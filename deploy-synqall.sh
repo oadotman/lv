@@ -36,7 +36,12 @@ if [ ! -f "$APP_DIR/.next/standalone/server.js" ]; then
 fi
 echo -e "${GREEN}✓ Standalone server ready${NC}"
 
-echo -e "${YELLOW}Step 3b: Copying static assets to standalone${NC}"
+echo -e "${YELLOW}Step 3b: Copying server files to standalone${NC}"
+# Copy server files (required for Next.js standalone mode)
+cp -r $APP_DIR/.next/server $APP_DIR/.next/standalone/.next/server
+echo -e "${GREEN}✓ Server files copied${NC}"
+
+echo -e "${YELLOW}Step 3c: Copying static assets to standalone${NC}"
 # Copy static assets and public files to standalone directory
 cp -r $APP_DIR/.next/static $APP_DIR/.next/standalone/.next/static
 cp -r $APP_DIR/public $APP_DIR/.next/standalone/public
