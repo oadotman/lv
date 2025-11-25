@@ -337,10 +337,18 @@ export async function POST(req: NextRequest) {
     const sanitized = sanitizeFilename(originalFilename);
     const fileName = `${userId}/${timestamp}_${sanitized}`;
 
+    // Normalize MIME type for Supabase Storage compatibility
+    // Supabase doesn't accept audio/x-m4a, convert to audio/mp4
+    let normalizedContentType = contentType;
+    if (contentType === 'audio/x-m4a') {
+      normalizedContentType = 'audio/mp4';
+    }
+
     console.log('Uploading to Supabase Storage:', {
       fileName,
       size: fileSize,
       contentType,
+      normalizedContentType,
     });
 
     // Upload to Supabase Storage
@@ -350,7 +358,7 @@ export async function POST(req: NextRequest) {
       .upload(fileName, buffer, {
         cacheControl: '3600',
         upsert: false,
-        contentType: contentType,
+        contentType: normalizedContentType,
       });
 
     if (uploadError) {
