@@ -36,6 +36,12 @@ if [ ! -f "$APP_DIR/.next/standalone/server.js" ]; then
 fi
 echo -e "${GREEN}✓ Standalone server ready${NC}"
 
+echo -e "${YELLOW}Step 3b: Copying static assets to standalone${NC}"
+# Copy static assets and public files to standalone directory
+cp -r $APP_DIR/.next/static $APP_DIR/.next/standalone/.next/static
+cp -r $APP_DIR/public $APP_DIR/.next/standalone/public
+echo -e "${GREEN}✓ Static assets copied${NC}"
+
 echo -e "${YELLOW}Step 4: Updating Nginx configuration${NC}"
 sudo cp $APP_DIR/synqall.nginx.conf $NGINX_AVAILABLE
 sudo ln -sf $NGINX_AVAILABLE $NGINX_ENABLED
