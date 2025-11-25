@@ -1,0 +1,63 @@
+# =====================================================
+# SYSTEMD SERVICE FILE FOR CALLIQ
+# Place in: /etc/systemd/system/calliq.service
+# =====================================================
+#
+# Installation:
+# 1. sudo cp calliq.service /etc/systemd/system/
+# 2. sudo systemctl daemon-reload
+# 3. sudo systemctl enable calliq
+# 4. sudo systemctl start calliq
+# 5. sudo systemctl status calliq
+# =====================================================
+
+[Unit]
+Description=CallIQ Next.js Application
+Documentation=https://github.com/yourorg/calliq
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=calliq
+Group=calliq
+WorkingDirectory=/var/www/calliq
+
+# Environment
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="HOSTNAME=0.0.0.0"
+EnvironmentFile=/var/www/calliq/.env.production
+
+# Start command
+ExecStart=/usr/bin/node /var/www/calliq/server.js
+
+# Restart policy
+Restart=always
+RestartSec=10s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Performance and security
+LimitNOFILE=65536
+LimitNPROC=4096
+Nice=0
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/calliq
+ReadWritePaths=/tmp
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=calliq
+
+# Process management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target

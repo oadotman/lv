@@ -1,0 +1,271 @@
+// =====================================================
+// OVERAGE MANAGEMENT SYSTEM
+// Handles minute overages at $0.02/minute
+// =====================================================
+
+import { createAdminClient } from '@/lib/supabase/server';
+
+/**
+ * Overage Pricing Configuration
+ *
+ * When organizations exceed their monthly minute allocation:
+ * - Cost: $0.02 per minute ($1.20 per hour)
+ * - Billing: Charged at end of billing cycle via Paddle adjustment
+ * - OR: Pre-purchase overage packs (recommended)
+ *
+ * Overage Packs (Pre-purchase options):
+ * - 500 minutes: $10 (saves $0)
+ * - 1,000 minutes: $18 (saves $2, 10% off)
+ * - 2,500 minutes: $40 (saves $10, 20% off)
+ * - 5,000 minutes: $75 (saves $25, 25% off)
+ */
+
+export const OVERAGE_CONFIG = {
+  pricePerMinute: 0.02, // $0.02 per minute
+  warningThresholds: [0.8, 0.9, 1.0], // Warn at 80%, 90%, 100%
+
+  // Pre-purchase overage packs
+  // IMPORTANT: Replace these placeholder IDs with actual Paddle Price IDs
+  // Create these products in your Paddle dashboard at: https://vendors.paddle.com/
+  packs: {
+    small: {
+      minutes: 500,
+      price: 10,
+      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_500 || 'pri_overage_500_REPLACE_ME'
+    },
+    medium: {
+      minutes: 1000,
+      price: 18,
+      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_1000 || 'pri_overage_1000_REPLACE_ME'
+    },
+    large: {
+      minutes: 2500,
+      price: 40,
+      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_2500 || 'pri_overage_2500_REPLACE_ME'
+    },
+    xlarge: {
+      minutes: 5000,
+      price: 75,
+      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_5000 || 'pri_overage_5000_REPLACE_ME'
+    },
+  },
+};
+
+/**
+ * Calculate current usage and overage for an organization
+ */
+export async function calculateUsageAndOverage(organizationId: string, periodStart: string, periodEnd: string) {
+  const supabase = createAdminClient();
+
+  // Get organization plan limits
+  const { data: org, error: orgError } = await supabase
+    .from('organizations')
+    .select('max_minutes_monthly, overage_minutes_purchased')
+    .eq('id', organizationId)
+    .single();
+
+  if (orgError || !org) {
+    throw new Error('Organization not found');
+  }
+
+  // Calculate minutes used this period
+  const { data: calls } = await supabase
+    .from('calls')
+    .select('duration')
+    .eq('organization_id', organizationId)
+    .gte('created_at', periodStart)
+    .lte('created_at', periodEnd)
+    .not('duration', 'is', null);
+
+  const minutesUsed = (calls || []).reduce((sum, call) => sum + (call.duration || 0), 0);
+
+  // Calculate available minutes (base plan + purchased overages)
+  const baseMinutes = org.max_minutes_monthly;
+  const purchasedOverageMinutes = org.overage_minutes_purchased || 0;
+  const totalAvailableMinutes = baseMinutes + purchasedOverageMinutes;
+
+  // Calculate overage
+  const overageMinutes = Math.max(0, minutesUsed - totalAvailableMinutes);
+  const overageCost = overageMinutes * OVERAGE_CONFIG.pricePerMinute;
+
+  return {
+    minutesUsed,
+    baseMinutes,
+    purchasedOverageMinutes,
+    totalAvailableMinutes,
+    overageMinutes,
+    overageCost,
+    percentUsed: (minutesUsed / totalAvailableMinutes) * 100,
+    hasOverage: overageMinutes > 0,
+    canUpload: minutesUsed < totalAvailableMinutes, // Can still upload if within purchased overages
+  };
+}
+
+/**
+ * Check if organization should receive usage warning
+ */
+export async function checkUsageWarning(organizationId: string): Promise<{
+  shouldWarn: boolean;
+  threshold: number;
+  usage: any;
+}> {
+  const supabase = createAdminClient();
+
+  // Get current billing period
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('current_period_start, current_period_end')
+    .eq('id', organizationId)
+    .single();
+
+  if (!org || !org.current_period_start) {
+    return { shouldWarn: false, threshold: 0, usage: null };
+  }
+
+  const usage = await calculateUsageAndOverage(
+    organizationId,
+    org.current_period_start,
+    org.current_period_end || new Date().toISOString()
+  );
+
+  // Check if usage crosses any warning threshold
+  const percentUsed = usage.percentUsed / 100;
+  let shouldWarn = false;
+  let crossedThreshold = 0;
+
+  for (const threshold of OVERAGE_CONFIG.warningThresholds) {
+    if (percentUsed >= threshold) {
+      shouldWarn = true;
+      crossedThreshold = threshold;
+    }
+  }
+
+  return { shouldWarn, threshold: crossedThreshold, usage };
+}
+
+/**
+ * Purchase overage pack
+ * This will be called after successful Paddle payment
+ */
+export async function creditOveragePack(
+  organizationId: string,
+  packSize: 'small' | 'medium' | 'large' | 'xlarge',
+  transactionId: string
+) {
+  const supabase = createAdminClient();
+  const pack = OVERAGE_CONFIG.packs[packSize];
+
+  // Add minutes to organization's overage balance
+  const { data: org, error: fetchError } = await supabase
+    .from('organizations')
+    .select('overage_minutes_purchased')
+    .eq('id', organizationId)
+    .single();
+
+  if (fetchError) {
+    throw new Error('Failed to fetch organization');
+  }
+
+  const currentOverageMinutes = org.overage_minutes_purchased || 0;
+  const newOverageMinutes = currentOverageMinutes + pack.minutes;
+
+  const { error: updateError } = await supabase
+    .from('organizations')
+    .update({
+      overage_minutes_purchased: newOverageMinutes,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', organizationId);
+
+  if (updateError) {
+    throw new Error('Failed to credit overage pack');
+  }
+
+  // Log the purchase in usage_metrics
+  await supabase.from('usage_metrics').insert({
+    organization_id: organizationId,
+    metric_type: 'overage_pack_purchased',
+    metric_value: pack.minutes,
+    cost_cents: pack.price * 100,
+    metadata: {
+      pack_size: packSize,
+      paddle_transaction_id: transactionId,
+      minutes_added: pack.minutes,
+    },
+  });
+
+  // Create notification
+  const { data: owners } = await supabase
+    .from('user_organizations')
+    .select('user_id')
+    .eq('organization_id', organizationId)
+    .in('role', ['owner', 'admin']);
+
+  if (owners) {
+    for (const owner of owners) {
+      await supabase.from('notifications').insert({
+        user_id: owner.user_id,
+        notification_type: 'overage_pack_purchased',
+        title: 'Overage pack added',
+        message: `${pack.minutes} additional minutes added to your account. You now have extra capacity for this billing period.`,
+        link: '/settings',
+      });
+    }
+  }
+
+  return { success: true, minutesAdded: pack.minutes, newTotal: newOverageMinutes };
+}
+
+/**
+ * Reset overage minutes at start of new billing period
+ * Called from Paddle webhook when billing period renews
+ */
+export async function resetOverageMinutes(organizationId: string) {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from('organizations')
+    .update({
+      overage_minutes_purchased: 0,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', organizationId);
+
+  if (error) {
+    console.error('[Overage] Failed to reset overage minutes:', error);
+    throw new Error('Failed to reset overage minutes');
+  }
+
+  console.log('[Overage] Reset overage minutes for organization:', organizationId);
+}
+
+/**
+ * Calculate total overage charges for billing period
+ * Used to generate Paddle adjustment at end of billing cycle
+ */
+export async function calculateOverageCharges(organizationId: string, periodStart: string, periodEnd: string) {
+  const usage = await calculateUsageAndOverage(organizationId, periodStart, periodEnd);
+
+  if (!usage.hasOverage) {
+    return { hasCharges: false, amount: 0, minutes: 0 };
+  }
+
+  return {
+    hasCharges: true,
+    amount: usage.overageCost,
+    minutes: usage.overageMinutes,
+    description: `Overage charges: ${usage.overageMinutes} minutes @ $${OVERAGE_CONFIG.pricePerMinute}/min`,
+  };
+}
+
+/**
+ * Get recommended overage pack based on current usage
+ */
+export function recommendOveragePack(projectedOverageMinutes: number): keyof typeof OVERAGE_CONFIG.packs | null {
+  if (projectedOverageMinutes <= 0) return null;
+
+  if (projectedOverageMinutes <= 500) return 'small';
+  if (projectedOverageMinutes <= 1000) return 'medium';
+  if (projectedOverageMinutes <= 2500) return 'large';
+  return 'xlarge';
+}

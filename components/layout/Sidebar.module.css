@@ -1,0 +1,307 @@
+/* Modern Sidebar with Glassmorphism and Animations */
+.sidebarContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.logoSection {
+  height: 56px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Removed continuous pulse animation for better performance */
+
+.logoLink {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.logoLink:hover {
+  transform: translateX(2px);
+}
+
+.logoIcon {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logoLink:hover .logoIcon {
+  background: rgba(255, 255, 255, 0.35);
+  transform: rotate(-5deg) scale(1.05);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+}
+
+.logoText {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: white;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navSection {
+  flex: 1;
+  padding: 0.75rem 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.navLink {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  text-decoration: none;
+  color: rgb(71, 85, 105);
+  position: relative;
+  overflow: hidden;
+}
+
+:global(.dark) .navLink {
+  color: rgb(148, 163, 184);
+}
+
+.navLink::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+  transition: width 0.3s ease;
+}
+
+.navLink:hover::before {
+  width: 100%;
+}
+
+.navLink:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+  color: rgb(37, 99, 235);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+:global(.dark) .navLink:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+  color: rgb(167, 139, 250);
+}
+
+.navLinkActive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+  transform: translateX(0);
+}
+
+.navLinkActive::before {
+  display: none;
+}
+
+.navLinkActive:hover {
+  transform: translateX(0) scale(1.02);
+  box-shadow: 0 10px 24px rgba(102, 126, 234, 0.45);
+}
+
+.navIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navLink:hover .navIcon {
+  transform: scale(1.1) rotate(3deg);
+}
+
+.navLinkActive .navIcon {
+  transform: scale(1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.navLabel {
+  flex: 1;
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.navIndicator {
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+/* Removed pulse-dot animation for better performance */
+
+.bottomSection {
+  border-top: 1px solid rgb(241, 245, 249);
+  flex-shrink: 0;
+  background: linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.5) 100%);
+}
+
+:global(.dark) .bottomSection {
+  border-top: 1px solid rgb(51, 65, 85);
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.bottomLink {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  text-decoration: none;
+  color: rgb(100, 116, 139);
+}
+
+:global(.dark) .bottomLink {
+  color: rgb(148, 163, 184);
+}
+
+.bottomLink:hover {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+  color: rgb(37, 99, 235);
+  padding-left: 1.25rem;
+}
+
+:global(.dark) .bottomLink:hover {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%);
+  color: rgb(167, 139, 250);
+}
+
+.bottomLinkActive {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+  color: rgb(37, 99, 235);
+  font-weight: 600;
+}
+
+:global(.dark) .bottomLinkActive {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.15) 0%, transparent 100%);
+  color: rgb(167, 139, 250);
+}
+
+.profileSection {
+  padding: 0.5rem 0.625rem;
+  background: linear-gradient(to top, rgba(248, 250, 252, 0.8) 0%, rgba(248, 250, 252, 0.4) 100%);
+}
+
+:global(.dark) .profileSection {
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.4) 100%);
+}
+
+.profileCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+:global(.dark) .profileCard {
+  background: rgb(30, 41, 59);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(71, 85, 105, 0.6);
+}
+
+.profileCard:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+:global(.dark) .profileCard:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25), 0 2px 4px rgba(0, 0, 0, 0.3);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.profileAvatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.profileCard:hover .profileAvatar {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
+}
+
+.profileInfo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.profileName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(15, 23, 42);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+:global(.dark) .profileName {
+  color: rgb(226, 232, 240);
+}

@@ -1,0 +1,39 @@
+# =====================================================
+# DOCKER COMPOSE FOR LOCAL DEVELOPMENT
+# For production on Datalix, use standalone Docker
+# =====================================================
+
+version: '3.8'
+
+services:
+  calliq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: calliq-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Add all environment variables from .env file
+    env_file:
+      - .env.production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - calliq-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  calliq-network:
+    driver: bridge
