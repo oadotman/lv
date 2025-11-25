@@ -13,6 +13,7 @@ const SUPPORTED_FORMATS = [
   'audio/ogg',        // .ogg
   'audio/flac',       // .flac
   'audio/x-m4a',      // .m4a (alternative)
+  'audio/mp3',        // .mp3 (alternative)
 ];
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
