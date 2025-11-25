@@ -8,7 +8,7 @@ import { createServerClient, requireAuth } from '@/lib/supabase/server';
 import { sanitizeFilename } from '@/lib/fileValidation';
 import { calculateUsageAndOverage } from '@/lib/overage';
 import { uploadRateLimiter } from '@/lib/rateLimit';
-import { validateDownloadUrl, safeFetch } from '@/lib/security/url-validation';
+import { validateDownloadUrl, safeFetch, convertToDirectDownloadUrl } from '@/lib/security/url-validation';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes max for download + upload
@@ -145,6 +145,16 @@ export async function POST(req: NextRequest) {
       hostname,
     });
 
+    // Convert platform-specific URLs to direct download URLs
+    const downloadUrl = convertToDirectDownloadUrl(recordingUrl);
+
+    if (downloadUrl !== recordingUrl) {
+      console.log('Converted URL to direct download link:', {
+        original: recordingUrl,
+        converted: downloadUrl,
+      });
+    }
+
     // Create Supabase client
     const supabase = createServerClient();
 
@@ -193,7 +203,7 @@ export async function POST(req: NextRequest) {
 
     // Step 1: Validate URL for SSRF protection
     console.log('Validating URL...');
-    const urlValidation = validateDownloadUrl(recordingUrl);
+    const urlValidation = validateDownloadUrl(downloadUrl);
 
     if (!urlValidation.valid) {
       console.error('URL validation failed:', urlValidation.error);
@@ -211,12 +221,22 @@ export async function POST(req: NextRequest) {
 
     let downloadResponse: Response;
     try {
-      downloadResponse = await safeFetch(recordingUrl, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'SynQall/1.0',
-        },
-      });
+      // Use native fetch with redirect following for platform downloads
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout for large files
+
+      try {
+        downloadResponse = await fetch(downloadUrl, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'SynQall/1.0',
+          },
+          signal: controller.signal,
+          redirect: 'follow', // Follow redirects for Google Drive, Dropbox, etc.
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (!downloadResponse.ok) {
         throw new Error(`Download failed: ${downloadResponse.status} ${downloadResponse.statusText}`);
@@ -256,6 +276,28 @@ export async function POST(req: NextRequest) {
     // Validate content type
     const isSupported = SUPPORTED_MIME_TYPES.some(type => contentType.includes(type));
     if (!isSupported && !contentType.includes('octet-stream')) {
+      // Check if it's HTML (likely a sharing page, not a direct link)
+      if (contentType.includes('text/html')) {
+        let helpMessage = 'The URL appears to be a web page, not a direct media file link.';
+
+        if (platform === 'zoom') {
+          helpMessage += ' For Zoom: Go to your Zoom recordings, click the "More" menu (...), select "Download", and use the download link.';
+        } else if (platform === 'google_drive') {
+          helpMessage += ' For Google Drive: Right-click the file, select "Get link", ensure it\'s set to "Anyone with the link can view", then use that link.';
+        } else if (hostname.includes('loom.com')) {
+          helpMessage += ' For Loom: Click "Share", then "Download" to get the video file, then upload it directly to SynQall.';
+        } else {
+          helpMessage += ' Please ensure you\'re using a direct download link to the audio/video file, not a sharing page URL.';
+        }
+
+        return NextResponse.json(
+          {
+            error: helpMessage,
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
           error: `Unsupported file type: ${contentType}. Please use audio or video files.`,

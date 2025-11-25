@@ -213,8 +213,61 @@ export async function safeFetch(
   }
 }
 
+/**
+ * Convert platform-specific URLs to direct download links
+ * Handles Google Drive, Zoom, Loom, Dropbox, etc.
+ */
+export function convertToDirectDownloadUrl(urlString: string): string {
+  try {
+    const url = new URL(urlString);
+    const hostname = url.hostname.toLowerCase();
+
+    // Google Drive handling
+    if (hostname.includes('drive.google.com') || hostname.includes('docs.google.com')) {
+      // Example: https://drive.google.com/file/d/FILE_ID/view
+      // Convert to: https://drive.google.com/uc?export=download&id=FILE_ID
+
+      const fileIdMatch = url.pathname.match(/\/d\/([^\/]+)/);
+      if (fileIdMatch) {
+        const fileId = fileIdMatch[1];
+        return `https://drive.google.com/uc?export=download&id=${fileId}`;
+      }
+
+      // Already in download format
+      if (url.pathname.includes('/uc') && url.searchParams.has('id')) {
+        return urlString;
+      }
+    }
+
+    // Dropbox handling
+    if (hostname.includes('dropbox.com')) {
+      // Convert dl=0 to dl=1 for direct download
+      if (url.searchParams.get('dl') === '0') {
+        url.searchParams.set('dl', '1');
+        return url.toString();
+      }
+
+      // If no dl parameter, add it
+      if (!url.searchParams.has('dl')) {
+        url.searchParams.set('dl', '1');
+        return url.toString();
+      }
+    }
+
+    // For other URLs (Zoom, Loom, OneDrive), return as-is
+    // These typically require authentication or special handling
+    // The user should provide direct download URLs
+    return urlString;
+
+  } catch (error) {
+    // If URL parsing fails, return original
+    return urlString;
+  }
+}
+
 export default {
   validateUrl,
   validateDownloadUrl,
   safeFetch,
+  convertToDirectDownloadUrl,
 };
