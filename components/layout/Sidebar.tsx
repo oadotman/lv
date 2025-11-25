@@ -28,7 +28,7 @@ import {
 import { useAuth } from "@/lib/AuthContext";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Phone, label: "Calls", href: "/calls" },
   { icon: FileText, label: "Templates", href: "/templates" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
@@ -52,7 +52,7 @@ export function Sidebar() {
     <div className={styles.sidebarContent}>
       {/* Logo */}
       <div className={styles.logoSection}>
-        <Link href="/" className={styles.logoLink}>
+        <Link href="/dashboard" className={styles.logoLink}>
           <div className={styles.logoIcon}>
             <Phone className="w-5 h-5 text-white" />
           </div>

@@ -24,7 +24,16 @@
       "Bash(git add:*)",
       "Bash(findstr:*)",
       "Bash(test:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: CallIQ application\n\nComplete CallIQ call recording and transcription platform with:\n- User authentication and team management\n- Call upload and transcription via AssemblyAI\n- AI-powered data extraction with OpenAI\n- Approval workflows\n- GDPR compliance features\n- Usage tracking and overage management\n- Paddle payment integration\n- Comprehensive security measures\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(openssl rand:*)",
+      "Bash(pm2 status:*)",
+      "Bash(git commit:*)",
+      "Bash(ssh root@datalix.eu \"cd /var/www/synqall && echo ''=== Checking if .next/static exists in parent directory ==='' && ls -la .next/ | grep static && echo '''' && echo ''=== Checking standalone directory structure ==='' && ls -la .next/standalone/ 2>&1 | head -20\")"
     ],
     "deny": [],
     "ask": []

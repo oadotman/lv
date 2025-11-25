@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 # Configuration
 APP_USER="calliq"
 APP_DIR="/var/www/calliq"
-DOMAIN="your-domain.com"
+DOMAIN="synqall.com"
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
