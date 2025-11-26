@@ -5,14 +5,27 @@
 
 import { AssemblyAI } from 'assemblyai';
 
-// Validate API key exists
-if (!process.env.ASSEMBLYAI_API_KEY) {
-  throw new Error('ASSEMBLYAI_API_KEY environment variable is required');
+// Lazy-loaded client to avoid build-time initialization
+let assemblyAIClientInstance: AssemblyAI | null = null;
+
+function getAssemblyAIClient(): AssemblyAI {
+  if (!assemblyAIClientInstance) {
+    if (!process.env.ASSEMBLYAI_API_KEY) {
+      throw new Error('ASSEMBLYAI_API_KEY environment variable is required');
+    }
+    assemblyAIClientInstance = new AssemblyAI({
+      apiKey: process.env.ASSEMBLYAI_API_KEY,
+    });
+  }
+  return assemblyAIClientInstance;
 }
 
-// Create AssemblyAI client
-export const assemblyAIClient = new AssemblyAI({
-  apiKey: process.env.ASSEMBLYAI_API_KEY,
+// Export for backward compatibility
+export const assemblyAIClient = new Proxy({} as AssemblyAI, {
+  get: (target, prop) => {
+    const client = getAssemblyAIClient();
+    return (client as any)[prop];
+  }
 });
 
 // =====================================================

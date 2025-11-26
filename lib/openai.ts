@@ -6,14 +6,27 @@
 import OpenAI from 'openai';
 import type { AssemblyAIUtterance } from './assemblyai';
 
-// Validate API key exists
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY environment variable is required');
+// Lazy-loaded client to avoid build-time initialization
+let openaiClientInstance: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClientInstance) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openaiClientInstance = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClientInstance;
 }
 
-// Create OpenAI client
-export const openaiClient = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Export for backward compatibility
+export const openaiClient = new Proxy({} as OpenAI, {
+  get: (target, prop) => {
+    const client = getOpenAIClient();
+    return (client as any)[prop];
+  }
 });
 
 // =====================================================
