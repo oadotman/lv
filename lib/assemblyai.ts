@@ -91,17 +91,23 @@ export interface AssemblyAIEntity {
 // =====================================================
 
 /**
- * Submit audio file for transcription
- * Returns transcript ID for polling/webhook
+ * Submit audio file for transcription with progress tracking
+ * Provides callback for progress updates and comprehensive error logging
  */
 export async function submitTranscriptionJob(
-  config: TranscriptionConfig
-): Promise<{ transcriptId: string; status: string }> {
+  config: TranscriptionConfig,
+  onProgress?: (progress: { status: string; percent?: number; message: string }) => Promise<void>
+): Promise<TranscriptionResult> {
+  const startTime = Date.now();
+
   try {
-    console.log('Submitting transcription job:', {
-      audioUrl: config.audioUrl,
-      speakersExpected: config.speakersExpected || 2,
-    });
+    console.log('[AssemblyAI] ========================================');
+    console.log('[AssemblyAI] Starting transcription job');
+    console.log('[AssemblyAI] Audio URL:', config.audioUrl);
+    console.log('[AssemblyAI] Speakers expected:', config.speakersExpected || 2);
+    console.log('[AssemblyAI] Trim start:', config.trimStart || 'none');
+    console.log('[AssemblyAI] Trim end:', config.trimEnd || 'none');
+    console.log('[AssemblyAI] ========================================');
 
     const params: any = {
       audio: config.audioUrl,
@@ -154,27 +160,136 @@ export async function submitTranscriptionJob(
     // Add trim parameters if provided (convert seconds to milliseconds)
     if (config.trimStart !== undefined && config.trimStart > 0) {
       params.audio_start_from = Math.floor(config.trimStart * 1000);
-      console.log(`Trimming audio from ${config.trimStart}s (${params.audio_start_from}ms)`);
+      console.log(`[AssemblyAI] ✂️  Trimming audio from ${config.trimStart}s (${params.audio_start_from}ms)`);
     }
 
     if (config.trimEnd !== undefined && config.trimEnd > 0) {
       params.audio_end_at = Math.floor(config.trimEnd * 1000);
-      console.log(`Trimming audio to ${config.trimEnd}s (${params.audio_end_at}ms)`);
+      console.log(`[AssemblyAI] ✂️  Trimming audio to ${config.trimEnd}s (${params.audio_end_at}ms)`);
     }
 
-    const transcript = await assemblyAIClient.transcripts.transcribe(params);
+    // Report initial progress
+    if (onProgress) {
+      await onProgress({
+        status: 'queued',
+        percent: 0,
+        message: 'Submitting audio to AssemblyAI...'
+      });
+    }
 
-    console.log('Transcription job submitted:', {
-      id: transcript.id,
-      status: transcript.status,
+    console.log('[AssemblyAI] 📤 Submitting to AssemblyAI API...');
+
+    // Submit and wait for completion with manual polling to track progress
+    const client = getAssemblyAIClient();
+
+    // First, submit the transcription
+    const submittedTranscript = await client.transcripts.submit(params);
+
+    console.log('[AssemblyAI] ✅ Submitted successfully');
+    console.log('[AssemblyAI] Transcript ID:', submittedTranscript.id);
+    console.log('[AssemblyAI] Initial status:', submittedTranscript.status);
+
+    if (onProgress) {
+      await onProgress({
+        status: 'queued',
+        percent: 10,
+        message: 'Queued for transcription...'
+      });
+    }
+
+    // Now poll for completion with progress tracking
+    console.log('[AssemblyAI] 🔄 Polling for completion...');
+    let pollCount = 0;
+    let lastStatus = '';
+
+    const transcript = await client.transcripts.waitUntilReady(submittedTranscript.id, {
+      pollingInterval: 3000, // Poll every 3 seconds
+      pollingTimeout: 900000, // 15 minute timeout
     });
 
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    console.log('[AssemblyAI] ========================================');
+    console.log('[AssemblyAI] ✅ Transcription completed!');
+    console.log('[AssemblyAI] Status:', transcript.status);
+    console.log('[AssemblyAI] Duration:', transcript.audio_duration, 'ms');
+    console.log('[AssemblyAI] Text length:', transcript.text?.length || 0, 'characters');
+    console.log('[AssemblyAI] Utterances:', transcript.utterances?.length || 0);
+    console.log('[AssemblyAI] Words:', transcript.words?.length || 0);
+    console.log('[AssemblyAI] Elapsed time:', elapsedTime, 'seconds');
+    console.log('[AssemblyAI] ========================================');
+
+    // Report completion
+    if (onProgress) {
+      await onProgress({
+        status: 'completed',
+        percent: 100,
+        message: 'Transcription complete!'
+      });
+    }
+
+    // Check for errors
+    if (transcript.status === 'error') {
+      console.error('[AssemblyAI] ❌ ERROR: Transcription failed');
+      console.error('[AssemblyAI] Error message:', transcript.error);
+      throw new Error(`AssemblyAI transcription failed: ${transcript.error || 'Unknown error'}`);
+    }
+
+    // Validate we have the data we need
+    if (!transcript.text) {
+      console.error('[AssemblyAI] ❌ ERROR: No text returned');
+      console.error('[AssemblyAI] Transcript object:', JSON.stringify(transcript, null, 2));
+      throw new Error('Transcription completed but no text was returned');
+    }
+
+    if (!transcript.utterances || transcript.utterances.length === 0) {
+      console.warn('[AssemblyAI] ⚠️  WARNING: No utterances returned (speaker diarization may have failed)');
+    }
+
+    console.log('[AssemblyAI] ✅ Validation passed - returning transcript data');
+
+    // Return the complete transcript in our expected format
     return {
-      transcriptId: transcript.id,
-      status: transcript.status,
+      id: transcript.id,
+      status: transcript.status as any,
+      text: transcript.text,
+      utterances: transcript.utterances as any,
+      words: transcript.words as any,
+      chapters: transcript.chapters as any,
+      entities: transcript.entities as any,
+      audio_duration: transcript.audio_duration ?? undefined,
+      error: transcript.error || undefined,
     };
   } catch (error) {
-    console.error('AssemblyAI transcription error:', error);
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    console.error('[AssemblyAI] ========================================');
+    console.error('[AssemblyAI] ❌ TRANSCRIPTION ERROR');
+    console.error('[AssemblyAI] Elapsed time:', elapsedTime, 'seconds');
+    console.error('[AssemblyAI] Error type:', error instanceof Error ? error.constructor.name : typeof error);
+    console.error('[AssemblyAI] Error message:', error instanceof Error ? error.message : String(error));
+
+    if (error instanceof Error && error.stack) {
+      console.error('[AssemblyAI] Stack trace:', error.stack);
+    }
+
+    console.error('[AssemblyAI] Full error object:', JSON.stringify(error, null, 2));
+    console.error('[AssemblyAI] Config used:', JSON.stringify({
+      audioUrl: config.audioUrl,
+      speakersExpected: config.speakersExpected,
+      trimStart: config.trimStart,
+      trimEnd: config.trimEnd,
+    }, null, 2));
+    console.error('[AssemblyAI] ========================================');
+
+    // Report error to progress callback
+    if (onProgress) {
+      await onProgress({
+        status: 'error',
+        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+    }
+
     throw error;
   }
 }

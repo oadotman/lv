@@ -42,72 +42,66 @@ export const processTranscription = inngest.createFunction(
       return data;
     });
 
-    // Step 2: Submit to AssemblyAI (if not already submitted)
-    const transcriptId = await step.run('submit-transcription', async () => {
-      if (call.assemblyai_transcript_id) {
-        console.log('Transcription already submitted:', call.assemblyai_transcript_id);
-        return call.assemblyai_transcript_id;
-      }
-
+    // Step 2: Submit to AssemblyAI and wait for completion
+    // The SDK automatically handles polling until the transcript is ready
+    const transcript = await step.run('transcribe-audio', async () => {
       const { submitTranscriptionJob } = await import('@/lib/assemblyai');
 
-      // Don't use webhook in Inngest flow - we handle it ourselves
-      const { transcriptId } = await submitTranscriptionJob({
-        audioUrl,
-        speakersExpected: 2,
-        webhookUrl: undefined, // No webhook - Inngest handles polling
-        trimStart: trimStart,
-        trimEnd: trimEnd,
-      });
-
-      // Update call with transcript ID
+      // Update call status to transcribing
       const supabase = createAdminClient();
       await supabase
         .from('calls')
         .update({
           status: 'transcribing',
-          assemblyai_transcript_id: transcriptId,
           assemblyai_audio_url: audioUrl,
+          processing_progress: 0,
+          processing_message: 'Starting transcription...',
         })
         .eq('id', callId);
 
-      return transcriptId;
+      console.log('[Inngest] Starting transcription (SDK will poll automatically)...');
+
+      // The SDK's method waits until completion with progress tracking
+      const result = await submitTranscriptionJob({
+        audioUrl,
+        speakersExpected: 2,
+        webhookUrl: undefined,
+        trimStart: trimStart,
+        trimEnd: trimEnd,
+      }, async (progress) => {
+        // Update call record with real-time progress
+        await supabase
+          .from('calls')
+          .update({
+            processing_progress: progress.percent || 0,
+            processing_message: progress.message,
+          })
+          .eq('id', callId);
+
+        console.log(`[Inngest] 📊 Transcription progress: ${progress.percent}% - ${progress.message}`);
+      });
+
+      console.log('[Inngest] Transcription complete:', {
+        id: result.id,
+        duration: result.audio_duration,
+        textLength: result.text?.length || 0,
+        utterancesCount: result.utterances?.length || 0,
+      });
+
+      // Store the transcript ID and clear progress indicators
+      await supabase
+        .from('calls')
+        .update({
+          assemblyai_transcript_id: result.id,
+          processing_progress: 100,
+          processing_message: 'Transcription complete',
+        })
+        .eq('id', callId);
+
+      return result;
     });
 
-    // Step 3: Wait for transcription to complete (with polling)
-    const transcript = await step.run('wait-for-transcription', async () => {
-      console.log('Polling AssemblyAI for completion:', transcriptId);
-
-      // Poll every 10 seconds for up to 15 minutes
-      const maxAttempts = 90; // 15 minutes
-      const pollInterval = 10000; // 10 seconds
-
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const status = await getTranscriptionStatus(transcriptId);
-
-        console.log(`Poll attempt ${attempt}/${maxAttempts}:`, status.status);
-
-        if (status.status === 'completed') {
-          if (!status.text || !status.utterances) {
-            throw new Error('Incomplete transcript data received');
-          }
-          return status;
-        }
-
-        if (status.status === 'error') {
-          throw new Error(`Transcription failed: ${status.error || 'Unknown error'}`);
-        }
-
-        // Still processing, wait before next poll
-        if (attempt < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, pollInterval));
-        }
-      }
-
-      throw new Error(`Transcription timeout after ${maxAttempts * pollInterval / 1000 / 60} minutes`);
-    });
-
-    // Step 4: Store transcript in database
+    // Step 3: Store transcript in database
     const transcriptData = await step.run('store-transcript', async () => {
       const supabase = createAdminClient();
 
@@ -224,7 +218,7 @@ export const processTranscription = inngest.createFunction(
       };
     });
 
-    // Step 5: Perform quality check to determine if review is needed
+    // Step 4: Perform quality check to determine if review is needed
     const qualityCheck = await step.run('quality-check', async () => {
       console.log('[Inngest] Performing quality check');
 
@@ -268,7 +262,7 @@ export const processTranscription = inngest.createFunction(
       };
     });
 
-    // Step 6: Send notification
+    // Step 5: Send notification
     await step.run('send-notification', async () => {
       const supabase = createAdminClient();
 
@@ -298,7 +292,7 @@ export const processTranscription = inngest.createFunction(
       }
     });
 
-    // Step 7: Auto-trigger extraction if no review needed
+    // Step 6: Auto-trigger extraction if no review needed
     const extractionTriggered = await step.run('maybe-trigger-extraction', async () => {
       if (!qualityCheck.requiresReview) {
         // Auto-approve and trigger extraction
@@ -317,7 +311,7 @@ export const processTranscription = inngest.createFunction(
           data: {
             callId,
             userId: call.user_id,
-            transcriptId,
+            transcriptId: transcript.id,
             autoApproved: true,
           },
         });
@@ -335,7 +329,7 @@ export const processTranscription = inngest.createFunction(
     return {
       success: true,
       callId,
-      transcriptId,
+      transcriptId: transcript.id,
       duration: transcript.audio_duration,
       requiresReview: qualityCheck.requiresReview,
       triggerReason: qualityCheck.triggerReason,

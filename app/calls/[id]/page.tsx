@@ -58,6 +58,8 @@ interface CallRecord {
   created_at: string;
   audio_url: string | null;
   file_url: string | null;
+  processing_progress: number | null;
+  processing_message: string | null;
 }
 
 interface TranscriptUtterance {
@@ -771,8 +773,17 @@ Call_Duration__c: ${call.duration || 0}
                 >
                   {call.status === "completed" ? "✓ Completed" :
                    call.status === "failed" ? "✗ Failed" :
-                   "⏳ Processing"}
+                   call.status === "transcribing" && call.processing_progress !== null
+                     ? `⏳ Transcribing ${call.processing_progress}%`
+                     : "⏳ Processing"}
                 </Badge>
+
+                {/* Show detailed progress message during transcription */}
+                {call.status === "transcribing" && call.processing_message && (
+                  <span className="ml-3 text-sm text-gray-600">
+                    {call.processing_message}
+                  </span>
+                )}
               </div>
             </div>
 
