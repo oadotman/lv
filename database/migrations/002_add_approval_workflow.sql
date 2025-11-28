@@ -218,7 +218,7 @@ CREATE POLICY "Users can view their own call edits"
       SELECT 1 FROM calls
       WHERE calls.id = call_edits.call_id
       AND (calls.user_id = auth.uid() OR calls.organization_id IN (
-        SELECT organization_id FROM organization_members WHERE user_id = auth.uid()
+        SELECT organization_id FROM user_organizations WHERE user_id = auth.uid()
       ))
     )
   );
@@ -230,7 +230,7 @@ CREATE POLICY "Users can create call edits for their calls"
       SELECT 1 FROM calls
       WHERE calls.id = call_edits.call_id
       AND (calls.user_id = auth.uid() OR calls.organization_id IN (
-        SELECT organization_id FROM organization_members WHERE user_id = auth.uid()
+        SELECT organization_id FROM user_organizations WHERE user_id = auth.uid()
       ))
     )
   );
@@ -243,7 +243,7 @@ CREATE POLICY "Users can view their own call notes"
       SELECT 1 FROM calls
       WHERE calls.id = call_notes.call_id
       AND (calls.user_id = auth.uid() OR calls.organization_id IN (
-        SELECT organization_id FROM organization_members WHERE user_id = auth.uid()
+        SELECT organization_id FROM user_organizations WHERE user_id = auth.uid()
       ))
     )
   );
@@ -255,7 +255,7 @@ CREATE POLICY "Users can create call notes for their calls"
       SELECT 1 FROM calls
       WHERE calls.id = call_notes.call_id
       AND (calls.user_id = auth.uid() OR calls.organization_id IN (
-        SELECT organization_id FROM organization_members WHERE user_id = auth.uid()
+        SELECT organization_id FROM user_organizations WHERE user_id = auth.uid()
       ))
     )
   );
