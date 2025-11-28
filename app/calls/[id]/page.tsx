@@ -709,6 +709,17 @@ Call_Duration__c: ${call.duration || 0}
           ref={audioRef}
           src={call.file_url}
           preload="metadata"
+          crossOrigin="anonymous"
+          onError={(e) => {
+            console.error('Audio element error:', e);
+            console.error('Audio src:', call.file_url);
+            const audio = e.currentTarget;
+            console.error('Audio error code:', audio.error?.code);
+            console.error('Audio error message:', audio.error?.message);
+          }}
+          onLoadedMetadata={() => {
+            console.log('Audio loaded successfully:', call.file_url);
+          }}
         />
       )}
 

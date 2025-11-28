@@ -15,8 +15,8 @@ export async function middleware(req: NextRequest) {
     const host = req.headers.get('host');
     const referer = req.headers.get('referer');
 
-    // Webhook endpoints are exempt from CSRF checks (they use signature verification)
-    const webhookPaths = ['/api/webhooks/', '/api/paddle/webhook', '/api/inngest'];
+    // Webhook endpoints and internal processing are exempt from CSRF checks
+    const webhookPaths = ['/api/webhooks/', '/api/paddle/webhook', '/api/inngest', '/api/calls/'];
     const isWebhook = webhookPaths.some(path => req.nextUrl.pathname.startsWith(path));
 
     if (!isWebhook) {
