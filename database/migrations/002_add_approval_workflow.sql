@@ -145,7 +145,7 @@ SELECT
   c.transcription_quality_score,
   c.extraction_quality_score,
   c.low_confidence_fields_count,
-  c.call_title,
+  c.customer_name,
   c.created_at,
   c.updated_at,
   u.email as user_email,
