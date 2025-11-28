@@ -175,7 +175,7 @@ SELECT
   c.user_id,
   c.organization_id,
   c.status,
-  c.call_title,
+  c.customer_name,
   c.transcription_quality_score,
   c.extraction_quality_score,
   c.low_confidence_fields_count,
