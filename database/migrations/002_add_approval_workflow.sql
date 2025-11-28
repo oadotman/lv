@@ -184,7 +184,8 @@ SELECT
   -- Transcript stats
   t.confidence_score as transcript_confidence,
   t.word_count,
-  t.sentiment_overall,
+  c.sentiment_type,
+  c.sentiment_score,
   -- Field stats
   (SELECT COUNT(*) FROM call_fields cf WHERE cf.call_id = c.id) as total_fields,
   (SELECT COUNT(*) FROM call_fields cf WHERE cf.call_id = c.id AND cf.confidence_score < 0.7) as low_confidence_fields,
