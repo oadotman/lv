@@ -15,14 +15,12 @@ module.exports = {
     },
     {
       name: 'retention-cleanup',
-      script: './cron-retention.js',
+      script: './cron-retention.sh',
       cwd: '/var/www/synqall',
+      interpreter: '/bin/bash',
       cron_restart: '0 2 * * *', // Daily at 2:00 AM
       autorestart: false,
       watch: false,
-      env: {
-        NODE_ENV: 'production',
-      },
     },
   ],
 };

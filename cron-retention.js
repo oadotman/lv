@@ -27,8 +27,10 @@ const options = {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${CRON_SECRET}`,
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+    'User-Agent': 'PM2-Cron/1.0'
+  },
+  timeout: 30000 // 30 second timeout
 };
 
 const req = https.request(CRON_URL, options, (res) => {
