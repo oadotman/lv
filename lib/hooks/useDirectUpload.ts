@@ -51,6 +51,11 @@ export function useDirectUpload() {
     try {
       // Step 1: Get presigned upload URL from our API
       console.log('📋 Requesting presigned upload URL...');
+      console.log('Original file info:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
 
       // Fix MIME type for M4A files - browsers report different types
       let mimeType = file.type;
@@ -77,6 +82,8 @@ export function useDirectUpload() {
         };
         mimeType = extensionToMimeMap[fileExtension] || '';
       }
+
+      console.log('Normalized MIME type for upload:', mimeType);
 
       const urlResponse = await fetch('/api/upload/presigned-url', {
         method: 'POST',
@@ -131,9 +138,21 @@ export function useDirectUpload() {
         // Get the normalized content type from the presigned URL response
         const contentType = uploadMetadata.contentType;
 
+        // Create a new Blob with the correct MIME type for M4A files
+        // This is necessary because Supabase validates the File/Blob's type property
+        let uploadFile: File | Blob = file;
+
+        // If it's an M4A file with a problematic MIME type, create a new Blob
+        if (file.name.toLowerCase().endsWith('.m4a') && contentType === 'audio/mp4') {
+          // Read the file and create a new Blob with the correct MIME type
+          const arrayBuffer = await file.arrayBuffer();
+          uploadFile = new Blob([arrayBuffer], { type: contentType });
+          console.log('📝 Created new Blob with normalized MIME type for M4A file');
+        }
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('call-audio')
-          .uploadToSignedUrl(path, token, file, {
+          .uploadToSignedUrl(path, token, uploadFile, {
             contentType: contentType, // Use the normalized MIME type from the server
           });
 
