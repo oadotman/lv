@@ -123,14 +123,17 @@ export async function POST(
       const processUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/calls/${callId}/process`;
 
       // Use fetch without awaiting to trigger background processing
+      // Use Connection: close to avoid chunked encoding HTTP parser issues
       fetch(processUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-internal-processing': 'true',
+          'Connection': 'close',
         },
       }).catch((err) => {
-        console.error('Failed to trigger processing:', err);
+        // Log but don't fail - processing will continue in background
+        console.error('Failed to trigger processing (non-fatal):', err.message);
       });
 
       console.log('✅ Background processing triggered for call:', callId);

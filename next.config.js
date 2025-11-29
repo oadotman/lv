@@ -121,6 +121,20 @@ const nextConfig = {
           }
         ],
       },
+      // Internal processing endpoints - minimal headers to avoid HTTP parsing issues
+      {
+        source: '/api/calls/:id/process',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          }
+        ],
+      },
       // Special headers for API routes
       {
         source: '/api/:path*',

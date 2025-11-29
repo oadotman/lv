@@ -258,10 +258,17 @@ export async function POST(
       link: `/calls/${callId}`,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Call processed successfully',
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Call processed successfully',
+      },
+      {
+        headers: {
+          'Connection': 'close', // Prevent chunked encoding issues
+        },
+      }
+    );
 
   } catch (error) {
     console.error('[Process] ❌ ERROR:', error);
