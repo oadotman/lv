@@ -13,5 +13,16 @@ module.exports = {
       max_memory_restart: '1G',
       autorestart: true,
     },
+    {
+      name: 'retention-cleanup',
+      script: './cron-retention.js',
+      cwd: '/var/www/synqall',
+      cron_restart: '0 2 * * *', // Daily at 2:00 AM
+      autorestart: false,
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+      },
+    },
   ],
 };
