@@ -201,11 +201,74 @@ export async function submitTranscriptionJob(
     console.log('[AssemblyAI] 🔄 Polling for completion...');
     let pollCount = 0;
     let lastStatus = '';
+    const maxPolls = 300; // 300 * 3 seconds = 15 minutes max
+    const pollingInterval = 3000; // 3 seconds
 
-    const transcript = await client.transcripts.waitUntilReady(submittedTranscript.id, {
-      pollingInterval: 3000, // Poll every 3 seconds
-      pollingTimeout: 900000, // 15 minute timeout
-    });
+    // Custom polling with progress updates
+    let transcript: any;
+    while (pollCount < maxPolls) {
+      pollCount++;
+
+      // Get current status
+      transcript = await client.transcripts.get(submittedTranscript.id);
+
+      // Calculate estimated progress based on time and status
+      let estimatedPercent = 10;
+      const elapsedSeconds = (pollCount * pollingInterval) / 1000;
+
+      if (transcript.status === 'processing') {
+        // Estimate progress based on elapsed time
+        // Typical transcription takes 20-30% of audio duration
+        // Assume average 3 minute audio takes ~45 seconds to process
+        if (elapsedSeconds < 10) {
+          estimatedPercent = 15 + (elapsedSeconds * 2); // 15-35%
+        } else if (elapsedSeconds < 20) {
+          estimatedPercent = 35 + ((elapsedSeconds - 10) * 3); // 35-65%
+        } else if (elapsedSeconds < 30) {
+          estimatedPercent = 65 + ((elapsedSeconds - 20) * 2); // 65-85%
+        } else {
+          estimatedPercent = Math.min(85 + ((elapsedSeconds - 30) * 0.5), 95); // 85-95%
+        }
+      } else if (transcript.status === 'queued') {
+        estimatedPercent = Math.min(10 + (elapsedSeconds * 0.5), 15); // 10-15%
+      }
+
+      // Report progress if status changed or every 3rd poll
+      if (transcript.status !== lastStatus || pollCount % 3 === 0) {
+        console.log(`[AssemblyAI] Status: ${transcript.status}, Poll #${pollCount}, Progress: ${estimatedPercent}%`);
+
+        if (onProgress) {
+          const messages: Record<string, string> = {
+            'queued': 'Waiting in queue...',
+            'processing': pollCount < 5 ? 'Analyzing audio quality...' :
+                         pollCount < 10 ? 'Detecting speakers...' :
+                         pollCount < 15 ? 'Transcribing conversation...' :
+                         pollCount < 20 ? 'Processing speech patterns...' :
+                         'Finalizing transcript...'
+          };
+
+          await onProgress({
+            status: transcript.status,
+            percent: Math.round(estimatedPercent),
+            message: messages[transcript.status] || 'Processing...'
+          });
+        }
+
+        lastStatus = transcript.status;
+      }
+
+      // Check if completed
+      if (transcript.status === 'completed' || transcript.status === 'error') {
+        break;
+      }
+
+      // Wait before next poll
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
+    }
+
+    if (pollCount >= maxPolls) {
+      throw new Error('Transcription timed out after 15 minutes');
+    }
 
     const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
 

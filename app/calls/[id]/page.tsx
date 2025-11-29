@@ -6,6 +6,8 @@ import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ModernProgress } from "@/components/ui/modern-progress";
+import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
@@ -119,10 +121,11 @@ export default function CallDetailPage() {
   const [activeTab, setActiveTab] = useState("plain");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(1380); // Default 23 minutes
+  const [duration, setDuration] = useState(0); // Start with 0, will be set from audio metadata
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [volume, setVolume] = useState(1);
   const [copiedInsight, setCopiedInsight] = useState<number | null>(null);
+  const [audioLoaded, setAudioLoaded] = useState(false);
 
   // Audio element ref
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -218,10 +221,9 @@ export default function CallDetailPage() {
 
         setCallDetail(detail);
 
-        // Set duration from call if available
-        if (callData.duration) {
-          setDuration(callData.duration);
-        }
+        // Don't set duration from call data - let audio metadata handle it
+        // The call.duration is in minutes while audio player needs seconds
+        console.log('Call duration from DB (minutes):', callData.duration);
 
         setLoading(false);
       } catch (err) {
@@ -481,11 +483,19 @@ export default function CallDetailPage() {
     if (!audio) return;
 
     const handleLoadedMetadata = () => {
+      console.log('Audio metadata loaded, duration (seconds):', audio.duration);
       setDuration(audio.duration);
+      setAudioLoaded(true);
+      // Force update to ensure UI reflects the change
+      setCurrentTime(0);
     };
 
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
+      // Add debug log for first few updates to verify it's working
+      if (audio.currentTime < 1 || Math.floor(audio.currentTime) % 10 === 0) {
+        console.log('Audio time update:', audio.currentTime, '/', audio.duration);
+      }
     };
 
     const handleEnded = () => {
@@ -571,30 +581,53 @@ export default function CallDetailPage() {
 
     switch (format) {
       case "plain":
-        return `CALL SUMMARY
-============
+        // Get sentiment emoji
+        const sentimentEmoji =
+          call.sentiment_type === "positive" ? "😊" :
+          call.sentiment_type === "negative" ? "😟" :
+          call.sentiment_type === "neutral" ? "😐" : "❓";
 
-Customer: ${call.customer_name || "Unknown"}
-Sales Rep: ${call.sales_rep || "Unknown"}
-Date: ${format ? new Date(call.call_date).toLocaleDateString() : call.call_date}
-Duration: ${call.duration ? Math.floor(call.duration / 60) : 0} minutes
-Sentiment: ${call.sentiment_type || "Unknown"}
+        return `┌─────────────────────────────────────────────────┐
+│ 📞 CALL SUMMARY                                 │
+├─────────────────────────────────────────────────┤
+│ Customer:     ${(call.customer_name || "Unknown").padEnd(33)} │
+│ Company:      ${getField("company").padEnd(33)} │
+│ Sales Rep:    ${(call.sales_rep || "Unknown").padEnd(33)} │
+│ Date:         ${(format ? new Date(call.call_date).toLocaleDateString() : call.call_date).padEnd(33)} │
+│ Duration:     ${`${call.duration ? Math.floor(call.duration / 60) : 0} minutes`.padEnd(33)} │
+│ Sentiment:    ${`${sentimentEmoji} ${call.sentiment_type || "Unknown"}`.padEnd(32)} │
+│ Outcome:      ${getField("call_outcome").padEnd(33)} │
+└─────────────────────────────────────────────────┘
 
-EXTRACTED FIELDS
-================
-${fields.map(f => `${f.field_name}: ${f.field_value || "N/A"}`).join('\n')}
+🎯 KEY INSIGHTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-INSIGHTS
-========
+⚠️ Pain Points:
+${insights.filter(i => i.insight_type === 'pain_point').map(i => `   • ${i.insight_text}`).join('\n') || '   • None identified'}
 
-Pain Points:
-${insights.filter(i => i.insight_type === 'pain_point').map(i => `- ${i.insight_text}`).join('\n') || '- None identified'}
+🎯 Action Items:
+${insights.filter(i => i.insight_type === 'action_item').map(i => `   • ${i.insight_text}`).join('\n') || '   • None identified'}
 
-Action Items:
-${insights.filter(i => i.insight_type === 'action_item').map(i => `- ${i.insight_text}`).join('\n') || '- None identified'}
+🏢 Competitors Mentioned:
+${insights.filter(i => i.insight_type === 'competitor').map(i => `   • ${i.insight_text}`).join('\n') || '   • None mentioned'}
 
-Competitors Mentioned:
-${insights.filter(i => i.insight_type === 'competitor').map(i => `- ${i.insight_text}`).join('\n') || '- None mentioned'}
+📊 EXTRACTED DATA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${fields.length > 0
+  ? fields.map(f => {
+      const icon =
+        f.field_name.toLowerCase().includes('budget') ? '💰' :
+        f.field_name.toLowerCase().includes('company') ? '🏢' :
+        f.field_name.toLowerCase().includes('email') ? '📧' :
+        f.field_name.toLowerCase().includes('phone') ? '📱' :
+        f.field_name.toLowerCase().includes('timeline') ? '⏰' :
+        f.field_name.toLowerCase().includes('decision') ? '👤' : '📋';
+
+      const displayName = f.field_name.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      return `${icon} ${displayName}: ${f.field_value || "Not specified"}`;
+    }).join('\n')
+  : "📝 No fields extracted yet"}
 `;
 
       case "hubspot":
@@ -816,47 +849,49 @@ Call_Duration__c: ${call.duration || 0}
               </div>
             </div>
 
-            {/* Modern Progress Indicator */}
+            {/* Modern Animated Progress Indicator */}
             {(call.status === "processing" || call.status === "transcribing" || call.status === "extracting") && (
-              <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 space-y-3 mt-4">
-                {/* Progress Bar */}
-                {call.processing_progress !== null && call.processing_progress !== undefined && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-violet-900">
-                        {call.processing_message || 'Processing...'}
-                      </span>
-                      <span className="text-violet-700 font-semibold">
-                        {call.processing_progress}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-violet-200 rounded-full h-2.5 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-violet-600 to-purple-600 h-2.5 rounded-full transition-all duration-500 ease-out"
-                        style={{ width: `${call.processing_progress}%` }}
+              <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 border border-violet-200 rounded-lg p-6 mt-4 shadow-lg">
+                <ModernProgress
+                  progress={call.processing_progress || 0}
+                  message={call.processing_message || (
+                    call.status === "transcribing" ? "Transcribing audio..." :
+                    call.status === "extracting" ? "Extracting insights..." :
+                    "Starting processing..."
+                  )}
+                  status={
+                    call.status === "transcribing" || call.status === "extracting" ? "processing" :
+                    call.status === "completed" ? "completed" :
+                    "queued"
+                  }
+                />
+
+                {/* Additional Info */}
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-xs text-violet-600">
+                    {call.status === "transcribing"
+                      ? "This usually takes 3-6 minutes depending on call length"
+                      : call.status === "extracting"
+                      ? "Analyzing conversation and extracting insights..."
+                      : "Initializing transcription service..."}
+                  </p>
+
+                  {/* Live Status Dots */}
+                  <div className="flex gap-1">
+                    {[1, 2, 3].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-2 h-2 bg-purple-400 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          delay: i * 0.2
+                        }}
                       />
-                    </div>
+                    ))}
                   </div>
-                )}
-
-                {/* Status Message without Progress Bar */}
-                {(call.processing_progress === null || call.processing_progress === undefined) && (
-                  <div className="flex items-center gap-3">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-violet-600"></div>
-                    <span className="text-sm font-medium text-violet-900">
-                      {call.processing_message || 'Starting processing...'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Estimated Time */}
-                <p className="text-xs text-violet-600">
-                  {call.status === "transcribing"
-                    ? "This usually takes 3-6 minutes depending on call length"
-                    : call.status === "extracting"
-                    ? "Analyzing conversation and extracting insights..."
-                    : "Initializing transcription service..."}
-                </p>
+                </div>
               </div>
             )}
 
@@ -927,7 +962,12 @@ Call_Duration__c: ${call.duration || 0}
               {/* Play/Pause Button */}
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center shadow-lg transition-all hover:scale-105"
+                disabled={!audioLoaded}
+                className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                  audioLoaded
+                    ? 'bg-purple-600 hover:bg-purple-700 hover:scale-105'
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
               >
                 {isPlaying ? (
                   <Pause className="w-5 h-5 text-white" />
@@ -939,9 +979,19 @@ Call_Duration__c: ${call.duration || 0}
               {/* Time Display */}
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-mono font-semibold text-gray-900">
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                  </span>
+                  {audioLoaded ? (
+                    <span className={`text-sm font-mono font-semibold transition-all duration-300 ${
+                      isPlaying ? 'text-purple-600 animate-pulse' : 'text-gray-900'
+                    }`}>
+                      <span className="text-lg">{formatTime(currentTime)}</span>
+                      <span className="text-gray-400 mx-1">/</span>
+                      <span className="text-base text-gray-600">{formatTime(duration)}</span>
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-500 animate-pulse">
+                      Loading audio...
+                    </span>
+                  )}
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>{call.customer_name || "Customer"} Call</span>
                     <span>•</span>
