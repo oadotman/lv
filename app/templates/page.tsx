@@ -236,7 +236,7 @@ export default function TemplatesPage() {
           field_name: field.fieldName,
           field_type: field.fieldType,
           description: field.description || '',
-          is_required: field.required || false,
+          is_required: false, // Default to false since the interface doesn't have this property
           sort_order: index,
           picklist_values: field.picklistValues || null
         }));
@@ -337,7 +337,7 @@ export default function TemplatesPage() {
           field_name: field.fieldName,
           field_type: field.fieldType,
           description: field.description || '',
-          is_required: field.required || false,
+          is_required: false, // Default to false since the interface doesn't have this property
           sort_order: index,
           picklist_values: field.picklistValues || null
         }));

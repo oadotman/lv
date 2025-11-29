@@ -1002,7 +1002,7 @@ Call_Duration__c: ${call.duration || 0}
                   )}
                   status={
                     call.status === "transcribing" || call.status === "extracting" ? "processing" :
-                    call.status === "completed" ? "completed" :
+                    call.status === "processing" ? "processing" :
                     "queued"
                   }
                 />
