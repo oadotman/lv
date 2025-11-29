@@ -5,6 +5,7 @@
 // =====================================================
 
 import { useState, useCallback } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
 
 export interface UploadProgress {
   loaded: number;
@@ -68,60 +69,53 @@ export function useDirectUpload() {
         throw new Error(errorData.error || 'Failed to get upload URL');
       }
 
-      const { uploadUrl, path, metadata: uploadMetadata } = await urlResponse.json();
+      const { uploadUrl, token, path, metadata: uploadMetadata } = await urlResponse.json();
 
       console.log('✅ Presigned URL received');
 
-      // Step 2: Upload directly to Supabase Storage
+      // Step 2: Upload directly to Supabase Storage using signed URL
       console.log('📤 Uploading file to Supabase Storage...');
 
-      const uploadResponse = await new Promise<Response>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+      // Create Supabase browser client
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
 
-        // Track upload progress
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            const percentage = Math.round((event.loaded / event.total) * 100);
-            const progressData = {
-              loaded: event.loaded,
-              total: event.total,
-              percentage,
-            };
-            setProgress(progressData);
+      // Use Supabase's uploadToSignedUrl method
+      // Note: This doesn't support progress tracking, so we'll simulate it
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          const newPercentage = Math.min(prev.percentage + 2, 95); // Cap at 95% until complete
+          const progressData = {
+            loaded: Math.round((file.size * newPercentage) / 100),
+            total: file.size,
+            percentage: newPercentage,
+          };
 
-            // Call the progress callback if provided
-            if (onProgress) {
-              onProgress(progressData);
-            }
-
-            console.log(`📊 Upload progress: ${percentage}%`);
+          if (onProgress && newPercentage !== prev.percentage) {
+            onProgress(progressData);
           }
+
+          return progressData;
         });
+      }, 200); // Update every 200ms
 
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(new Response(xhr.response, { status: xhr.status }));
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
-          }
-        });
+      try {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('call-audio')
+          .uploadToSignedUrl(path, token, file);
 
-        xhr.addEventListener('error', () => {
-          reject(new Error('Network error during upload'));
-        });
+        clearInterval(progressInterval);
 
-        xhr.addEventListener('abort', () => {
-          reject(new Error('Upload aborted'));
-        });
+        if (uploadError) {
+          throw new Error(uploadError.message || 'Failed to upload file to storage');
+        }
 
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type);
-        xhr.setRequestHeader('x-upsert', 'false'); // Don't overwrite existing files
-        xhr.send(file);
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file to storage');
+        console.log('✅ File uploaded to storage:', uploadData);
+      } catch (uploadErr) {
+        clearInterval(progressInterval);
+        throw uploadErr;
       }
 
       console.log('✅ File uploaded to storage');
