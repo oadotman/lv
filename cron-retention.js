@@ -3,6 +3,9 @@
 // Runs daily via PM2 to clean up old data
 // =====================================================
 
+// Load environment variables from .env.production
+require('dotenv').config({ path: '.env.production' });
+
 const https = require('https');
 
 const CRON_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://synqall.com') + '/api/cron/retention-cleanup';
