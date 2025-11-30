@@ -49,15 +49,16 @@ function LoginForm() {
 
       if (data?.session) {
         console.log('Login successful, session:', data.session)
-        const redirectPath = returnTo || '/'
+        const redirectPath = returnTo || '/dashboard'
         console.log('Redirecting to:', redirectPath)
 
-        // Small delay to ensure auth state is updated
+        // Increased delay to ensure auth state is properly propagated
+        // This gives AuthContext time to update with the new session
         setTimeout(() => {
+          console.log('🚀 Executing redirect to:', redirectPath)
           router.push(redirectPath)
-          // Force a page refresh to ensure AuthContext picks up the new session
-          router.refresh()
-        }, 100)
+          // Removed router.refresh() as it can cause state reset issues
+        }, 500)
       }
     } catch (err) {
       console.error('Unexpected error during login:', err)

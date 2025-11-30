@@ -12,58 +12,57 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Auth pages that don't need sidebar or authentication
-  const authPages = ['/login', '/signup', '/forgot-password', '/reset-password']
-  const isAuthPage = authPages.some(page => pathname?.startsWith(page))
+  // Pages that don't require authentication and don't show sidebar
+  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/landing']
+  const isPublicPage = publicPages.some(page => pathname?.startsWith(page))
 
-  // Public pages that don't require authentication (like landing page)
-  const publicPages = ['/', '/landing']
-  const isPublicPage = publicPages.some(page => pathname === page || pathname?.startsWith(page + '/'))
+  // Pages that show sidebar (all authenticated pages)
+  const protectedPages = ['/dashboard', '/calls', '/analytics', '/templates', '/settings', '/help', '/invite']
+  const isProtectedPage = protectedPages.some(page => pathname?.startsWith(page))
 
-  // Log for debugging
+  // Log for debugging with more detail
   useEffect(() => {
-    console.log('AuthLayout render state:', {
+    console.log('🔍 AuthLayout render state:', {
       loading,
       hasUser: !!user,
       userId: user?.id,
       pathname,
-      isAuthPage,
-      isPublicPage
+      isPublicPage,
+      isProtectedPage,
+      timestamp: new Date().toISOString()
     })
-  }, [loading, user, pathname, isAuthPage, isPublicPage])
+  }, [loading, user, pathname, isPublicPage, isProtectedPage])
 
-  // Handle redirects based on auth state
+  // Handle authentication and redirects
   useEffect(() => {
-    console.log('AuthLayout: Checking redirects', { loading, hasUser: !!user, isAuthPage, isPublicPage, pathname })
-
     if (!loading) {
-      // If user is logged in and on an auth page, redirect to dashboard
-      if (user && isAuthPage) {
-        console.log('AuthLayout: User logged in on auth page, redirecting to /dashboard')
-        router.replace('/dashboard')
-      }
-      // If user is NOT logged in and NOT on an auth page or public page, redirect to login
-      else if (!user && !isAuthPage && !isPublicPage) {
+      // If on a protected page without user, redirect to login
+      if (isProtectedPage && !user) {
         console.log('AuthLayout: No user on protected page, redirecting to /login')
         router.replace('/login')
       }
+      // If user is logged in and on login/signup pages, redirect to dashboard
+      else if (user && (pathname === '/login' || pathname === '/signup')) {
+        console.log('AuthLayout: User logged in on auth page, redirecting to /dashboard')
+        router.replace('/dashboard')
+      }
     }
-  }, [user, loading, isAuthPage, isPublicPage, router, pathname])
+  }, [user, loading, isProtectedPage, router, pathname])
 
-  // Render auth pages and public pages without sidebar but with footer
-  if (isAuthPage || isPublicPage) {
+  // For public pages, render without sidebar
+  if (isPublicPage) {
     return (
       <>
         <div className="flex flex-col min-h-screen">
           <main className="flex-1">{children}</main>
-          {!isPublicPage && <Footer />}
+          <Footer />
         </div>
         <CookieConsent />
       </>
     )
   }
 
-  // For protected pages, show loading spinner while auth is being checked
+  // For protected pages, show loading while auth is being checked
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -75,9 +74,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Render protected pages with sidebar (only if user is authenticated)
-  // If loading is false and user exists, show the page with sidebar
-  if (user) {
+  // For protected pages with authenticated user, ALWAYS show sidebar
+  if (user && isProtectedPage) {
+    console.log('🎯 Rendering protected page with sidebar for user:', user.id)
     return (
       <>
         <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -93,7 +92,32 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // If loading is false and no user, show nothing while redirecting
-  // (redirect logic in useEffect will handle sending to login)
-  return null
+  // For authenticated users on any other page (fallback to show sidebar)
+  if (user && !isPublicPage) {
+    console.log('🔄 Fallback: Rendering with sidebar for authenticated user on:', pathname)
+    return (
+      <>
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+          <Sidebar />
+          <div className="flex-1 lg:ml-56 transition-all duration-300 ease-out flex flex-col">
+            <main className="flex-1">
+              {children}
+            </main>
+          </div>
+        </div>
+        <CookieConsent />
+      </>
+    )
+  }
+
+  // For unauthenticated users or edge cases
+  console.log('⚠️ Rendering without sidebar - user:', !!user, 'pathname:', pathname)
+  return (
+    <>
+      <div className="flex flex-col min-h-screen">
+        <main className="flex-1">{children}</main>
+      </div>
+      <CookieConsent />
+    </>
+  )
 }

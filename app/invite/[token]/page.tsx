@@ -145,7 +145,7 @@ export default function AcceptInvitationPage() {
 
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
-          router.push('/');
+          router.push('/dashboard');
           router.refresh(); // Force page refresh to update navigation
         }, 2000);
 
