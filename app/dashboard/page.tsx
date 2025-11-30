@@ -459,32 +459,31 @@ export default function Dashboard() {
                   {/* Metrics */}
                   <div>
                     <p className="text-white/80 text-xs font-medium mb-2">
-                      Time Saved This Month
+                      Monthly Usage
                     </p>
                     <div className="flex items-baseline gap-2 mb-1">
                       <h2 className="text-3xl font-bold text-white">
-                        {stats.hoursSavedThisMonth}
+                        {stats.minutesUsed}
                       </h2>
                       <span className="text-lg font-semibold text-white/90">
-                        hours
-                      </span>
-                      <span className="text-xl font-bold text-white mx-1">
-                        =
-                      </span>
-                      <span className="text-3xl font-bold text-white">
-                        ${dollarsSaved.toLocaleString()}
+                        / {stats.minutesTotal} minutes
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      {percentageIncrease >= 0 ? (
-                        <TrendingUp className="w-3.5 h-3.5 text-emerald-300" />
-                      ) : (
-                        <TrendingDown className="w-3.5 h-3.5 text-red-300" />
-                      )}
-                      <span className="text-white/90 text-xs font-medium">
-                        {percentageIncrease > 0 && "+"}
-                        {percentageIncrease}% {percentageIncrease >= 0 ? "more" : "less"} than last
-                        month
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ${
+                            minutesUsagePercent >= 80
+                              ? 'bg-gradient-to-r from-orange-400 to-red-400'
+                              : 'bg-gradient-to-r from-emerald-400 to-green-400'
+                          }`}
+                          style={{
+                            width: `${Math.min((stats.minutesUsed / stats.minutesTotal) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-white/90 text-sm font-medium">
+                        {Math.round(minutesUsagePercent)}%
                       </span>
                     </div>
                   </div>
@@ -572,6 +571,47 @@ export default function Dashboard() {
               </Card>
             </div>
 
+            {/* Minutes Used Card - Primary Usage Display */}
+            <div className="group relative">
+              <Card className="relative border border-violet-100 dark:border-violet-900 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 overflow-hidden group-hover:-translate-y-1">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 tracking-wide uppercase">
+                      Minutes Used
+                    </CardTitle>
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                      <Clock className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                    {stats.minutesUsed} / {stats.minutesTotal}
+                    <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2">
+                      minutes
+                    </span>
+                  </div>
+                  <div className="relative w-full h-2.5 bg-violet-200 dark:bg-violet-900/30 rounded-full overflow-hidden mb-2">
+                    <div
+                      className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out ${
+                        minutesUsagePercent >= 80
+                          ? 'bg-gradient-to-r from-orange-500 to-red-500'
+                          : minutesUsagePercent >= 60
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                          : 'bg-gradient-to-r from-violet-500 to-purple-500'
+                      }`}
+                      style={{
+                        width: `${Math.min((stats.minutesUsed / stats.minutesTotal) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                    {Math.round(minutesUsagePercent)}% of monthly plan used
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Time Saved Card */}
             <div className="group relative">
               <Card className="relative border border-emerald-100 dark:border-emerald-900 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50 overflow-hidden group-hover:-translate-y-1">
@@ -581,16 +621,19 @@ export default function Dashboard() {
                       Time Saved
                     </CardTitle>
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                      <Clock className="w-6 h-6 text-white" />
+                      <Zap className="w-6 h-6 text-white" />
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                    {stats.timeSaved}
+                    {stats.hoursSavedThisMonth}
+                    <span className="text-lg font-normal text-slate-500 dark:text-slate-400 ml-2">
+                      hours
+                    </span>
                   </div>
                   <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-1">
-                    ≈ ${dollarsSaved.toLocaleString()} in labor savings
+                    ≈ ${dollarsSaved.toLocaleString()} saved
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
                     ~15 min per call average
@@ -599,13 +642,13 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Active Users Card */}
+            {/* Active Team Card */}
             <div className="group relative">
               <Card className="relative border border-purple-100 dark:border-purple-900 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 overflow-hidden group-hover:-translate-y-1">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 tracking-wide uppercase">
-                      Active Users
+                      Active Team
                     </CardTitle>
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                       <Users className="w-6 h-6 text-white" />
@@ -616,42 +659,6 @@ export default function Dashboard() {
                   <div className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">1</div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
                     Team member online
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Minutes Usage Card */}
-            <div className="group relative">
-              <Card className="relative border border-orange-100 dark:border-orange-900 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/50 dark:to-amber-950/50 overflow-hidden group-hover:-translate-y-1">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 tracking-wide uppercase">
-                      Minutes Used
-                    </CardTitle>
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-600 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">
-                    {stats.minutesUsed}
-                    <span className="text-xl font-normal text-slate-500 dark:text-slate-400">
-                      /{stats.minutesTotal}
-                    </span>
-                  </div>
-                  <div className="relative w-full h-3 bg-orange-200 dark:bg-orange-900/30 rounded-full overflow-hidden">
-                    <div
-                      className="absolute inset-y-0 left-0 bg-orange-500 dark:bg-orange-600 rounded-full transition-all duration-1000 ease-out shadow-md"
-                      style={{
-                        width: `${(stats.minutesUsed / stats.minutesTotal) * 100}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-2">
-                    {stats.minutesTotal - stats.minutesUsed} minutes remaining this
-                    month
                   </p>
                 </CardContent>
               </Card>

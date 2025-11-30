@@ -116,11 +116,15 @@ export default function TemplatesPage() {
   // =====================================================
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false); // Set loading to false if no user
+      return;
+    }
 
     async function fetchData() {
       if (!user) return; // Additional TypeScript safety check
 
+      setLoading(true); // Ensure loading is set
       try {
         const supabase = createClient();
 

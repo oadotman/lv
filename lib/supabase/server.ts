@@ -170,7 +170,7 @@ export async function getSession() {
 /**
  * Alias for createServerClient (for consistency with team invitation API)
  */
-export async function createClient() {
+export function createClient() {
   return createServerClient();
 }
 

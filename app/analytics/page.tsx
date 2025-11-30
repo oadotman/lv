@@ -58,11 +58,15 @@ export default function AnalyticsPage() {
   // =====================================================
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false); // Set loading to false if no user
+      return;
+    }
 
     async function fetchAnalytics() {
       if (!user) return; // Additional safety check for TypeScript
 
+      setLoading(true); // Ensure loading is set
       try {
         const supabase = createClient();
 

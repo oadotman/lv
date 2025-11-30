@@ -80,6 +80,8 @@ export default function TeamSettingsPage() {
   async function fetchTeamData() {
     if (!user) return;
 
+    setLoading(true); // Ensure loading is set to true at start
+
     try {
       const supabase = createClient();
 
@@ -90,82 +92,84 @@ export default function TeamSettingsPage() {
         .eq('user_id', user.id)
         .maybeSingle(); // Use maybeSingle() instead of single() to avoid error if no rows
 
-      // Handle case where membership query returns null (no organization)
-      if (!membership) {
-        console.log('No organization membership found for user');
-        setLoading(false);
-        return;
-      }
-
       if (membershipError) {
         console.error('Error fetching membership:', membershipError);
-
         // Don't show error toast - just silently handle
+        setOrganization(null); // Explicitly set organization to null
         setLoading(false);
         return;
       }
 
-      if (membership && membership.organization_id) {
-        setUserRole(membership.role);
+      // Handle case where membership query returns null (no organization)
+      if (!membership || !membership.organization_id) {
+        console.log('No organization membership found for user');
+        setOrganization(null); // Explicitly set organization to null
+        setLoading(false);
+        return;
+      }
 
-        // Fetch organization details separately
-        const { data: org, error: orgError } = await supabase
-          .from('organizations')
-          .select('*')
-          .eq('id', membership.organization_id)
-          .maybeSingle();
+      // At this point we know membership exists with organization_id
+      setUserRole(membership.role);
 
-        if (orgError) {
-          console.error('Error fetching organization:', orgError);
-          setLoading(false);
-          return;
+      // Fetch organization details separately
+      const { data: org, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', membership.organization_id)
+        .maybeSingle();
+
+      if (orgError) {
+        console.error('Error fetching organization:', orgError);
+        setOrganization(null);
+        setLoading(false);
+        return;
+      }
+
+      if (!org) {
+        console.warn('Organization not found for membership');
+        setOrganization(null);
+        setLoading(false);
+        return;
+      }
+
+      setOrganization(org as Organization);
+
+      // Get all team members
+      const { data: teamMembers, error: membersError } = await supabase
+        .from('user_organizations')
+        .select('*')
+        .eq('organization_id', membership.organization_id);
+
+      if (membersError) {
+        console.error('Error fetching team members:', membersError);
+      } else if (teamMembers) {
+        // Fetch user emails via API since we can't access auth.users directly from client
+        const response = await fetch(`/api/teams/members?organizationId=${membership.organization_id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMembers(data.members || []);
+        } else {
+          // Fallback: show members without email details
+          const membersWithPlaceholders = teamMembers.map(member => ({
+            ...member,
+            user: {
+              email: 'Loading...',
+              user_metadata: {}
+            }
+          }));
+          setMembers(membersWithPlaceholders as TeamMember[]);
         }
+      }
 
-        if (!org) {
-          console.warn('Organization not found for membership');
-          setLoading(false);
-          return;
-        }
+      // Get pending invitations (only if admin/owner)
+      if (['owner', 'admin'].includes(membership.role)) {
+        const response = await fetch(
+          `/api/teams/invite?organizationId=${membership.organization_id}`
+        );
 
-        setOrganization(org as Organization);
-
-        // Get all team members
-        const { data: teamMembers, error: membersError } = await supabase
-          .from('user_organizations')
-          .select('*')
-          .eq('organization_id', membership.organization_id);
-
-        if (membersError) {
-          console.error('Error fetching team members:', membersError);
-        } else if (teamMembers) {
-          // Fetch user emails via API since we can't access auth.users directly from client
-          const response = await fetch(`/api/teams/members?organizationId=${membership.organization_id}`);
-          if (response.ok) {
-            const data = await response.json();
-            setMembers(data.members || []);
-          } else {
-            // Fallback: show members without email details
-            const membersWithPlaceholders = teamMembers.map(member => ({
-              ...member,
-              user: {
-                email: 'Loading...',
-                user_metadata: {}
-              }
-            }));
-            setMembers(membersWithPlaceholders as TeamMember[]);
-          }
-        }
-
-        // Get pending invitations (only if admin/owner)
-        if (['owner', 'admin'].includes(membership.role)) {
-          const response = await fetch(
-            `/api/teams/invite?organizationId=${membership.organization_id}`
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            setInvitations(data.invitations || []);
-          }
+        if (response.ok) {
+          const data = await response.json();
+          setInvitations(data.invitations || []);
         }
       }
     } catch (error) {
