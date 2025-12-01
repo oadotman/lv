@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       const adminClient = createAdminClient();
       const { data: userList } = await adminClient.auth.admin.listUsers();
 
-      const existingUser = userList?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      const existingUser = userList?.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
 
       if (existingUser) {
         const { data: existingMember } = await supabase
