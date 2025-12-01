@@ -62,7 +62,7 @@ export const PLANS: Record<PlanType, PlanDetails> = {
       'Priority email support',
       'Overage billing at $0.02/min',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Get Started',
   },
   starter: {
     id: 'starter',
@@ -84,7 +84,7 @@ export const PLANS: Record<PlanType, PlanDetails> = {
       'Overage billing at $0.02/min',
     ],
     isPopular: true,
-    cta: 'Start Free Trial',
+    cta: 'Get Started',
   },
   professional: {
     id: 'professional',
@@ -104,7 +104,7 @@ export const PLANS: Record<PlanType, PlanDetails> = {
       'Onboarding assistance',
       'Overage billing at $0.02/min',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Get Started',
   },
   enterprise: {
     id: 'enterprise',
@@ -125,7 +125,7 @@ export const PLANS: Record<PlanType, PlanDetails> = {
       'Dedicated account manager',
       'Overage billing at $0.02/min',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Get Started',
   },
   custom: {
     id: 'custom',
