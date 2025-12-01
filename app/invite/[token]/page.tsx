@@ -51,21 +51,25 @@ export default function AcceptInvitationPage() {
       const supabase = createClient();
 
       // Fetch invitation
+      console.log('🔍 Fetching invitation with token:', token);
       const { data: invite, error: fetchError } = await supabase
-        .from('invitations')
+        .from('team_invitations')
         .select(`
           *,
           organization:organizations(*)
         `)
         .eq('token', token)
-        .eq('status', 'pending')
+        .is('accepted_at', null)  // Check if not accepted (pending)
         .single();
 
       if (fetchError || !invite) {
+        console.error('❌ Invitation fetch error:', fetchError);
         setStatus('error');
         setErrorMessage('Invitation not found or already accepted');
         return;
       }
+
+      console.log('✅ Invitation found:', invite);
 
       // Check if expired
       if (new Date(invite.expires_at) < new Date()) {
@@ -94,6 +98,8 @@ export default function AcceptInvitationPage() {
 
       // Accept invitation
       try {
+        console.log('🚀 Accepting invitation for organization:', invite.organization.name);
+
         // Add user to organization
         const { error: memberError } = await supabase
           .from('user_organizations')
@@ -115,13 +121,48 @@ export default function AcceptInvitationPage() {
         }
 
         // Mark invitation as accepted
-        await supabase
-          .from('invitations')
+        console.log('📝 Marking invitation as accepted');
+        const { error: updateError } = await supabase
+          .from('team_invitations')
           .update({
-            status: 'accepted',
             accepted_at: new Date().toISOString(),
+            accepted_by: user.id
           })
           .eq('id', invite.id);
+
+        if (updateError) {
+          console.error('❌ Error updating invitation:', updateError);
+        }
+
+        // Check for duplicate free organizations
+        console.log('🔍 Checking for duplicate free organizations');
+        const { data: allUserOrgs } = await supabase
+          .from('user_organizations')
+          .select(`
+            organization_id,
+            role,
+            organization:organizations (
+              id,
+              name,
+              plan_type
+            )
+          `)
+          .eq('user_id', user.id);
+
+        if (allUserOrgs && allUserOrgs.length > 1) {
+          // Find free tier organizations where user is owner
+          const freeOrgs = allUserOrgs.filter((uo: any) =>
+            uo.role === 'owner' &&
+            uo.organization?.plan_type === 'free' &&
+            uo.organization_id !== invite.organization_id
+          );
+
+          if (freeOrgs.length > 0) {
+            console.log(`🗑️ Found ${freeOrgs.length} free organization(s) to potentially clean up`);
+            // Note: We're not automatically deleting them as they might have data
+            // This is just logged for now - could add a cleanup process later
+          }
+        }
 
         // Log audit
         await supabase.rpc('log_audit', {

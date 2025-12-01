@@ -49,26 +49,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch organization data for a user
   const fetchOrganization = async (userId: string) => {
     try {
-      // Fetch all user organizations, ordered by created_at (oldest first, likely the primary org)
+      console.log('🏢 Fetching organizations for user:', userId)
+
+      // Fetch all user organizations with their details, ordered by joined_at (newest first)
       const { data: userOrgs } = await supabase
         .from('user_organizations')
-        .select('organization_id, role')
+        .select(`
+          organization_id,
+          role,
+          joined_at,
+          organization:organizations (
+            id,
+            name,
+            plan_type,
+            max_members,
+            max_minutes_monthly
+          )
+        `)
         .eq('user_id', userId)
-        .order('created_at', { ascending: true })
+        .order('joined_at', { ascending: false }) // Most recent first
 
       if (userOrgs && userOrgs.length > 0) {
-        // Use the first organization (primary organization)
-        const primaryOrgId = userOrgs[0].organization_id
+        console.log(`📊 Found ${userOrgs.length} organization(s) for user`)
 
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('id, name, plan_type, max_members, max_minutes_monthly')
-          .eq('id', primaryOrgId)
-          .single()
+        // Prefer non-free organizations over free ones
+        // If multiple non-free orgs, use the most recently joined
+        let selectedOrg = null;
 
-        if (org) {
-          console.log('AuthContext: Organization fetched', { orgId: org.id, name: org.name, plan: org.plan_type })
-          setOrganization(org)
+        // First, try to find a non-free organization
+        const nonFreeOrg = userOrgs.find((uo: any) =>
+          uo.organization && uo.organization.plan_type !== 'free'
+        )
+
+        if (nonFreeOrg && nonFreeOrg.organization) {
+          selectedOrg = nonFreeOrg.organization
+          console.log('✅ Selected non-free organization:', selectedOrg.name, '(Plan:', selectedOrg.plan_type, ')')
+        } else {
+          // Fall back to the most recently joined organization
+          const mostRecentOrg = userOrgs[0] as any
+          if (mostRecentOrg && mostRecentOrg.organization) {
+            selectedOrg = mostRecentOrg.organization
+            console.log('📌 Selected most recent organization:', selectedOrg.name, '(Plan:', selectedOrg.plan_type, ')')
+          }
+        }
+
+        if (selectedOrg) {
+          setOrganization(selectedOrg)
+        } else {
+          console.warn('⚠️ No valid organization found')
+          setOrganization(null)
         }
       } else {
         console.log('AuthContext: No organizations found for user')

@@ -115,12 +115,13 @@ export async function POST(req: NextRequest) {
       console.log('🔵 Signup API: Checking invitation token', { inviteToken });
 
       // Verify the invitation exists and is valid
+      console.log('🔍 Checking team_invitations table for token:', inviteToken);
       const { data: invite, error: inviteError } = await supabaseAdmin
-        .from('invitations')
+        .from('team_invitations')
         .select('*, organizations(*)')
         .eq('token', inviteToken)
         .eq('email', cleanEmail)
-        .eq('status', 'pending')
+        .is('accepted_at', null)  // Check if not accepted (pending)
         .single();
 
       if (!inviteError && invite) {
@@ -135,10 +136,18 @@ export async function POST(req: NextRequest) {
         membershipRole = invite.role || 'member';
 
         // Mark invitation as accepted
-        await supabaseAdmin
-          .from('invitations')
-          .update({ status: 'accepted' })
+        console.log('📝 Marking invitation as accepted');
+        const { error: updateError } = await supabaseAdmin
+          .from('team_invitations')
+          .update({
+            accepted_at: new Date().toISOString(),
+            accepted_by: userId
+          })
           .eq('id', invite.id);
+
+        if (updateError) {
+          console.error('❌ Error updating invitation:', updateError);
+        }
       } else {
         console.warn('⚠️ Signup API: Invalid invitation token', { inviteError });
         // Continue with normal signup if invitation is invalid
