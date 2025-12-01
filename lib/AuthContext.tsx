@@ -46,8 +46,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  // Check and auto-accept pending invitations for a user
+  const checkAndAcceptPendingInvitations = async (userId: string, userEmail: string) => {
+    try {
+      console.log('🔍 Checking for pending invitations for:', userEmail)
+
+      // Fetch pending invitations for this email
+      const { data: pendingInvites, error } = await supabase
+        .from('team_invitations')
+        .select('*, organization:organizations(*)')
+        .eq('email', userEmail.toLowerCase())
+        .is('accepted_at', null)
+        .gt('expires_at', new Date().toISOString())
+
+      if (error) {
+        console.error('❌ Error fetching pending invitations:', error)
+        return false
+      }
+
+      if (!pendingInvites || pendingInvites.length === 0) {
+        console.log('✅ No pending invitations found')
+        return false
+      }
+
+      console.log(`📬 Found ${pendingInvites.length} pending invitation(s)`)
+
+      // Auto-accept all pending invitations
+      for (const invite of pendingInvites) {
+        console.log(`🤝 Auto-accepting invitation to: ${invite.organization.name}`)
+
+        // Add user to organization
+        const { error: memberError } = await supabase
+          .from('user_organizations')
+          .insert({
+            user_id: userId,
+            organization_id: invite.organization_id,
+            role: invite.role,
+            invited_by: invite.invited_by,
+          })
+
+        // Check if insert was successful or if user is already a member
+        if (!memberError || memberError.code === '23505') { // 23505 = unique violation (already exists)
+          // Mark invitation as accepted
+          const { error: updateError } = await supabase
+            .from('team_invitations')
+            .update({
+              accepted_at: new Date().toISOString(),
+              accepted_by: userId
+            })
+            .eq('id', invite.id)
+
+          if (!updateError) {
+            console.log(`✅ Auto-accepted invitation to: ${invite.organization.name}`)
+          } else {
+            console.error('❌ Error updating invitation:', updateError)
+          }
+        } else {
+          console.error('❌ Error adding user to organization:', memberError)
+        }
+      }
+
+      return true // Invitations were processed
+
+    } catch (error) {
+      console.error('❌ Error in auto-accept process:', error)
+      return false
+    }
+  }
+
   // Fetch organization data for a user
-  const fetchOrganization = async (userId: string) => {
+  const fetchOrganization = async (userId: string, userEmail?: string) => {
+    // First, check and auto-accept any pending invitations
+    if (userEmail) {
+      const invitationsProcessed = await checkAndAcceptPendingInvitations(userId, userEmail)
+      if (invitationsProcessed) {
+        console.log('🔄 Invitations processed, fetching updated organizations...')
+      }
+    }
     try {
       console.log('🏢 Fetching organizations for user:', userId)
 
@@ -114,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.user) {
       setUser(session.user)
-      await fetchOrganization(session.user.id)
+      await fetchOrganization(session.user.id, session.user.email)
     }
   }
 
@@ -141,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch organization if user exists
         if (session?.user) {
           console.log('🏢 AuthContext: Fetching organization for user:', session.user.id)
-          await fetchOrganization(session.user.id)
+          await fetchOrganization(session.user.id, session.user.email)
           console.log('✅ AuthContext: Organization fetch complete')
         }
 
@@ -178,7 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fetch organization if user exists
       if (session?.user) {
         console.log('🏢 AuthContext: Fetching organization after auth change')
-        await fetchOrganization(session.user.id)
+        await fetchOrganization(session.user.id, session.user.email)
       } else {
         setOrganization(null)
       }
