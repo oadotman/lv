@@ -243,12 +243,18 @@ export default function TeamSettingsPage() {
       setInviteEmail('');
       setInviteRole('member');
 
-      // Wait a bit before refreshing to ensure the database is updated
-      setTimeout(() => {
-        if (!fetchingData) { // Only fetch if not already fetching
-          fetchTeamData();
-        }
-      }, 500);
+      // Add the new invitation to the list without refetching everything
+      if (data.invitation) {
+        setInvitations(prev => [...prev, data.invitation]);
+      } else {
+        // Only fetch if we don't have the invitation data
+        // Wait a bit before refreshing to ensure the database is updated
+        setTimeout(() => {
+          if (!fetchingData) { // Only fetch if not already fetching
+            fetchTeamData();
+          }
+        }, 1000);
+      }
 
     } catch (error: any) {
       toast({

@@ -54,7 +54,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fetch pending invitations for this email
       const { data: pendingInvites, error } = await supabase
         .from('team_invitations')
-        .select('*, organization:organizations(*)')
+        .select(`
+          *,
+          organization:organizations(
+            id,
+            name,
+            slug
+          )
+        `)
         .eq('email', userEmail.toLowerCase())
         .is('accepted_at', null)
         .gt('expires_at', new Date().toISOString())
@@ -73,7 +80,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Auto-accept all pending invitations
       for (const invite of pendingInvites) {
-        console.log(`🤝 Auto-accepting invitation to: ${invite.organization.name}`)
+        // Skip if no organization_id
+        if (!invite.organization_id) {
+          console.warn('⚠️ Skipping invitation without organization_id:', invite.id)
+          continue
+        }
+
+        const orgName = invite.organization?.name || `Organization ${invite.organization_id}`
+        console.log(`🤝 Auto-accepting invitation to: ${orgName}`)
 
         // Add user to organization
         const { error: memberError } = await supabase
@@ -81,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .insert({
             user_id: userId,
             organization_id: invite.organization_id,
-            role: invite.role,
+            role: invite.role || 'member',
             invited_by: invite.invited_by,
           })
 
@@ -97,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .eq('id', invite.id)
 
           if (!updateError) {
-            console.log(`✅ Auto-accepted invitation to: ${invite.organization.name}`)
+            console.log(`✅ Auto-accepted invitation to: ${orgName}`)
           } else {
             console.error('❌ Error updating invitation:', updateError)
           }
