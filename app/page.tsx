@@ -81,7 +81,7 @@ export default function LandingPage() {
               </Link>
               <Link href="/signup">
                 <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg">
-                  Start Free Trial
+                  Get Started
                 </Button>
               </Link>
             </div>
@@ -109,7 +109,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/signup">
                 <Button size="lg" className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-2xl shadow-violet-500/40 px-8 py-6 text-lg font-semibold rounded-xl">
-                  Start Free Trial
+                  Get Started
                   <span className="ml-2 px-2 py-0.5 bg-white/20 rounded text-sm">3 Calls Free</span>
                 </Button>
               </Link>
@@ -999,7 +999,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <Link href="/signup">
               <Button size="lg" className="bg-white text-violet-600 hover:bg-slate-100 shadow-2xl px-8 py-6 text-lg font-semibold rounded-xl">
-                Start Free Trial
+                Get Started
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
