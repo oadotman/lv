@@ -17,15 +17,20 @@ export default async function SettingsPage() {
   }
 
   // Get user's organization and plan details
-  const { data: userOrg } = await supabase
+  // Use maybeSingle() to handle users with multiple orgs
+  const { data: userOrgs } = await supabase
     .from("user_organizations")
     .select("organization_id, role")
-    .eq("user_id", user.id)
-    .single();
+    .eq("user_id", user.id);
 
-  if (!userOrg) {
+  if (!userOrgs || userOrgs.length === 0) {
     return <div>No organization found</div>;
   }
+
+  // For now, use the first organization or the one where user has highest role
+  const userOrg = userOrgs.find(org => org.role === 'owner') ||
+                   userOrgs.find(org => org.role === 'admin') ||
+                   userOrgs[0];
 
   // Get full organization details
   const { data: organization } = await supabase
