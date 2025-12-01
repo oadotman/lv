@@ -259,11 +259,15 @@ export default function InviteSignupPage() {
               <Users className="h-6 w-6 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Join {invitation?.organization?.name}</CardTitle>
+          <CardTitle className="text-2xl font-bold">Join Team</CardTitle>
           <CardDescription>
-            You've been invited as a <span className="font-semibold capitalize">{invitation?.role}</span>
-            <br />
-            Create your account to get started
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700">
+              <div className="font-semibold text-lg">{invitation?.organization?.name}</div>
+              <div className="text-sm mt-1">You'll join as: <span className="font-medium capitalize">{invitation?.role}</span></div>
+            </div>
+            <div className="mt-3 text-gray-600">
+              Create your account to accept this invitation
+            </div>
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignup}>

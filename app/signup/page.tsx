@@ -163,7 +163,15 @@ function SignUpForm() {
           </div>
           <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100">Create your account</CardTitle>
           <CardDescription className="text-slate-600 dark:text-slate-400">
-            Start automating your CRM data entry today
+            {isInvited ? (
+              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <span className="text-blue-700 dark:text-blue-300">
+                  You're joining an existing team. Your account will be linked to their organization.
+                </span>
+              </div>
+            ) : (
+              'Start automating your CRM data entry today'
+            )}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>
@@ -199,24 +207,26 @@ function SignUpForm() {
                 className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="organizationName" className="text-slate-700 dark:text-slate-300">
-                Organization name
-                <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">(optional)</span>
-              </Label>
-              <Input
-                id="organizationName"
-                type="text"
+            {!isInvited && (
+              <div className="space-y-2">
+                <Label htmlFor="organizationName" className="text-slate-700 dark:text-slate-300">
+                  Organization name
+                  <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">(optional)</span>
+                </Label>
+                <Input
+                  id="organizationName"
+                  type="text"
                 placeholder="Acme Corp (defaults to your name)"
                 value={organizationName}
                 onChange={(e) => setOrganizationName(e.target.value)}
                 disabled={loading}
                 className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                You'll start with a Free plan (1 user, 30 min/month)
-              </p>
-            </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  You'll start with a Free plan (1 user, 30 min/month)
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Password</Label>
               <Input
