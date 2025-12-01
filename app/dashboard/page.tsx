@@ -146,7 +146,7 @@ export default function Dashboard() {
 
         // Fetch recent calls (last 5)
         // If we have an organization, fetch calls from that org, otherwise fetch user's personal calls
-        const callsQuery = supabase
+        const recentCallsQuery = supabase
           .from('calls')
           .select('*')
           .is('deleted_at', null)
@@ -155,13 +155,13 @@ export default function Dashboard() {
 
         if (orgId) {
           // Fetch organization calls
-          callsQuery.eq('organization_id', orgId);
+          recentCallsQuery.eq('organization_id', orgId);
         } else {
           // Fallback to user's personal calls
-          callsQuery.eq('user_id', user.id);
+          recentCallsQuery.eq('user_id', user.id);
         }
 
-        const { data: callsData, error: callsError } = await callsQuery;
+        const { data: callsData, error: callsError } = await recentCallsQuery;
 
         if (callsError) {
           console.error('Error fetching calls:', callsError);
