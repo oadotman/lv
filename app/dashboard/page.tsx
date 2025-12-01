@@ -97,7 +97,7 @@ interface Call {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, organization } = useAuth();
   const [recentCalls, setRecentCalls] = useState<Call[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,36 +113,55 @@ export default function Dashboard() {
       try {
         const supabase = createClient();
 
-        // Fetch user's organization to get plan limits
-        const { data: userOrg } = await supabase
-          .from('user_organizations')
-          .select('organization_id, role')
-          .eq('user_id', user.id)
-          .single();
-
+        // Use organization from AuthContext if available
         let planLimit = 30; // Default to free plan (30 minutes)
+        let orgId = organization?.id;
 
-        if (userOrg?.organization_id) {
-          // Fetch organization details for plan limit
-          const { data: org } = await supabase
-            .from('organizations')
-            .select('max_minutes_monthly, plan_type')
-            .eq('id', userOrg.organization_id)
+        if (organization) {
+          // Use the organization from AuthContext (already selected correctly)
+          planLimit = organization.max_minutes_monthly || 30;
+          console.log('📊 Dashboard using organization from context:', organization.name, 'Plan:', organization.plan_type);
+        } else {
+          // Fallback: fetch user's organization if not in context
+          const { data: userOrg } = await supabase
+            .from('user_organizations')
+            .select('organization_id, role')
+            .eq('user_id', user.id)
             .single();
 
-          if (org?.max_minutes_monthly) {
-            planLimit = org.max_minutes_monthly;
+          if (userOrg?.organization_id) {
+            orgId = userOrg.organization_id;
+            // Fetch organization details for plan limit
+            const { data: org } = await supabase
+              .from('organizations')
+              .select('max_minutes_monthly, plan_type')
+              .eq('id', userOrg.organization_id)
+              .single();
+
+            if (org?.max_minutes_monthly) {
+              planLimit = org.max_minutes_monthly;
+            }
           }
         }
 
         // Fetch recent calls (last 5)
-        const { data: callsData, error: callsError } = await supabase
+        // If we have an organization, fetch calls from that org, otherwise fetch user's personal calls
+        const callsQuery = supabase
           .from('calls')
           .select('*')
-          .eq('user_id', user.id)
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(5);
+
+        if (orgId) {
+          // Fetch organization calls
+          callsQuery.eq('organization_id', orgId);
+        } else {
+          // Fallback to user's personal calls
+          callsQuery.eq('user_id', user.id);
+        }
+
+        const { data: callsData, error: callsError } = await callsQuery;
 
         if (callsError) {
           console.error('Error fetching calls:', callsError);
@@ -157,18 +176,13 @@ export default function Dashboard() {
         const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
         // Current month calls - for all organization members if user is in an org
-        const callsQuery = userOrg?.organization_id
+        const callsQuery = orgId
           ? supabase
               .from('calls')
               .select('id, duration, user_id')
               .eq('status', 'completed')
               .gte('created_at', startOfMonth.toISOString())
-              .in('user_id',
-                (await supabase
-                  .from('user_organizations')
-                  .select('user_id')
-                  .eq('organization_id', userOrg.organization_id)).data?.map(u => u.user_id) || []
-              )
+              .eq('organization_id', orgId)
           : supabase
               .from('calls')
               .select('id, duration')
@@ -179,19 +193,14 @@ export default function Dashboard() {
         const { data: currentMonthCalls } = await callsQuery;
 
         // Last month calls - using same logic
-        const lastMonthQuery = userOrg?.organization_id
+        const lastMonthQuery = orgId
           ? supabase
               .from('calls')
               .select('id, duration, user_id')
               .eq('status', 'completed')
               .gte('created_at', startOfLastMonth.toISOString())
               .lte('created_at', endOfLastMonth.toISOString())
-              .in('user_id',
-                (await supabase
-                  .from('user_organizations')
-                  .select('user_id')
-                  .eq('organization_id', userOrg.organization_id)).data?.map(u => u.user_id) || []
-              )
+              .eq('organization_id', orgId)
           : supabase
               .from('calls')
               .select('id, duration')
@@ -272,7 +281,7 @@ export default function Dashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, organization]); // Re-run when user or organization changes
 
   // Calculate ROI metrics
   const dollarsSaved = stats
