@@ -5,14 +5,14 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { DEFAULT_PREFERENCES } from '@/lib/types/preferences';
 import type { UserPreferences, UpdatePreferencesInput } from '@/lib/types/preferences';
 
 // GET - Fetch user preferences (creates default if doesn't exist)
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createAdminClient();
+    const supabase = createServerClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 // PATCH - Update user preferences
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createAdminClient();
+    const supabase = createServerClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
