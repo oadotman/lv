@@ -110,14 +110,18 @@ export default function TeamSettingsPage() {
         console.error('Error fetching membership:', membershipError);
         // Don't show error toast - just silently handle
         setOrganization(null); // Explicitly set organization to null
-        return; // Let the finally block handle loading state
+        setLoading(false); // Ensure loading is set to false before return
+        setFetchingData(false);
+        return;
       }
 
       // Handle case where membership query returns null (no organization)
       if (!membership || !membership.organization_id) {
         console.log('No organization membership found for user');
         setOrganization(null); // Explicitly set organization to null
-        return; // Let the finally block handle loading state
+        setLoading(false); // Ensure loading is set to false before return
+        setFetchingData(false);
+        return;
       }
 
       // At this point we know membership exists with organization_id
@@ -133,13 +137,17 @@ export default function TeamSettingsPage() {
       if (orgError) {
         console.error('Error fetching organization:', orgError);
         setOrganization(null);
-        return; // Let the finally block handle loading state
+        setLoading(false);
+        setFetchingData(false);
+        return;
       }
 
       if (!org) {
         console.warn('Organization not found for membership');
         setOrganization(null);
-        return; // Let the finally block handle loading state
+        setLoading(false);
+        setFetchingData(false);
+        return;
       }
 
       setOrganization(org as Organization);
