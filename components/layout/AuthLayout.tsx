@@ -13,8 +13,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   // Pages that don't require authentication and don't show sidebar
-  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/landing']
-  const isPublicPage = publicPages.some(page => pathname?.startsWith(page))
+  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password']
+  const isPublicPage = pathname === '/' || publicPages.some(page => pathname?.startsWith(page))
 
   // Pages that show sidebar (all authenticated pages)
   const protectedPages = ['/dashboard', '/calls', '/analytics', '/templates', '/settings', '/help', '/invite']
