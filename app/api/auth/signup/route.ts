@@ -124,10 +124,11 @@ export async function POST(req: NextRequest) {
         .is('accepted_at', null)  // Check if not accepted (pending)
         .single();
 
-      if (!inviteError && invite) {
+      if (!inviteError && invite && invite.organizations) {
         console.log('✅ Signup API: Valid invitation found', {
           inviteId: invite.id,
           orgId: invite.organization_id,
+          orgName: invite.organizations?.name,
           role: invite.role
         });
 
@@ -149,8 +150,26 @@ export async function POST(req: NextRequest) {
           console.error('❌ Error updating invitation:', updateError);
         }
       } else {
-        console.warn('⚠️ Signup API: Invalid invitation token', { inviteError });
-        // Continue with normal signup if invitation is invalid
+        console.warn('⚠️ Signup API: Invalid invitation token', {
+          inviteError,
+          token: inviteToken,
+          email: cleanEmail
+        });
+
+        // If a token was provided but it's invalid, return an error
+        if (inviteToken) {
+          return NextResponse.json(
+            {
+              error: 'Invalid or expired invitation. Please request a new invitation from your team administrator.',
+              debugInfo: process.env.NODE_ENV === 'development' ? {
+                message: inviteError?.message,
+                code: inviteError?.code
+              } : undefined
+            },
+            { status: 400 }
+          );
+        }
+        // Otherwise continue with normal signup (no invitation)
       }
     }
 
@@ -228,15 +247,34 @@ export async function POST(req: NextRequest) {
     console.log('🔵 Signup API: Creating membership', {
       userId,
       orgId: orgData.id,
-      role: membershipRole
+      role: membershipRole,
+      isInvited: isInvitedSignup
     });
+
+    // Build membership object
+    const membershipData: any = {
+      user_id: userId,
+      organization_id: orgData.id,
+      role: membershipRole,
+    };
+
+    // If this is an invited signup, add the invited_by field
+    if (isInvitedSignup && inviteToken) {
+      // Get the invitation details to find who invited them
+      const { data: inviteData } = await supabaseAdmin
+        .from('team_invitations')
+        .select('invited_by')
+        .eq('token', inviteToken)
+        .single();
+
+      if (inviteData?.invited_by) {
+        membershipData.invited_by = inviteData.invited_by;
+      }
+    }
+
     const { error: membershipError } = await supabaseAdmin
       .from('user_organizations')
-      .insert({
-        user_id: userId,
-        organization_id: orgData.id,
-        role: membershipRole,
-      });
+      .insert(membershipData);
 
     if (membershipError) {
       console.error('🔴 Signup API: Membership creation error:', {

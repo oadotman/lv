@@ -55,22 +55,39 @@ export default function AcceptInvitationPage() {
 
       const supabase = createClient();
 
-      // Fetch invitation
+      // Fetch invitation (first try to get any invitation with this token)
       console.log('🔍 Fetching invitation with token:', token);
-      const { data: invite, error: fetchError } = await supabase
+      let { data: invite, error: fetchError } = await supabase
         .from('team_invitations')
         .select(`
           *,
           organization:organizations(*)
         `)
         .eq('token', token)
-        .is('accepted_at', null)  // Check if not accepted (pending)
         .single();
 
+      // Check if invitation exists but was already accepted
+      if (invite && invite.accepted_at) {
+        console.log('✅ Invitation already accepted at:', invite.accepted_at);
+
+        // If user is logged in and is the one who accepted it, redirect to dashboard
+        if (user && invite.accepted_by === user.id) {
+          console.log('📊 User already accepted this invitation, redirecting to dashboard');
+          router.push('/dashboard');
+          return;
+        }
+
+        // Otherwise show appropriate error
+        setStatus('error');
+        setErrorMessage('This invitation has already been accepted.');
+        return;
+      }
+
+      // If invitation not found at all
       if (fetchError || !invite) {
         console.error('❌ Invitation fetch error:', fetchError);
         setStatus('error');
-        setErrorMessage('Invitation not found or already accepted');
+        setErrorMessage('Invitation not found or invalid link');
         return;
       }
 
@@ -85,12 +102,9 @@ export default function AcceptInvitationPage() {
 
       setInvitation(invite);
 
-      // If not logged in, redirect to signup with return URL
+      // If not logged in, redirect to dedicated invitation signup page
       if (!user) {
-        const signupUrl = new URL('/signup', window.location.origin);
-        signupUrl.searchParams.set('email', invite.email);
-        signupUrl.searchParams.set('returnTo', `/invite/${token}`);
-        router.push(signupUrl.toString());
+        router.push(`/invite-signup/${token}`);
         return;
       }
 

@@ -49,7 +49,13 @@ function LoginForm() {
 
       if (data?.session) {
         console.log('Login successful, session:', data.session)
-        const redirectPath = returnTo || '/dashboard'
+
+        // Check if this is after invitation acceptance during signup
+        const searchParams = new URLSearchParams(window.location.search)
+        const inviteAccepted = searchParams.get('inviteAccepted') === 'true'
+
+        // If invitation was already accepted, go straight to dashboard
+        const redirectPath = inviteAccepted ? '/dashboard' : (returnTo || '/dashboard')
         console.log('Redirecting to:', redirectPath)
 
         // Increased delay to ensure auth state is properly propagated

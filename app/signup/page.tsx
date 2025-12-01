@@ -113,8 +113,9 @@ function SignUpForm() {
       // Redirect after 2 seconds
       setTimeout(() => {
         if (returnTo && inviteToken) {
-          // If coming from invitation, redirect to login with return URL
-          router.push(`/login?message=Account created successfully! Please sign in to join the team.&returnTo=${encodeURIComponent(returnTo)}`)
+          // If invitation was accepted during signup, redirect directly to login
+          // without the invite URL since it's already processed
+          router.push('/login?message=Account created successfully! You have been added to the team. Please sign in.&inviteAccepted=true')
         } else {
           // Normal signup flow
           router.push('/login?message=Account created successfully! Please sign in.')
