@@ -146,12 +146,18 @@ export default function CallDetailPage() {
   // =====================================================
 
   useEffect(() => {
-    if (!user || !params.id) return;
+    if (!user || !params.id) {
+      setLoading(false); // Always set loading to false if no user or no id
+      return;
+    }
+
+    let isMounted = true; // Add mounted flag
 
     async function fetchCallDetail() {
-      if (!user) return; // Additional TypeScript safety check
+      if (!user || !isMounted) return; // Check both user and mounted state
 
       try {
+        setLoading(true); // Ensure loading is set at start
         const supabase = createClient();
         const callId = params.id as string;
 
@@ -223,11 +229,13 @@ export default function CallDetailPage() {
           fields: fieldsData || []
         };
 
-        setCallDetail(detail);
+        if (isMounted) {
+          setCallDetail(detail);
 
-        // Don't set duration from call data - let audio metadata handle it
-        // The call.duration is in minutes while audio player needs seconds
-        console.log('Call duration from DB (minutes):', callData.duration);
+          // Don't set duration from call data - let audio metadata handle it
+          // The call.duration is in minutes while audio player needs seconds
+          console.log('Call duration from DB (minutes):', callData.duration);
+        }
 
         // Fetch user's custom templates
         const { data: templatesData, error: templatesError } = await supabase
@@ -237,7 +245,7 @@ export default function CallDetailPage() {
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
 
-        if (!templatesError && templatesData) {
+        if (!templatesError && templatesData && isMounted) {
           // Transform fields to match frontend format
           const formattedTemplates = templatesData.map(template => ({
             ...template,
@@ -253,15 +261,24 @@ export default function CallDetailPage() {
           setCustomTemplates(formattedTemplates);
         }
 
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Error fetching call detail:', err);
-        setError('Failed to load call details.');
-        setLoading(false);
+        if (isMounted) {
+          setError('Failed to load call details.');
+          setLoading(false); // ALWAYS set loading to false in error case
+        }
       }
     }
 
     fetchCallDetail();
+
+    // Cleanup on unmount
+    return () => {
+      isMounted = false; // Mark as unmounted
+    };
   }, [user, params.id]);
 
   // =====================================================

@@ -28,11 +28,13 @@ import {
   Trash2,
   Check,
   X,
+  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { UploadModal } from "@/components/modals/UploadModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,17 +71,25 @@ export default function CallsPage() {
   const [callToDelete, setCallToDelete] = useState<string | null>(null);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const { toast } = useToast();
   const itemsPerPage = 10;
 
   // Fetch calls from database
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false); // Always set loading to false if no user
+      return;
+    }
+
+    let isMounted = true; // Add mounted flag
+    let debounceTimer: NodeJS.Timeout | null = null; // For debouncing real-time updates
 
     async function fetchCalls() {
-      if (!user) return; // Additional TypeScript safety check
+      if (!user || !isMounted) return; // Check both user and mounted state
 
       try {
+        setLoading(true); // Ensure loading is set at start
         const supabase = createClient();
         const { data, error } = await supabase
           .from('calls')
@@ -88,15 +98,20 @@ export default function CallsPage() {
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
 
+        if (!isMounted) return; // Don't update state if unmounted
+
         if (error) {
           console.error('Error fetching calls:', error);
+          setLoading(false);
         } else {
           setCalls(data || []);
+          setLoading(false);
         }
-        setLoading(false);
       } catch (error) {
         console.error('Fetch calls error:', error);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false); // ALWAYS set loading to false in error case
+        }
       }
     }
 
@@ -116,14 +131,25 @@ export default function CallsPage() {
         },
         (payload) => {
           console.log('Call updated:', payload);
-          // Refresh calls list when a call changes
-          fetchCalls();
+          // Debounce refresh to prevent rapid re-fetches
+          if (debounceTimer) {
+            clearTimeout(debounceTimer);
+          }
+          debounceTimer = setTimeout(() => {
+            if (isMounted) {
+              fetchCalls();
+            }
+          }, 1000); // Wait 1 second before fetching
         }
       )
       .subscribe();
 
     // Cleanup subscription on unmount
     return () => {
+      isMounted = false; // Mark as unmounted
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       supabase.removeChannel(channel);
     };
   }, [user]);
@@ -436,7 +462,15 @@ export default function CallsPage() {
                   >
                     Clear Filters
                   </Button>
-                ) : null}
+                ) : (
+                  <Button
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-xl rounded-xl px-8 py-3 text-base border-0"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Process Your First Call
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -717,6 +751,12 @@ export default function CallsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Upload Modal */}
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+      />
     </div>
   );
 }

@@ -120,8 +120,10 @@ export default function TemplatesPage() {
       return;
     }
 
+    let isMounted = true; // Add mounted flag
+
     async function fetchData() {
-      if (!user) return; // Additional TypeScript safety check
+      if (!user || !isMounted) return; // Check both user and mounted state
 
       setLoading(true); // Ensure loading is set
       try {
@@ -190,14 +192,23 @@ export default function TemplatesPage() {
           setTemplateStats(stats);
         }
 
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Error fetching templates:', err);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false); // ALWAYS set loading to false in error case
+        }
       }
     }
 
     fetchData();
+
+    // Cleanup on unmount
+    return () => {
+      isMounted = false; // Mark as unmounted
+    };
   }, [user]);
 
   // =====================================================

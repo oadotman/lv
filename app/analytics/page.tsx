@@ -62,8 +62,10 @@ export default function AnalyticsPage() {
       return;
     }
 
+    let isMounted = true; // Add mounted flag
+
     async function fetchAnalytics() {
-      if (!user) return; // Additional safety check for TypeScript
+      if (!user || !isMounted) return; // Check both user and mounted state
 
       setLoading(true); // Ensure loading is set
       try {
@@ -239,27 +241,35 @@ export default function AnalyticsPage() {
           .slice(0, 6);
 
         // Set analytics data
-        setAnalytics({
-          totalTimeSaved,
-          avgSentiment,
-          activeReps,
-          avgCallLength,
-          timeSavedData,
-          callsByRepData,
-          sentimentData,
-          keywordsData,
-          lastMonthTimeSaved,
-          lastMonthSentiment
-        });
-
-        setLoading(false);
+        if (isMounted) {
+          setAnalytics({
+            totalTimeSaved,
+            avgSentiment,
+            activeReps,
+            avgCallLength,
+            timeSavedData,
+            callsByRepData,
+            sentimentData,
+            keywordsData,
+            lastMonthTimeSaved,
+            lastMonthSentiment
+          });
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Error calculating analytics:', err);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false); // ALWAYS set loading to false in error case
+        }
       }
     }
 
     fetchAnalytics();
+
+    // Cleanup on unmount
+    return () => {
+      isMounted = false; // Mark as unmounted
+    };
   }, [user]);
 
   // =====================================================

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/lib/AuthContext";
 import { getPlanDetails } from "@/lib/pricing";
 import { useDirectUpload } from "@/lib/hooks/useDirectUpload";
+import { createClient } from "@/lib/supabase/client";
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -62,14 +63,37 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingUrl, setRecordingUrl] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("default");
+  const [customTemplates, setCustomTemplates] = useState<any[]>([]);
   const { toast } = useToast();
   const router = useRouter();
-  const { organization } = useAuth();
+  const { user, organization } = useAuth();
   const { upload: directUpload, uploading: isDirectUploading } = useDirectUpload();
 
   // Get user's plan details for duration validation
   const userPlan = organization?.plan_type || 'free';
   const planDetails = getPlanDetails(userPlan as any);
+
+  // Fetch user's custom templates when modal opens
+  useEffect(() => {
+    if (!user || !isOpen) return;
+
+    async function fetchTemplates() {
+      const supabase = createClient();
+      const { data: templatesData } = await supabase
+        .from('custom_templates')
+        .select('id, name, description')
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (templatesData) {
+        setCustomTemplates(templatesData);
+      }
+    }
+
+    fetchTemplates();
+  }, [user, isOpen]);
 
   const addParticipant = () => {
     const newParticipant: Participant = {
@@ -196,6 +220,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
         salesRep: salesReps.length > 0 ? salesReps[0].name : undefined,
         callDate: new Date().toISOString(),
         participants: participants.filter(p => p.name.trim()),
+        templateId: selectedTemplateId, // Add template ID to metadata
       };
 
       // Upload directly to Supabase Storage (zero memory usage)
@@ -472,6 +497,32 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
           </DialogDescription>
         </DialogHeader>
 
+        {/* Template Selection */}
+        <div className="mb-6 p-4 bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-violet-200 rounded-xl">
+          <Label className="text-sm font-semibold text-violet-900 mb-2 block">
+            Select Output Template
+          </Label>
+          <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+            <SelectTrigger className="w-full bg-white">
+              <SelectValue placeholder="Choose a template..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default (All Fields)</SelectItem>
+              <SelectItem value="salesforce">Salesforce</SelectItem>
+              <SelectItem value="hubspot">HubSpot</SelectItem>
+              <SelectItem value="pipedrive">Pipedrive</SelectItem>
+              {customTemplates.map(template => (
+                <SelectItem key={template.id} value={template.id}>
+                  {template.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-violet-700 mt-2">
+            AI will extract fields matching this template. You can change templates later.
+          </p>
+        </div>
+
         <Tabs defaultValue="file" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="file">
@@ -560,11 +611,24 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
           {/* URL IMPORT TAB */}
           <TabsContent value="url" className="space-y-6 mt-6">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">Import from Zoom, Drive, or Dropbox</h4>
-                <p className="text-xs text-blue-700 dark:text-blue-400">
-                  Paste a publicly accessible URL to your recording. Works with Zoom, Google Drive, Dropbox, OneDrive, and direct audio file links.
+                <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Important: Recording Must Be Publicly Accessible
+                </h4>
+                <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-1 ml-6 list-disc">
+                  <li><strong>Zoom:</strong> Ensure recording link sharing is enabled (Settings → Recording → Share recordings)</li>
+                  <li><strong>Google Drive:</strong> Right-click file → Share → "Anyone with the link can view"</li>
+                  <li><strong>Dropbox:</strong> Use "Create link" → "Anyone with the link"</li>
+                  <li><strong>OneDrive:</strong> Share → "Anyone with the link can view"</li>
+                </ul>
+              </div>
+
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-xs text-amber-800 dark:text-amber-400 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>If the link requires login or has restricted access, the import will fail. Test by opening the link in an incognito/private browser window.</span>
                 </p>
               </div>
 

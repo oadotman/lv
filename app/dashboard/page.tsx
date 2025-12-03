@@ -34,11 +34,13 @@ import {
   HelpCircle,
   Trophy,
   AlertTriangle,
+  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { UsageMeter } from "@/components/dashboard/UsageMeter";
+import { UploadModal } from "@/components/modals/UploadModal";
 
 // Helper function to get sentiment configuration
 const getSentimentConfig = (sentiment?: SentimentType) => {
@@ -103,14 +105,22 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [showMilestone, setShowMilestone] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false); // Always set loading to false if no user
+      return;
+    }
+
+    let isMounted = true; // Add mounted flag to prevent state updates after unmount
+    let debounceTimer: NodeJS.Timeout | null = null; // For debouncing real-time updates
 
     async function fetchDashboardData() {
-      if (!user) return; // Additional TypeScript safety check
+      if (!user || !isMounted) return; // Check both user and mounted state
 
       try {
+        setLoading(true); // Ensure loading is set at start
         const supabase = createClient();
 
         // Use organization from AuthContext if available
@@ -236,22 +246,25 @@ export default function Dashboard() {
           callsTrend = "+100%";
         }
 
-        setStats({
-          callsThisMonth,
-          callsLastMonth,
-          callsTrend,
-          timeSaved: `${hoursSavedThisMonth} hours`,
-          hoursSavedThisMonth,
-          hoursSavedLastMonth,
-          minutesUsed: Math.round(totalMinutesThisMonth),
-          minutesTotal: planLimit, // Now using actual plan limit from organization
-          hourlyRate: 75, // Average hourly rate (can be customized per user)
-        });
-
-        setLoading(false);
+        if (isMounted) {
+          setStats({
+            callsThisMonth,
+            callsLastMonth,
+            callsTrend,
+            timeSaved: `${hoursSavedThisMonth} hours`,
+            hoursSavedThisMonth,
+            hoursSavedLastMonth,
+            minutesUsed: Math.round(totalMinutesThisMonth),
+            minutesTotal: planLimit, // Now using actual plan limit from organization
+            hourlyRate: 75, // Average hourly rate (can be customized per user)
+          });
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Dashboard fetch error:', error);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false); // ALWAYS set loading to false in error case
+        }
       }
     }
 
@@ -271,14 +284,25 @@ export default function Dashboard() {
         },
         (payload) => {
           console.log('Call updated:', payload);
-          // Refresh dashboard data when a call changes
-          fetchDashboardData();
+          // Debounce refresh to prevent rapid re-fetches
+          if (debounceTimer) {
+            clearTimeout(debounceTimer);
+          }
+          debounceTimer = setTimeout(() => {
+            if (isMounted) {
+              fetchDashboardData();
+            }
+          }, 1000); // Wait 1 second before fetching
         }
       )
       .subscribe();
 
     // Cleanup subscription on unmount
     return () => {
+      isMounted = false; // Mark as unmounted
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       supabase.removeChannel(channel);
     };
   }, [user, organization]); // Re-run when user or organization changes
@@ -676,204 +700,56 @@ export default function Dashboard() {
           <UsageMeter />
         </div>
 
-        {/* Premium Recent Calls Table */}
-        <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="bg-gradient-to-r from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-800 dark:via-purple-950/30 dark:to-slate-800 border-b border-slate-100 dark:border-slate-700">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-1">
-                  Recent Calls
-                </CardTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                  Your latest processed recordings
-                </p>
-              </div>
+        {/* Quick Actions Card */}
+        <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-gradient-to-br from-violet-50 to-purple-50">
+          <CardHeader className="bg-gradient-to-r from-violet-600 to-purple-600 text-white">
+            <CardTitle className="text-2xl font-bold tracking-tight mb-1">
+              Quick Actions
+            </CardTitle>
+            <p className="text-violet-100 font-medium">
+              What would you like to do?
+            </p>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Link href="/calls">
-                <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/50 transition-all duration-300 rounded-xl border-0 group">
+                <Button className="w-full h-24 bg-white hover:bg-violet-50 text-violet-600 border-2 border-violet-200 hover:border-violet-400 rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-xl flex flex-col items-center justify-center gap-2">
+                  <Phone className="w-8 h-8" />
                   View All Calls
-                  <ArrowUpRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </Button>
+              </Link>
+              <Button
+                onClick={() => setIsUploadModalOpen(true)}
+                className="w-full h-24 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl flex flex-col items-center justify-center gap-2"
+              >
+                <Plus className="w-8 h-8" />
+                Process New Call
+              </Button>
+              <Link href="/templates">
+                <Button className="w-full h-24 bg-white hover:bg-violet-50 text-violet-600 border-2 border-violet-200 hover:border-violet-400 rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-xl flex flex-col items-center justify-center gap-2">
+                  <FileText className="w-8 h-8" />
+                  Manage Templates
                 </Button>
               </Link>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {recentCalls.length === 0 ? (
-              <div className="text-center py-20 px-6">
-                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 flex items-center justify-center">
-                  <Phone className="w-12 h-12 text-violet-600 dark:text-violet-400" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-slate-900 dark:text-slate-100">
-                  No calls processed yet
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto text-lg">
-                  Upload your first call recording to get AI-powered insights and
-                  CRM-ready data
-                </p>
-                <Link href="/calls">
-                  <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-xl shadow-violet-500/40 hover:shadow-2xl hover:shadow-violet-500/60 transition-all duration-300 rounded-xl px-8 py-6 text-lg border-0">
-                    <Zap className="w-5 h-5 mr-2" />
-                    Process Your First Call
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-800/50">
-                    <tr className="text-left">
-                      <th className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        Customer
-                      </th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden md:table-cell">
-                        Duration
-                      </th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden lg:table-cell">
-                        Sentiment
-                      </th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-right">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {recentCalls.map((call, index) => (
-                      <tr
-                        key={call.id}
-                        className="group hover:bg-gradient-to-r hover:from-violet-50/30 dark:hover:from-violet-950/30 hover:to-transparent transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <span className="text-sm font-bold text-violet-600 dark:text-violet-400">
-                                {call.customer_name
-                                  ? call.customer_name.charAt(0)
-                                  : "?"}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
-                                {call.customer_name || "Unknown Customer"}
-                              </p>
-                              <p className="text-sm text-slate-500 dark:text-slate-400">
-                                with {call.sales_rep || "Unknown Rep"}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
-                            <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                            {formatDate(call.call_date || call.created_at)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-5 text-sm font-medium text-slate-600 dark:text-slate-400 hidden md:table-cell">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                              {call.duration
-                                ? formatDuration(call.duration)
-                                : "N/A"}
-                            </div>
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-md font-semibold text-xs border border-emerald-200 dark:border-emerald-700">
-                              <span>+15 min saved</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5 hidden lg:table-cell">
-                          {call.sentiment_type &&
-                            call.sentiment_score !== undefined && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div
-                                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm border cursor-default ${
-                                        getSentimentConfig(call.sentiment_type)
-                                          ?.bgColor
-                                      } ${
-                                        getSentimentConfig(call.sentiment_type)
-                                          ?.textColor
-                                      } ${
-                                        getSentimentConfig(call.sentiment_type)
-                                          ?.borderColor
-                                      }`}
-                                    >
-                                      <span className="text-base">
-                                        {
-                                          getSentimentConfig(call.sentiment_type)
-                                            ?.emoji
-                                        }
-                                      </span>
-                                      <span>
-                                        {
-                                          getSentimentConfig(call.sentiment_type)
-                                            ?.label
-                                        }
-                                      </span>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="bg-slate-900 text-white px-3 py-2 rounded-lg">
-                                    <p className="font-medium">
-                                      Sentiment Score: {call.sentiment_score}/100
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                        </td>
-                        <td className="px-6 py-5">
-                          {call.status === "completed" && (
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg font-medium text-sm border border-emerald-200 dark:border-emerald-700">
-                              <CheckCircle2 className="w-4 h-4" />
-                              Completed
-                            </div>
-                          )}
-                          {(call.status === "processing" ||
-                            call.status === "transcribing" ||
-                            call.status === "extracting") && (
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg font-medium text-sm border border-amber-200 dark:border-amber-700">
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Processing
-                            </div>
-                          )}
-                          {call.status === "failed" && (
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg font-medium text-sm border border-red-200 dark:border-red-700">
-                              <AlertCircle className="w-4 h-4" />
-                              Failed
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Link href={`/calls/${call.id}`}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/50 rounded-lg font-medium transition-all duration-200 group/btn"
-                              >
-                                <Eye className="w-4 h-4 mr-1.5 group-hover/btn:scale-110 transition-transform" />
-                                View Details
-                              </Button>
-                            </Link>
-                            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors duration-200">
-                              <MoreVertical className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </CardContent>
         </Card>
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-8 right-8 z-50">
+          <Button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="w-16 h-16 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-2xl shadow-violet-500/50 hover:shadow-3xl hover:scale-110 transition-all duration-300 rounded-full flex items-center justify-center group"
+          >
+            <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
+          </Button>
+        </div>
+
+        {/* Upload Modal */}
+        <UploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+        />
       </div>
     </div>
   );

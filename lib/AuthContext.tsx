@@ -209,45 +209,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('🔐 AuthContext: Initializing...')
+    let isMounted = true // Add mounted flag to prevent state updates after unmount
 
     // Set a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      console.warn('⏱️ AuthContext: Session check timed out after 10s, proceeding without auth')
-      setLoading(false)
-    }, 10000) // Increased to 10 second timeout for slower connections
+    const loadingTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('⏱️ AuthContext: Forcing loading=false after 10s timeout')
+        setLoading(false)
+      }
+    }, 10000) // 10 second safety timeout
 
     // Get initial session
-    supabase.auth.getSession()
-      .then(async ({ data: { session } }) => {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (!isMounted) return // Don't update state if unmounted
+
+        if (error) {
+          console.error('❌ AuthContext: Error getting session:', error)
+          setLoading(false)
+          clearTimeout(loadingTimeout)
+          return
+        }
+
         console.log('🔐 AuthContext: Initial session loaded', {
           hasSession: !!session,
           hasUser: !!session?.user,
           userId: session?.user?.id
         })
+
         setSession(session)
         setUser(session?.user ?? null)
 
         // Fetch organization if user exists
         if (session?.user) {
           console.log('🏢 AuthContext: Fetching organization for user:', session.user.id)
-          await fetchOrganization(session.user.id, session.user.email)
-          console.log('✅ AuthContext: Organization fetch complete')
+          try {
+            await fetchOrganization(session.user.id, session.user.email)
+            console.log('✅ AuthContext: Organization fetch complete')
+          } catch (orgError) {
+            console.error('❌ AuthContext: Error fetching organization:', orgError)
+            // Continue even if org fetch fails
+          }
         }
 
-        console.log('🎯 AuthContext: Initialization complete, setting loading=false')
-        setLoading(false)
-        clearTimeout(timeout)
-      })
-      .catch((error) => {
-        console.error('❌ AuthContext: Error loading session', error)
-        setLoading(false)
-        clearTimeout(timeout)
-      })
+        if (isMounted) {
+          console.log('🎯 AuthContext: Initialization complete, setting loading=false')
+          setLoading(false)
+          clearTimeout(loadingTimeout)
+        }
+      } catch (error) {
+        console.error('❌ AuthContext: Unexpected error during initialization:', error)
+        if (isMounted) {
+          setLoading(false)
+          clearTimeout(loadingTimeout)
+        }
+      }
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return // Don't process if unmounted
+
       console.log('🔄 AuthContext: Auth state changed', {
         event,
         hasSession: !!session,
@@ -256,10 +284,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         timestamp: new Date().toISOString()
       })
 
-      // Only set loading to true if this is a significant auth event
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        console.log('🔄 AuthContext: Processing auth event:', event)
-      }
+      // Don't set loading to true during auth state changes - this causes the perpetual loading bug
+      // The initial load is already complete, state changes should be seamless
 
       setSession(session)
       setUser(session?.user ?? null)
@@ -267,19 +293,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fetch organization if user exists
       if (session?.user) {
         console.log('🏢 AuthContext: Fetching organization after auth change')
-        await fetchOrganization(session.user.id, session.user.email)
+        try {
+          await fetchOrganization(session.user.id, session.user.email)
+        } catch (error) {
+          console.error('❌ AuthContext: Error fetching organization after auth change:', error)
+          // Continue without organization
+        }
       } else {
         setOrganization(null)
       }
 
-      // Always ensure loading is false after processing auth changes
-      console.log('✅ AuthContext: Auth change processed, setting loading=false')
-      setLoading(false)
+      // Don't change loading state during auth changes - keep the app responsive
+      console.log('✅ AuthContext: Auth change processed')
     })
 
     return () => {
+      isMounted = false // Mark as unmounted
       subscription.unsubscribe()
-      clearTimeout(timeout)
+      clearTimeout(loadingTimeout)
     }
   }, [])
 
