@@ -337,10 +337,19 @@ export default function CallsPage() {
                   {filteredCalls.length} call{filteredCalls.length !== 1 ? 's' : ''} total
                 </p>
               </div>
-              <Button className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/50 transition-all duration-300 rounded-xl border-0 font-semibold group/btn">
-                <Download className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
-                Export All Data
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setIsUploadModalOpen(true)}
+                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/50 transition-all duration-300 rounded-xl border-0 font-semibold group/btn"
+                >
+                  <Plus className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                  Process New Call
+                </Button>
+                <Button className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/50 transition-all duration-300 rounded-xl border-0 font-semibold group/btn">
+                  <Download className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                  Export All Data
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -751,6 +760,16 @@ export default function CallsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <Button
+          onClick={() => setIsUploadModalOpen(true)}
+          className="w-16 h-16 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-2xl shadow-violet-500/50 hover:shadow-3xl hover:scale-110 transition-all duration-300 rounded-full flex items-center justify-center group"
+        >
+          <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
+        </Button>
+      </div>
 
       {/* Upload Modal */}
       <UploadModal

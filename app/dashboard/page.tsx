@@ -547,6 +547,15 @@ export default function Dashboard() {
                   Here's what's happening with your calls today
                 </p>
               </div>
+
+              {/* Primary Process Call CTA Button */}
+              <Button
+                onClick={() => setIsUploadModalOpen(true)}
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-xl shadow-violet-500/30 hover:shadow-2xl hover:shadow-violet-500/50 hover:scale-105 transition-all duration-300 rounded-xl px-6 py-3 text-base font-semibold border-0"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Process New Call
+              </Button>
               <div className="self-end">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full blur-lg opacity-50" />
@@ -695,12 +704,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Usage Meter - Prominent Display */}
-        <div className="max-w-2xl mx-auto">
-          <UsageMeter />
-        </div>
-
-        {/* Quick Actions Card */}
+        {/* Quick Actions Card - Moved to top for prominence */}
         <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-gradient-to-br from-violet-50 to-purple-50">
           <CardHeader className="bg-gradient-to-r from-violet-600 to-purple-600 text-white">
             <CardTitle className="text-2xl font-bold tracking-tight mb-1">
@@ -734,6 +738,11 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Usage Meter - Prominent Display */}
+        <div className="max-w-2xl mx-auto">
+          <UsageMeter />
+        </div>
 
         {/* Floating Action Button */}
         <div className="fixed bottom-8 right-8 z-50">
