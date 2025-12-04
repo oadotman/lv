@@ -53,7 +53,12 @@
       "WebSearch",
       "WebFetch(domain:supabase.com)",
       "Bash(temp_landing.txt)",
-      "Bash(set NODE_OPTIONS=\"--max-old-space-size=8192\")"
+      "Bash(set NODE_OPTIONS=\"--max-old-space-size=8192\")",
+      "Bash(node test-critical-flows.js:*)",
+      "Bash(node recover-stuck-calls.js:*)",
+      "Bash(node scripts/recover-stuck-calls.js:*)",
+      "Bash(node test-api-simulation.js:*)",
+      "Bash(node scripts/cleanup-stuck-calls.js:*)"
     ],
     "deny": [],
     "ask": []

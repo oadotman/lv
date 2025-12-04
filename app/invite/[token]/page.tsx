@@ -115,43 +115,33 @@ export default function AcceptInvitationPage() {
         return;
       }
 
-      // Accept invitation
+      // Accept invitation through secure API endpoint
       try {
         console.log('🚀 Accepting invitation for organization:', invite.organization.name);
 
-        // Add user to organization
-        const { error: memberError } = await supabase
-          .from('user_organizations')
-          .insert({
-            user_id: user.id,
-            organization_id: invite.organization_id,
-            role: invite.role,
-            invited_by: invite.invited_by,
-          });
+        // Call secure API endpoint for invitation acceptance
+        const response = await fetch('/api/teams/accept-invitation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
 
-        if (memberError) {
-          // Check if already a member
-          if (memberError.code === '23505') {
+        const result = await response.json();
+
+        if (!response.ok) {
+          // Handle specific error cases
+          if (response.status === 409) {
             setStatus('error');
-            setErrorMessage('You are already a member of this organization');
+            setErrorMessage('This invitation was just accepted in another session');
             return;
           }
-          throw memberError;
+
+          throw new Error(result.error || 'Failed to accept invitation');
         }
 
-        // Mark invitation as accepted
-        console.log('📝 Marking invitation as accepted');
-        const { error: updateError } = await supabase
-          .from('team_invitations')
-          .update({
-            accepted_at: new Date().toISOString(),
-            accepted_by: user.id
-          })
-          .eq('id', invite.id);
-
-        if (updateError) {
-          console.error('❌ Error updating invitation:', updateError);
-        }
+        console.log('✅ Invitation accepted successfully:', result);
 
         // Check for duplicate free organizations
         console.log('🔍 Checking for duplicate free organizations');

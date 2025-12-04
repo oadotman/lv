@@ -22,6 +22,7 @@ export interface UploadMetadata {
   callDate?: string;
   callType?: string;
   participants?: any[];
+  templateId?: string; // Add templateId to metadata type
 }
 
 export interface UploadResult {

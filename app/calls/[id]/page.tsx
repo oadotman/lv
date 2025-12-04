@@ -62,6 +62,13 @@ interface CallRecord {
   file_url: string | null;
   processing_progress: number | null;
   processing_message: string | null;
+  template_id: string | null;
+  template?: {
+    id: string;
+    name: string;
+    description: string | null;
+    field_count: number;
+  };
 }
 
 interface TranscriptUtterance {
@@ -95,8 +102,10 @@ interface CallInsight {
 interface CallField {
   id: string;
   call_id: string;
+  template_id: string | null;
   field_name: string;
   field_value: string | null;
+  field_type?: string;
   confidence_score: number | null;
   created_at: string;
 }
@@ -161,10 +170,10 @@ export default function CallDetailPage() {
         const supabase = createClient();
         const callId = params.id as string;
 
-        // Fetch call record
+        // Fetch call record with template information
         const { data: callData, error: callError } = await supabase
           .from('calls')
-          .select('*')
+          .select('*, template:custom_templates(*)')
           .eq('id', callId)
           .eq('user_id', user.id)
           .is('deleted_at', null)
@@ -747,32 +756,70 @@ export default function CallDetailPage() {
         output += `📝 Description: ${template.description}\n\n`;
       }
 
+      // Check if this template was used during extraction
+      const wasUsedForExtraction = call.template_id === templateId;
+
+      if (wasUsedForExtraction) {
+        output += `✅ This template was used during extraction\n\n`;
+      } else {
+        output += `ℹ️ Different template used during extraction\n\n`;
+      }
+
       // Generate output based on template fields
-      output += `📊 EXTRACTED DATA\n`;
+      output += `📊 TEMPLATE-SPECIFIC FIELDS\n`;
       output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-      template.fields.forEach((templateField: any) => {
-        // Try to match template field with extracted fields
-        const extractedValue = getField(templateField.fieldName.replace(/\s+/g, '_').toLowerCase());
+      // Get template-specific fields (those with template_id)
+      const templateSpecificFields = fields.filter(f => f.template_id === templateId);
 
-        const icon =
-          templateField.fieldType === 'email' ? '📧' :
-          templateField.fieldType === 'date' ? '📅' :
-          templateField.fieldType === 'number' ? '🔢' :
-          templateField.fieldType === 'picklist' ? '📝' :
-          '📋';
+      if (templateSpecificFields.length > 0) {
+        templateSpecificFields.forEach((field: any) => {
+          const icon =
+            field.field_type === 'email' ? '📧' :
+            field.field_type === 'date' ? '📅' :
+            field.field_type === 'number' ? '🔢' :
+            field.field_type === 'boolean' ? '✅' :
+            field.field_type === 'url' ? '🔗' :
+            '📋';
 
-        output += `${icon} ${templateField.fieldName}${templateField.required ? ' *' : ''}: ${extractedValue}\n`;
+          output += `${icon} ${field.field_name}: ${field.field_value || 'N/A'}\n`;
+          if (field.confidence_score) {
+            output += `   Confidence: ${Math.round(field.confidence_score * 100)}%\n`;
+          }
+          output += '\n';
+        });
+      } else if (wasUsedForExtraction) {
+        output += `⚠️ Template fields are still being extracted...\n\n`;
+      } else {
+        output += `📝 No fields extracted for this template yet\n\n`;
+      }
 
-        if (templateField.description) {
-          output += `   ↳ ${templateField.description}\n`;
+      // Add core fields section
+      output += `\n📋 CORE FIELDS (Always Extracted)\n`;
+      output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+      const coreFields = fields.filter(f => !f.template_id);
+      const importantCoreFields = ['summary', 'key_points', 'next_steps', 'pain_points', 'budget', 'timeline', 'call_outcome'];
+
+      importantCoreFields.forEach(fieldName => {
+        const field = coreFields.find(f => f.field_name === fieldName);
+        if (field) {
+          let value = field.field_value;
+          try {
+            // Try to parse JSON fields
+            if (value && (value.startsWith('[') || value.startsWith('{'))) {
+              const parsed = JSON.parse(value);
+              if (Array.isArray(parsed)) {
+                value = parsed.join(', ');
+              } else {
+                value = JSON.stringify(parsed, null, 2);
+              }
+            }
+          } catch {}
+
+          const label = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          output += `📍 ${label}: ${value || 'N/A'}\n`;
         }
-
-        if (templateField.picklistValues && templateField.picklistValues.length > 0) {
-          output += `   Options: ${templateField.picklistValues.join(', ')}\n`;
-        }
-
-        output += '\n';
       });
 
       // Add insights section
@@ -1352,9 +1399,16 @@ Call_Duration__c: ${call.duration || 0}
         {/* CRM Output Section - Full Width */}
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader className="bg-gray-50 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-purple-600" />
-              <CardTitle className="text-2xl font-bold text-gray-900">CRM Output</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-purple-600" />
+                <CardTitle className="text-2xl font-bold text-gray-900">CRM Output</CardTitle>
+              </div>
+              {callDetail?.call.template && (
+                <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                  Template: {callDetail.call.template.name}
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent className="p-6">

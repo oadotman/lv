@@ -65,6 +65,12 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("default");
   const [customTemplates, setCustomTemplates] = useState<any[]>([]);
+  const [showTemplateCreator, setShowTemplateCreator] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [newTemplateDescription, setNewTemplateDescription] = useState("");
+  const [newTemplateFields, setNewTemplateFields] = useState<any[]>([
+    { id: "1", fieldName: "", fieldType: "text", description: "" }
+  ]);
   const { toast } = useToast();
   const router = useRouter();
   const { user, organization } = useAuth();
@@ -499,9 +505,20 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
         {/* Template Selection */}
         <div className="mb-6 p-4 bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-violet-200 rounded-xl">
-          <Label className="text-sm font-semibold text-violet-900 mb-2 block">
-            Select Output Template
-          </Label>
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-sm font-semibold text-violet-900">
+              Select Output Template
+            </Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-violet-700 hover:text-violet-900 hover:bg-violet-100 h-8"
+              onClick={() => setShowTemplateCreator(true)}
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              Create Template
+            </Button>
+          </div>
           <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
             <SelectTrigger className="w-full bg-white">
               <SelectValue placeholder="Choose a template..." />
@@ -513,7 +530,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               <SelectItem value="pipedrive">Pipedrive</SelectItem>
               {customTemplates.map(template => (
                 <SelectItem key={template.id} value={template.id}>
-                  {template.name}
+                  {template.name} ({template.field_count} fields)
                 </SelectItem>
               ))}
             </SelectContent>
@@ -782,6 +799,226 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Quick Template Creator Dialog */}
+      <Dialog open={showTemplateCreator} onOpenChange={setShowTemplateCreator}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Custom Template</DialogTitle>
+            <DialogDescription>
+              Define the fields you want AI to extract from your sales calls
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-4">
+            {/* Template Name */}
+            <div>
+              <Label htmlFor="template-name">Template Name *</Label>
+              <Input
+                id="template-name"
+                placeholder="e.g., Enterprise Sales Template"
+                value={newTemplateName}
+                onChange={(e) => setNewTemplateName(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Template Description */}
+            <div>
+              <Label htmlFor="template-description">Description</Label>
+              <Input
+                id="template-description"
+                placeholder="Brief description of this template"
+                value={newTemplateDescription}
+                onChange={(e) => setNewTemplateDescription(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Template Fields */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Template Fields</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setNewTemplateFields([
+                      ...newTemplateFields,
+                      { id: Math.random().toString(36).substr(2, 9), fieldName: "", fieldType: "text", description: "" }
+                    ]);
+                  }}
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Field
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {newTemplateFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Field name"
+                        value={field.fieldName}
+                        onChange={(e) => {
+                          const updated = [...newTemplateFields];
+                          updated[index].fieldName = e.target.value;
+                          setNewTemplateFields(updated);
+                        }}
+                      />
+                    </div>
+                    <Select
+                      value={field.fieldType}
+                      onValueChange={(value) => {
+                        const updated = [...newTemplateFields];
+                        updated[index].fieldType = value;
+                        setNewTemplateFields(updated);
+                      }}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text">Text</SelectItem>
+                        <SelectItem value="number">Number</SelectItem>
+                        <SelectItem value="date">Date</SelectItem>
+                        <SelectItem value="boolean">Boolean</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="url">URL</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {newTemplateFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setNewTemplateFields(newTemplateFields.filter((_, i) => i !== index));
+                        }}
+                        className="h-10 w-10"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowTemplateCreator(false);
+                setNewTemplateName("");
+                setNewTemplateDescription("");
+                setNewTemplateFields([{ id: "1", fieldName: "", fieldType: "text", description: "" }]);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!newTemplateName.trim()) {
+                  toast({
+                    title: "Error",
+                    description: "Template name is required",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                const validFields = newTemplateFields.filter(f => f.fieldName.trim());
+                if (validFields.length === 0) {
+                  toast({
+                    title: "Error",
+                    description: "At least one field is required",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                try {
+                  const supabase = createClient();
+
+                  // Create the template
+                  const { data: template, error: templateError } = await supabase
+                    .from('custom_templates')
+                    .insert({
+                      user_id: user?.id,
+                      organization_id: organization?.id,
+                      name: newTemplateName,
+                      description: newTemplateDescription,
+                      field_count: validFields.length,
+                      category: 'custom',
+                      is_active: true,
+                    })
+                    .select()
+                    .single();
+
+                  if (templateError) throw templateError;
+
+                  // Create the template fields
+                  if (template) {
+                    const fieldsToInsert = validFields.map((field, index) => ({
+                      template_id: template.id,
+                      field_name: field.fieldName,
+                      field_type: field.fieldType,
+                      description: field.description || null,
+                      sort_order: index,
+                    }));
+
+                    const { error: fieldsError } = await supabase
+                      .from('template_fields')
+                      .insert(fieldsToInsert);
+
+                    if (fieldsError) throw fieldsError;
+                  }
+
+                  // Refresh templates list
+                  const { data: templatesData } = await supabase
+                    .from('custom_templates')
+                    .select('*')
+                    .eq('user_id', user?.id)
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+
+                  if (templatesData) {
+                    setCustomTemplates(templatesData);
+                    // Auto-select the new template
+                    setSelectedTemplateId(template.id);
+                  }
+
+                  toast({
+                    title: "Success",
+                    description: "Template created successfully",
+                  });
+
+                  // Reset and close
+                  setShowTemplateCreator(false);
+                  setNewTemplateName("");
+                  setNewTemplateDescription("");
+                  setNewTemplateFields([{ id: "1", fieldName: "", fieldType: "text", description: "" }]);
+
+                } catch (error) {
+                  console.error('Error creating template:', error);
+                  toast({
+                    title: "Error",
+                    description: "Failed to create template",
+                    variant: "destructive",
+                  });
+                }
+              }}
+              disabled={!newTemplateName.trim() || newTemplateFields.filter(f => f.fieldName.trim()).length === 0}
+            >
+              Create Template
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

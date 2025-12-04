@@ -18,10 +18,10 @@ export async function POST(
   try {
     const supabase = createAdminClient();
 
-    // Get call details
+    // Get call details including template
     const { data: call, error: fetchError } = await supabase
       .from('calls')
-      .select('*')
+      .select('*, template:custom_templates(*)')
       .eq('id', callId)
       .single();
 
@@ -215,7 +215,100 @@ export async function POST(
       }))
     );
 
-    console.log('[Process] ✅ Saved', coreFields.length, 'fields');
+    console.log('[Process] ✅ Saved', coreFields.length, 'core fields');
+
+    // =====================================================
+    // STEP 4B: EXTRACT TEMPLATE-SPECIFIC FIELDS (IF TEMPLATE SELECTED)
+    // =====================================================
+
+    if (call.template_id && call.template) {
+      console.log('[Process] 🎯 Template selected:', call.template.name);
+
+      // Validate template ownership
+      const { data: templateValidation } = await supabase
+        .from('custom_templates')
+        .select('id, user_id, organization_id')
+        .eq('id', call.template_id)
+        .single();
+
+      if (!templateValidation) {
+        console.error('[Process] ⚠️ Template not found:', call.template_id);
+        // Continue with core fields only
+      } else {
+        // Check if template belongs to user or their organization
+        const isUserTemplate = templateValidation.user_id === call.user_id;
+
+        let isOrgTemplate = false;
+        if (templateValidation.organization_id) {
+          const { data: userOrg } = await supabase
+            .from('user_organizations')
+            .select('organization_id')
+            .eq('user_id', call.user_id)
+            .eq('organization_id', templateValidation.organization_id)
+            .single();
+
+          isOrgTemplate = !!userOrg;
+        }
+
+        if (!isUserTemplate && !isOrgTemplate) {
+          console.error('[Process] ⚠️ User does not have access to template:', call.template_id);
+          // Continue with core fields only, don't use unauthorized template
+        } else {
+          // Template is valid and user has access
+          console.log('[Process] ✅ Template validated, user has access');
+
+          // Update progress
+          await supabase
+            .from('calls')
+            .update({
+              processing_progress: 85,
+              processing_message: `Extracting ${call.template.name} template fields...`,
+            })
+            .eq('id', callId);
+
+          // Fetch template fields
+          const { data: templateFields } = await supabase
+            .from('template_fields')
+            .select('*')
+            .eq('template_id', call.template_id)
+            .order('sort_order', { ascending: true });
+
+      if (templateFields && templateFields.length > 0) {
+        console.log('[Process] 📋 Template has', templateFields.length, 'custom fields');
+
+        // Extract template-specific fields using AI
+        const { extractTemplateFields } = await import('@/lib/openai');
+
+        const templateExtraction = await extractTemplateFields(
+          transcriptionResult.text || '',
+          transcriptionResult.utterances || [],
+          speakerMapping,
+          templateFields
+        );
+
+        console.log('[Process] ✅ Template fields extracted');
+
+        // Save template-specific fields
+        const templateFieldsToSave = templateExtraction.map((extractedField: any) => ({
+          call_id: callId,
+          template_id: call.template_id,
+          field_name: extractedField.field_name || extractedField.name,
+          field_value: extractedField.value || extractedField.field_value || '',
+          field_type: templateFields.find((f: any) => f.field_name === (extractedField.field_name || extractedField.name))?.field_type || 'text',
+          confidence_score: extractedField.confidence || 0.85,
+          source: 'gpt-4o-template',
+        }));
+
+        if (templateFieldsToSave.length > 0) {
+          await supabase.from('call_fields').insert(templateFieldsToSave);
+          console.log('[Process] ✅ Saved', templateFieldsToSave.length, 'template fields');
+        }
+      }
+        }
+      }
+    } else {
+      console.log('[Process] ℹ️ No template selected - using default extraction only');
+    }
 
     // Update progress
     await supabase

@@ -67,6 +67,9 @@ export default function LandingPage() {
               <a href="#features" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
                 Features
               </a>
+              <a href="#security" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+                Security
+              </a>
               <a href="#pricing" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
                 Pricing
               </a>
@@ -544,8 +547,131 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Security & Trust Section */}
+      <section id="security" className="py-20 px-4 lg:px-8 bg-white dark:bg-slate-950">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <Badge className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 px-4 py-1.5 text-sm font-semibold mb-6">
+              Enterprise-Grade Security
+            </Badge>
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-6">
+              Your CRM Data is <span className="text-emerald-600 dark:text-emerald-400">Sacred to Us</span>
+            </h2>
+            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+              We handle sensitive sales data with bank-level security and compliance standards
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-6 mb-12">
+            {/* SOC 2 Practices */}
+            <Card className="border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-xl transition-all">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2">SOC 2 Practices</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Following SOC 2 Type II security standards for data protection
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Encrypted at Rest */}
+            <Card className="border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-xl transition-all">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2">Encrypted at Rest</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  AES-256 encryption for all stored data and recordings
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Auto-Deletion */}
+            <Card className="border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-xl transition-all">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Clock className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2">Auto-Deletion</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Automatic data purging after 90 days for compliance
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* GDPR Compliant */}
+            <Card className="border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-xl transition-all">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Award className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2">GDPR Compliant</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Full GDPR compliance with data export and deletion rights
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Additional Security Features */}
+          <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 text-center">
+              Additional Security Measures
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3">
+                <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-500 flex-shrink-0" />
+                <span className="text-slate-700 dark:text-slate-300">SSL/TLS encryption in transit</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-500 flex-shrink-0" />
+                <span className="text-slate-700 dark:text-slate-300">Role-based access control</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-500 flex-shrink-0" />
+                <span className="text-slate-700 dark:text-slate-300">Regular security audits</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-500 flex-shrink-0" />
+                <span className="text-slate-700 dark:text-slate-300">ISO 27001 aligned processes</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-500 flex-shrink-0" />
+                <span className="text-slate-700 dark:text-slate-300">24/7 security monitoring</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-500 flex-shrink-0" />
+                <span className="text-slate-700 dark:text-slate-300">Data residency options</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+              Trusted by sales teams handling millions in pipeline value
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+                🔒 Bank-Level Encryption
+              </Badge>
+              <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+                ✓ Annual Pen Testing
+              </Badge>
+              <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+                🛡️ Zero Data Breaches
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Comparison Table */}
-      <section className="py-20 px-4 lg:px-8 bg-white dark:bg-slate-950">
+      <section className="py-20 px-4 lg:px-8 bg-gradient-to-br from-slate-50 to-violet-50/30 dark:from-slate-900 dark:to-violet-950/30">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-6">

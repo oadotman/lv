@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
     const callDate = formData.get('callDate') as string | null;
     const callType = formData.get('callType') as string | null;
     const participantsRaw = formData.get('participants') as string | null;
+    const templateId = formData.get('templateId') as string | null;
 
     // Parse participants if provided
     let participants = null;
@@ -270,6 +271,7 @@ export async function POST(req: NextRequest) {
         status: 'uploading',
         uploaded_at: new Date().toISOString(),
         metadata: participants ? { participants } : null,
+        template_id: templateId || null, // Save the selected template
       })
       .select()
       .single();
@@ -298,39 +300,20 @@ export async function POST(req: NextRequest) {
     const shouldAutoTranscribe = userPreferences?.auto_transcribe ?? true; // Default to true
 
     if (shouldAutoTranscribe) {
-      // Trigger background processing directly (no Inngest needed)
+      // Use our queue system with retry logic
       try {
-        console.log('🚀 Triggering background processing for call:', callData.id);
+        console.log('🚀 Enqueueing call for processing:', callData.id);
 
-        // Update call status to processing
-        await supabase
-          .from('calls')
-          .update({
-            status: 'processing',
-          })
-          .eq('id', callData.id);
+        // Import our queue processor
+        const { enqueueCallProcessing } = await import('@/lib/queue/call-processor');
 
-        // Call processing endpoint asynchronously (fire and forget)
-        const processUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/calls/${callData.id}/process`;
+        // Add to processing queue
+        await enqueueCallProcessing(callData.id);
 
-        // Use fetch without awaiting to trigger background processing
-        // Use Connection: close to avoid chunked encoding HTTP parser issues
-        fetch(processUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-internal-processing': 'true',
-            'Connection': 'close',
-          },
-        }).catch((err) => {
-          // Log but don't fail - processing will continue in background
-          console.error('Failed to trigger processing (non-fatal):', err.message);
-        });
-
-        console.log('✅ Background processing triggered for call:', callData.id);
+        console.log('✅ Call enqueued for processing:', callData.id);
 
       } catch (error) {
-        console.error('Failed to trigger processing:', error);
+        console.error('Failed to enqueue processing:', error);
 
         // Update status to failed
         await supabase
