@@ -223,6 +223,15 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
         ? selectedTemplateId
         : null;
 
+      // Get audio duration before upload
+      let audioDuration: number | undefined;
+      try {
+        audioDuration = await getAudioDuration(fileUpload.file);
+        console.log('Audio duration captured:', audioDuration, 'seconds');
+      } catch (error) {
+        console.warn('Could not capture audio duration:', error);
+      }
+
       // Prepare metadata
       const metadata = {
         customerName: customers.length > 0 ? customers[0].name : undefined,
@@ -233,6 +242,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
         callDate: new Date().toISOString(),
         participants: participants.filter(p => p.name.trim()),
         templateId: templateToSend, // Only send custom template IDs
+        audioDuration: audioDuration, // Add duration to metadata
       };
 
       // Upload directly to Supabase Storage (zero memory usage)

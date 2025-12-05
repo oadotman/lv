@@ -23,6 +23,7 @@ export interface UploadMetadata {
   callType?: string;
   participants?: any[];
   templateId?: string; // Add templateId to metadata type
+  audioDuration?: number; // Duration in seconds
 }
 
 export interface UploadResult {

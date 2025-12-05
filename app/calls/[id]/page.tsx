@@ -210,6 +210,9 @@ export default function CallDetailPage() {
 
           if (!utterancesError && utterances) {
             utterancesData = utterances;
+            console.log('[CallDetail] Found', utterances.length, 'utterances for transcript');
+          } else if (utterancesError) {
+            console.error('[CallDetail] Error fetching utterances:', utterancesError);
           }
         }
 
@@ -387,7 +390,10 @@ export default function CallDetailPage() {
 
               if (utterances) {
                 utterancesData = utterances;
+                console.log('[Polling] Found', utterances.length, 'utterances after completion');
               }
+            } else {
+              console.log('[Polling] No transcript found after completion');
             }
 
             const { data: insightsData } = await supabase
@@ -1511,7 +1517,7 @@ Call_Duration__c: ${call.duration || 0}
 
               <Button
                 onClick={() => setShowEmailModal(true)}
-                disabled={!transcript || !transcript.full_text}
+                disabled={!transcript || (!transcript.full_text && (!transcript.utterances || transcript.utterances.length === 0))}
                 className="h-12 bg-blue-600 text-white hover:bg-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Mail className="w-4 h-4 mr-2" />

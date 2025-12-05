@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       callType,
       participants,
       templateId, // Extract templateId from request
+      audioDuration, // Extract audio duration in seconds
     } = body;
 
     // Validate required fields
@@ -56,6 +57,8 @@ export async function POST(req: NextRequest) {
       path,
       fileName,
       fileSize,
+      audioDuration,
+      durationMinutes: audioDuration ? Math.ceil(audioDuration / 60) : null,
     });
 
     // Get organization
@@ -98,6 +101,8 @@ export async function POST(req: NextRequest) {
         uploaded_at: new Date().toISOString(),
         metadata: participants ? { participants } : null,
         template_id: templateId || null, // Save the selected template
+        duration: audioDuration ? Math.round(audioDuration) : null, // Duration in seconds
+        duration_minutes: audioDuration ? Math.ceil(audioDuration / 60) : null, // Duration in minutes
       })
       .select()
       .single();
