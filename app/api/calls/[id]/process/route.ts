@@ -128,6 +128,7 @@ export async function POST(
         call_id: callId,
         assemblyai_id: transcriptionResult.id,
         text: transcriptionResult.text,
+        full_text: transcriptionResult.text, // Add full_text for compatibility
         utterances: transcriptionResult.utterances,
         words: transcriptionResult.words,
         speaker_mapping: speakerMapping,
@@ -140,6 +141,29 @@ export async function POST(
       .single();
 
     console.log('[Process] ✅ Transcript saved');
+
+    // Save utterances to the normalized table
+    if (transcript && transcriptionResult.utterances && transcriptionResult.utterances.length > 0) {
+      const utterancesToInsert = transcriptionResult.utterances.map((utterance: any) => ({
+        transcript_id: transcript.id,
+        speaker: utterance.speaker || 'Unknown',
+        text: utterance.text,
+        start_time: utterance.start / 1000, // Convert ms to seconds
+        end_time: utterance.end / 1000, // Convert ms to seconds
+        confidence: utterance.confidence,
+        sentiment: utterance.sentiment || 'neutral',
+      }));
+
+      const { error: utteranceError } = await supabase
+        .from('transcript_utterances')
+        .insert(utterancesToInsert);
+
+      if (utteranceError) {
+        console.error('[Process] ⚠️ Failed to save utterances:', utteranceError);
+      } else {
+        console.log(`[Process] ✅ Saved ${utterancesToInsert.length} utterances`);
+      }
+    }
 
     // =====================================================
     // STEP 3: EXTRACT CRM DATA
