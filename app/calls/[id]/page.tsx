@@ -1548,6 +1548,8 @@ Call_Duration__c: ${call.duration || 0}
           isOpen={showEmailModal}
           onClose={() => setShowEmailModal(false)}
           callData={callDetail}
+          callId={call.id}
+          customerName={call.customer_name}
         />
       )}
     </div>
