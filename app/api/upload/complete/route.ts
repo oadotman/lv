@@ -126,31 +126,35 @@ export async function POST(req: NextRequest) {
     const shouldAutoTranscribe = userPreferences?.auto_transcribe ?? true;
 
     if (shouldAutoTranscribe) {
-      try {
-        console.log('🚀 Enqueueing call for processing:', callData.id);
+      // Don't await - let it process in the background to avoid timeouts
+      console.log('🚀 Enqueueing call for processing:', callData.id);
 
-        // Import our queue processor
-        const { enqueueCallProcessing } = await import('@/lib/queue/call-processor');
+      // Process async without blocking the response
+      setImmediate(async () => {
+        try {
+          // Import our queue processor
+          const { enqueueCallProcessing } = await import('@/lib/queue/call-processor');
 
-        // Add to processing queue
-        await enqueueCallProcessing(callData.id);
+          // Add to processing queue
+          await enqueueCallProcessing(callData.id);
 
-        console.log('✅ Call enqueued for processing:', callData.id);
+          console.log('✅ Call enqueued for processing:', callData.id);
+        } catch (error) {
+          console.error('Failed to enqueue processing:', error);
 
-      } catch (error) {
-        console.error('Failed to enqueue processing:', error);
-
-        // Update status to failed
-        await supabase
-          .from('calls')
-          .update({
-            status: 'failed',
-            assemblyai_error: error instanceof Error
-              ? error.message
-              : 'Failed to start processing',
-          })
-          .eq('id', callData.id);
-      }
+          // Update status to failed
+          const supabaseAsync = createServerClient();
+          await supabaseAsync
+            .from('calls')
+            .update({
+              status: 'failed',
+              assemblyai_error: error instanceof Error
+                ? error.message
+                : 'Failed to start processing',
+            })
+            .eq('id', callData.id);
+        }
+      });
     } else {
       console.log('Auto-transcribe disabled, leaving call in uploaded state');
     }

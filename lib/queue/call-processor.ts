@@ -68,8 +68,12 @@ class CallProcessorQueue {
 
     processingQueue.set(callId, job);
 
-    // Try to process immediately
-    await this.processNext();
+    // Try to process immediately but don't block
+    setImmediate(() => {
+      this.processNext().catch(err => {
+        console.error('[Queue] Error processing next:', err);
+      });
+    });
   }
 
   /**
