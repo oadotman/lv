@@ -17,7 +17,7 @@ export const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder_k
 // Note: These will fail at runtime if not configured, which is intentional
 // to prevent sending emails from incorrect addresses
 export const SENDER_EMAIL = process.env.RESEND_FROM_EMAIL || '';
-export const SENDER_NAME = 'CallSync AI';
+export const SENDER_NAME = 'SynQall';
 export const REPLY_TO_EMAIL = process.env.RESEND_REPLY_TO || '';
 
 // Email delivery helper
@@ -35,9 +35,12 @@ export async function sendEmail({
   replyTo?: string;
 }) {
   // Validate configuration before attempting to send
-  if (!SENDER_EMAIL || !REPLY_TO_EMAIL) {
-    throw new Error('Email configuration incomplete. Please set RESEND_FROM_EMAIL and RESEND_REPLY_TO environment variables.');
+  if (!SENDER_EMAIL) {
+    throw new Error('Email configuration incomplete. Please set RESEND_FROM_EMAIL environment variable.');
   }
+
+  // Use sender email as reply-to if not configured
+  const finalReplyTo = replyTo || SENDER_EMAIL;
 
   try {
     const { data, error } = await resend.emails.send({
@@ -46,7 +49,7 @@ export async function sendEmail({
       subject,
       html,
       text,
-      replyTo,
+      replyTo: finalReplyTo,
     });
 
     if (error) {

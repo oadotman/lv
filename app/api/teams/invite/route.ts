@@ -120,27 +120,36 @@ export async function POST(req: NextRequest) {
       console.log('Could not check for existing user, continuing:', userCheckError);
     }
 
-    // Check if invitation already exists
-    const { data: existingInvite } = await supabase
+    // Check if invitation already exists (including accepted ones)
+    const { data: existingInvites } = await supabase
       .from('team_invitations')
-      .select('id, expires_at')
+      .select('id, expires_at, accepted_at')
       .eq('organization_id', organizationId)
-      .eq('email', email)
-      .is('accepted_at', null)
-      .maybeSingle();
+      .eq('email', email);
 
-    if (existingInvite) {
-      if (new Date(existingInvite.expires_at) > new Date()) {
+    if (existingInvites && existingInvites.length > 0) {
+      // Check for any active (non-expired, non-accepted) invitations
+      const activeInvite = existingInvites.find(
+        inv => !inv.accepted_at && new Date(inv.expires_at) > new Date()
+      );
+
+      if (activeInvite) {
         return NextResponse.json(
           { error: 'An active invitation already exists for this email' },
           { status: 400 }
         );
-      } else {
-        // Delete expired invitation
+      }
+
+      // Delete all old invitations (expired or accepted) before creating new one
+      const oldInviteIds = existingInvites
+        .filter(inv => inv.accepted_at || new Date(inv.expires_at) <= new Date())
+        .map(inv => inv.id);
+
+      if (oldInviteIds.length > 0) {
         await supabase
           .from('team_invitations')
           .delete()
-          .eq('id', existingInvite.id);
+          .in('id', oldInviteIds);
       }
     }
 
@@ -186,6 +195,8 @@ export async function POST(req: NextRequest) {
 
     // Send email via Resend (dynamic import to avoid build-time issues)
     try {
+      console.log('Attempting to send invitation email to:', email);
+
       const { sendTeamInvitation } = await import('@/lib/resend/sendTeamInvitation');
       const messageId = await sendTeamInvitation({
         email,
@@ -196,6 +207,8 @@ export async function POST(req: NextRequest) {
         expiresAt,
       });
 
+      console.log('Invitation email sent successfully, message ID:', messageId);
+
       // Update invitation with Resend message ID
       if (messageId) {
         await supabase
@@ -204,22 +217,30 @@ export async function POST(req: NextRequest) {
           .eq('id', invitation.id);
       }
 
-      // Log audit
-      await supabase.rpc('log_audit', {
-        p_user_id: user.id,
-        p_action: 'team_member_invited',
-        p_resource_type: 'invitation',
-        p_resource_id: invitation.id,
-        p_metadata: {
-          email,
-          role,
-          organization_id: organizationId,
-          organization_name: organization.name,
-        },
-      });
+      // Log audit (don't fail if this errors)
+      try {
+        await supabase.rpc('log_audit', {
+          p_user_id: user.id,
+          p_action: 'team_member_invited',
+          p_resource_type: 'invitation',
+          p_resource_id: invitation.id,
+          p_metadata: {
+            email,
+            role,
+            organization_id: organizationId,
+            organization_name: organization.name,
+          },
+        });
+      } catch (auditError) {
+        console.warn('Failed to log audit, but invitation was sent:', auditError);
+      }
 
     } catch (emailError: any) {
-      console.error('Email send error:', emailError);
+      console.error('Email send error details:', {
+        error: emailError,
+        message: emailError?.message,
+        stack: emailError?.stack,
+      });
 
       // Delete invitation since email failed
       await supabase
@@ -227,8 +248,13 @@ export async function POST(req: NextRequest) {
         .delete()
         .eq('id', invitation.id);
 
+      // Provide more specific error message
+      const errorMessage = emailError?.message?.includes('configuration')
+        ? 'Email service is not configured. Please contact support.'
+        : 'Failed to send invitation email. Please try again.';
+
       return NextResponse.json(
-        { error: 'Failed to send invitation email. Please try again.' },
+        { error: errorMessage },
         { status: 500 }
       );
     }
