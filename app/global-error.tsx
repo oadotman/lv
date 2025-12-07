@@ -11,7 +11,9 @@ interface GlobalErrorProps {
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error('Global error:', error);
+    if (error) {
+      console.error('Global error:', error);
+    }
   }, [error]);
 
   return (
@@ -43,7 +45,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
             <div className="mt-8 pt-8 border-t border-gray-200">
               <p className="text-sm text-gray-500">
-                Error ID: {error.digest || 'Unknown'}
+                Error ID: {error?.digest || 'Unknown'}
               </p>
             </div>
           </div>

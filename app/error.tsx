@@ -14,7 +14,9 @@ export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
     // Log the error to an error reporting service
     // In production, this would be sent to Sentry or similar
-    console.error('Application error:', error);
+    if (error) {
+      console.error('Application error:', error);
+    }
   }, [error]);
 
   return (
@@ -35,12 +37,12 @@ export default function Error({ error, reset }: ErrorProps) {
           Our team has been notified and is working to fix the issue.
         </p>
 
-        {process.env.NODE_ENV === 'development' && error.message && (
+        {process.env.NODE_ENV === 'development' && error?.message && (
           <div className="mb-8 p-4 bg-gray-100 rounded-lg text-left">
             <p className="text-sm font-mono text-gray-700 break-all">
               {error.message}
             </p>
-            {error.digest && (
+            {error?.digest && (
               <p className="text-xs text-gray-500 mt-2">
                 Error ID: {error.digest}
               </p>
