@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       participants,
       templateId, // Extract templateId from request
       audioDuration, // Extract audio duration in seconds
+      typedNotes, // Extract typed notes from request
     } = body;
 
     // Validate required fields
@@ -103,6 +104,7 @@ export async function POST(req: NextRequest) {
         template_id: templateId || null, // Save the selected template
         duration: audioDuration ? Math.round(audioDuration) : null, // Duration in seconds
         duration_minutes: audioDuration ? Math.ceil(audioDuration / 60) : null, // Duration in minutes
+        typed_notes: typedNotes || null, // Save the typed notes
       })
       .select()
       .single();

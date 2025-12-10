@@ -24,6 +24,7 @@ export interface UploadMetadata {
   participants?: any[];
   templateId?: string; // Add templateId to metadata type
   audioDuration?: number; // Duration in seconds
+  typedNotes?: string; // Add typed notes to metadata
 }
 
 export interface UploadResult {

@@ -12,9 +12,12 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:integration": "jest --testPathPattern=integration",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:integration": "node tests/integration-test.js",
+    "test:e2e": "node tests/comprehensive-e2e-test.js",
+    "test:e2e:basic": "node tests/e2e-call-processing.test.js",
+    "test:e2e:ui": "playwright test --ui",
+    "test:quick": "node tests/integration-test.js",
+    "test:all": "npm run test:quick && npm run test:e2e"
   },
   "keywords": [],
   "author": "",

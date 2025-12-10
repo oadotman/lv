@@ -62,7 +62,8 @@
       "Bash(npx shadcn-ui@latest add:*)",
       "Bash(npx shadcn@latest add scroll-area --yes)",
       "Bash(npx shadcn@latest add alert --yes)",
-      "Bash(nul 2)"
+      "Bash(nul 2)",
+      "Bash(npm run test:quick:*)"
     ],
     "deny": [],
     "ask": []

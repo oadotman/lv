@@ -385,28 +385,54 @@ export async function POST(
     // =====================================================
 
     if (durationMinutes && durationMinutes > 0) {
-      // Record usage metrics for the organization
-      const { error: metricsError } = await supabase
-        .from('usage_metrics')
-        .insert({
-          organization_id: call.organization_id,
-          user_id: call.user_id,
-          metric_type: 'call_minutes',
-          metric_value: durationMinutes,
-          metadata: {
-            call_id: callId,
-            duration_seconds: durationSeconds,
-            duration_minutes: durationMinutes,
-            customer_name: call.customer_name,
-            sales_rep: call.sales_rep,
-            processed_at: new Date().toISOString(),
-          },
-        });
+      // Get organization_id if not present
+      let organizationId = call.organization_id;
 
-      if (metricsError) {
-        console.error('[Process] ⚠️ Failed to record usage metrics:', metricsError);
+      if (!organizationId) {
+        // Try to get organization from user
+        const { data: userOrg } = await supabase
+          .from('user_organizations')
+          .select('organization_id')
+          .eq('user_id', call.user_id)
+          .single();
+
+        organizationId = userOrg?.organization_id;
+
+        // Update call with organization_id
+        if (organizationId) {
+          await supabase
+            .from('calls')
+            .update({ organization_id: organizationId })
+            .eq('id', callId);
+        }
+      }
+
+      // Only record metrics if we have an organization
+      if (organizationId) {
+        const { error: metricsError } = await supabase
+          .from('usage_metrics')
+          .insert({
+            organization_id: organizationId,
+            user_id: call.user_id,
+            metric_type: 'call_minutes',
+            metric_value: durationMinutes,
+            metadata: {
+              call_id: callId,
+              duration_seconds: durationSeconds,
+              duration_minutes: durationMinutes,
+              customer_name: call.customer_name,
+              sales_rep: call.sales_rep,
+              processed_at: new Date().toISOString(),
+            },
+          });
+
+        if (metricsError) {
+          console.error('[Process] ⚠️ Failed to record usage metrics:', metricsError);
+        } else {
+          console.log(`[Process] ✅ Recorded ${durationMinutes} minutes usage for organization`);
+        }
       } else {
-        console.log(`[Process] ✅ Recorded ${durationMinutes} minutes usage for organization`);
+        console.warn('[Process] ⚠️ No organization found for user, skipping usage metrics');
       }
     }
     console.log('[Process] ========================================');
@@ -420,14 +446,16 @@ export async function POST(
       link: `/calls/${callId}`,
     });
 
-    return NextResponse.json(
-      {
+    return new Response(
+      JSON.stringify({
         success: true,
         message: 'Call processed successfully',
-      },
+      }),
       {
+        status: 200,
         headers: {
-          'Connection': 'close', // Prevent chunked encoding issues
+          'Content-Type': 'application/json',
+          'Connection': 'close',
         },
       }
     );

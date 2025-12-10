@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Upload, FileAudio, X, Check, AlertCircle, Loader2, Link as LinkIcon, Plus, Users, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -72,6 +73,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   const [newTemplateFields, setNewTemplateFields] = useState<any[]>([
     { id: "1", fieldName: "", fieldType: "text", description: "" }
   ]);
+  const [typedNotes, setTypedNotes] = useState("");
   const { toast } = useToast();
   const router = useRouter();
   const { user, organization } = useAuth();
@@ -334,6 +336,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
         participants: participants.filter(p => p.name.trim()),
         templateId: templateToSend, // Only send custom template IDs
         audioDuration: audioDuration, // Add duration to metadata
+        typedNotes: typedNotes.trim() || undefined, // Add typed notes to metadata
       };
 
       // Upload directly to Supabase Storage (zero memory usage)
@@ -934,6 +937,29 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Typed Notes Section - New */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6 space-y-3">
+            <div>
+              <Label htmlFor="typed-notes" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Pre-call Notes (Optional)
+              </Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3">
+                Add any context or notes about this call to enhance AI extraction accuracy
+              </p>
+              <Textarea
+                id="typed-notes"
+                placeholder="e.g., This is a follow-up call with the prospect about their enterprise needs. They mentioned budget concerns in our last meeting. Key decision maker is the CTO..."
+                value={typedNotes}
+                onChange={(e) => setTypedNotes(e.target.value)}
+                disabled={isProcessing || isImporting}
+                className="min-h-[100px] resize-y"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                These notes will help the AI better understand the context and extract more relevant information
+              </p>
             </div>
           </div>
 

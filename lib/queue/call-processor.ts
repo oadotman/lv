@@ -129,6 +129,18 @@ class CallProcessorQueue {
     const supabase = createAdminClient();
 
     try {
+      // First, check if call is already completed
+      const { data: existingCall } = await supabase
+        .from('calls')
+        .select('status')
+        .eq('id', job.callId)
+        .single();
+
+      if (existingCall?.status === 'completed') {
+        console.log(`[Queue] Call ${job.callId} already completed, skipping`);
+        return;
+      }
+
       // Update status to processing
       await supabase
         .from('calls')
@@ -167,6 +179,18 @@ class CallProcessorQueue {
 
     } catch (error: any) {
       console.error(`[Queue] ❌ Error processing call ${job.callId}:`, error);
+
+      // Check if call was actually completed despite the error
+      const { data: checkCall } = await supabase
+        .from('calls')
+        .select('status')
+        .eq('id', job.callId)
+        .single();
+
+      if (checkCall?.status === 'completed') {
+        console.log(`[Queue] Call ${job.callId} completed despite error, not retrying`);
+        return;
+      }
 
       // Check if should retry
       if (job.attempt < job.maxAttempts) {
