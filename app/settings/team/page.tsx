@@ -231,6 +231,16 @@ export default function TeamSettingsPage() {
 
       const data = await response.json();
 
+      // Handle 409 status (invitation already exists)
+      if (response.status === 409) {
+        toast({
+          title: 'Invitation Already Sent ℹ️',
+          description: data.warning || 'An active invitation already exists for this email address',
+          duration: 5000,
+        });
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to send invitation');
       }

@@ -310,7 +310,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
       // Only send templateId if it's a custom template (UUID), not a system template
       const templateToSend = selectedTemplateId &&
-        !['default', 'salesforce', 'hubspot', 'pipedrive'].includes(selectedTemplateId)
+        !['default', 'salesforce', 'hubspot', 'pipedrive', 'zoho', 'freshsales', 'monday'].includes(selectedTemplateId)
         ? selectedTemplateId
         : null;
 
@@ -693,6 +693,9 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               <SelectItem value="salesforce">Salesforce</SelectItem>
               <SelectItem value="hubspot">HubSpot</SelectItem>
               <SelectItem value="pipedrive">Pipedrive</SelectItem>
+              <SelectItem value="zoho">Zoho CRM</SelectItem>
+              <SelectItem value="freshsales">Freshsales</SelectItem>
+              <SelectItem value="monday">Monday.com</SelectItem>
               {customTemplates.map(template => (
                 <SelectItem key={template.id} value={template.id}>
                   {template.name} ({template.field_count} fields)

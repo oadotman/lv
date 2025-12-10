@@ -440,7 +440,7 @@ export function calculateExtractionCost(inputTokens: number, outputTokens: numbe
  */
 export function formatForCRM(
   extraction: CRMExtractionResult,
-  format: 'plain' | 'hubspot' | 'salesforce'
+  format: 'plain' | 'hubspot' | 'salesforce' | 'pipedrive' | 'zoho' | 'freshsales' | 'monday'
 ): string {
   switch (format) {
     case 'plain':
@@ -449,6 +449,14 @@ export function formatForCRM(
       return formatHubSpot(extraction);
     case 'salesforce':
       return formatSalesforce(extraction);
+    case 'pipedrive':
+      return formatPipedrive(extraction);
+    case 'zoho':
+      return formatZoho(extraction);
+    case 'freshsales':
+      return formatFreshsales(extraction);
+    case 'monday':
+      return formatMonday(extraction);
     default:
       return formatPlainText(extraction);
   }
@@ -562,5 +570,146 @@ function getSalesforceStatus(outcome: string): string {
       return 'Open';
     default:
       return 'New';
+  }
+}
+
+function formatPipedrive(extraction: CRMExtractionResult): string {
+  const fields: Record<string, string> = {
+    'Deal Title': `${extraction.raw.customerCompany || 'Unknown'} - ${extraction.callOutcome}`,
+    'Value': extraction.budget || '0',
+    'Stage': getPipedriveStage(extraction.callOutcome),
+    'Probability': extraction.qualificationScore.toString() + '%',
+    'Organization': extraction.raw.customerCompany || 'Unknown',
+    'Expected Close Date': extraction.timeline || 'TBD',
+    'Next Activity': extraction.nextSteps.join('; '),
+    'Notes': extraction.summary,
+  };
+
+  if (extraction.decisionMaker) fields['Person'] = extraction.decisionMaker;
+
+  return Object.entries(fields)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n');
+}
+
+function formatZoho(extraction: CRMExtractionResult): string {
+  const fields: Record<string, string> = {
+    'Deal Name': `${extraction.raw.customerCompany || 'Unknown'} - Opportunity`,
+    'Amount': extraction.budget || '0',
+    'Stage': getZohoStage(extraction.callOutcome),
+    'Closing Date': extraction.timeline || '3 months',
+    'Account Name': extraction.raw.customerCompany || 'Unknown',
+    'Type': 'New Business',
+    'Lead Source': 'Phone Inquiry',
+    'Description': extraction.summary,
+    'Next Steps': extraction.nextSteps.join('; '),
+    'Competitors': extraction.competitorsMentioned.join('; '),
+  };
+
+  if (extraction.decisionMaker) fields['Contact Name'] = extraction.decisionMaker;
+
+  return Object.entries(fields)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n');
+}
+
+function formatFreshsales(extraction: CRMExtractionResult): string {
+  const fields: Record<string, string> = {
+    'Deal Name': `${extraction.raw.customerCompany || 'Unknown'} - ${extraction.callOutcome}`,
+    'Deal Value': extraction.budget || '0',
+    'Deal Stage': getFreshsalesStage(extraction.callOutcome),
+    'Expected Close Date': extraction.timeline || 'TBD',
+    'Account': extraction.raw.customerCompany || 'Unknown',
+    'Deal Reason': extraction.painPoints.length > 0 ? 'Product Features' : 'Other',
+    'Next Steps': extraction.nextSteps.join('; '),
+    'Notes': extraction.summary,
+    'Tags': extraction.urgency,
+  };
+
+  if (extraction.decisionMaker) fields['Primary Contact'] = extraction.decisionMaker;
+  if (extraction.raw.industry) fields['Product'] = extraction.raw.industry;
+
+  return Object.entries(fields)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n');
+}
+
+function formatMonday(extraction: CRMExtractionResult): string {
+  const fields: Record<string, string> = {
+    'Item Name': `${extraction.raw.customerCompany || 'Unknown'} - Deal`,
+    'Status': getMondayStatus(extraction.callOutcome),
+    'Priority': extraction.urgency === 'high' ? 'Critical' : extraction.urgency === 'low' ? 'Low' : 'Medium',
+    'Deal Value': extraction.budget || '0',
+    'Company': extraction.raw.customerCompany || 'Unknown',
+    'Timeline': extraction.timeline || 'TBD',
+    'Next Action': extraction.nextSteps[0] || 'Follow up',
+    'Notes': `${extraction.summary}\n\nPain Points: ${extraction.painPoints.join(', ')}`,
+  };
+
+  if (extraction.decisionMaker) fields['Contact'] = extraction.decisionMaker;
+
+  return Object.entries(fields)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n');
+}
+
+// Helper functions for CRM stage mapping
+function getPipedriveStage(outcome: string): string {
+  switch (outcome) {
+    case 'qualified':
+      return 'Proposal Made';
+    case 'nurture':
+      return 'Contact Made';
+    case 'not_interested':
+      return 'Lost';
+    case 'follow_up_needed':
+      return 'Demo Scheduled';
+    default:
+      return 'Lead In';
+  }
+}
+
+function getZohoStage(outcome: string): string {
+  switch (outcome) {
+    case 'qualified':
+      return 'Value Proposition';
+    case 'nurture':
+      return 'Needs Analysis';
+    case 'not_interested':
+      return 'Closed Lost';
+    case 'follow_up_needed':
+      return 'Qualification';
+    default:
+      return 'Qualification';
+  }
+}
+
+function getFreshsalesStage(outcome: string): string {
+  switch (outcome) {
+    case 'qualified':
+      return 'Demo';
+    case 'nurture':
+      return 'Qualification';
+    case 'not_interested':
+      return 'Lost';
+    case 'follow_up_needed':
+      return 'New';
+    default:
+      return 'New';
+  }
+}
+
+function getMondayStatus(outcome: string): string {
+  switch (outcome) {
+    case 'qualified':
+      return 'Qualified';
+    case 'nurture':
+      return 'Lead';
+    case 'not_interested':
+      return 'Lost';
+    case 'follow_up_needed':
+      return 'Proposal';
+    default:
+      return 'Lead';
   }
 }

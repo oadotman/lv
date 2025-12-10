@@ -140,9 +140,9 @@ export async function POST(req: NextRequest) {
             warning: 'An invitation has already been sent to this email address',
             existingInvitation: {
               id: activeInvite.id,
-              email: activeInvite.email,
+              email: activeInvite.email || email, // Fallback to the email parameter if not in result
               expires_at: activeInvite.expires_at,
-              created_at: activeInvite.created_at
+              created_at: activeInvite.created_at || new Date().toISOString() // Fallback to current time
             },
             canResend: false
           },
