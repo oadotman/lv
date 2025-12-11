@@ -160,18 +160,38 @@ export default function Dashboard() {
 
         // Calculate minutes used from usage_metrics table
         // Look for minutes_transcribed which tracks actual call minutes
-        const { data: usageMetrics } = await supabase
-          .from('usage_metrics')
-          .select('metric_value')
-          .eq('organization_id', orgId || user.id)
-          .eq('metric_type', 'minutes_transcribed')
-          .gte('created_at', startOfMonth.toISOString())
-          .lte('created_at', now.toISOString());
+        // IMPORTANT: Only query if we have a valid organization ID
+        let totalMinutesThisMonth = 0;
 
-        const totalMinutesThisMonth = (usageMetrics || []).reduce(
-          (sum, metric) => sum + (metric.metric_value || 0),
-          0
-        );
+        if (orgId) {
+          const { data: usageMetrics } = await supabase
+            .from('usage_metrics')
+            .select('metric_value')
+            .eq('organization_id', orgId)
+            .eq('metric_type', 'minutes_transcribed')
+            .gte('created_at', startOfMonth.toISOString())
+            .lte('created_at', now.toISOString());
+
+          totalMinutesThisMonth = (usageMetrics || []).reduce(
+            (sum, metric) => sum + (metric.metric_value || 0),
+            0
+          );
+        } else {
+          // Fallback: If no org, check user-specific metrics
+          // This handles free tier users who might not have an organization
+          const { data: usageMetrics } = await supabase
+            .from('usage_metrics')
+            .select('metric_value')
+            .eq('user_id', user.id)
+            .eq('metric_type', 'minutes_transcribed')
+            .gte('created_at', startOfMonth.toISOString())
+            .lte('created_at', now.toISOString());
+
+          totalMinutesThisMonth = (usageMetrics || []).reduce(
+            (sum, metric) => sum + (metric.metric_value || 0),
+            0
+          );
+        }
 
         // Calculate time saved (assuming 15 min saved per call)
         const hoursSavedThisMonth = Math.round((callsThisMonth * 15) / 60 * 10) / 10;

@@ -4,7 +4,7 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createServerClient, requireAuth } from '@/lib/supabase/server';
 import { emailRateLimiter } from '@/lib/rateLimit/email';
 import OpenAI from 'openai';
 
@@ -17,17 +17,18 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createAdminClient();
+    // Authenticate user first using requireAuth
+    const user = await requireAuth();
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
+
+    // Now create server client with proper cookie context
+    const supabase = createServerClient();
 
     const userId = user.id;
     const callId = params.id;

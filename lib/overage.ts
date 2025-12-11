@@ -68,18 +68,17 @@ export async function calculateUsageAndOverage(organizationId: string, periodSta
     throw new Error('Organization not found');
   }
 
-  // Calculate minutes used this period
-  // Use duration_minutes for accurate billing (already in minutes)
-  const { data: calls } = await supabase
-    .from('calls')
-    .select('duration_minutes')
+  // Calculate minutes used this period from usage_metrics table
+  // This is the source of truth for billing as it tracks actual transcribed minutes
+  const { data: usageMetrics } = await supabase
+    .from('usage_metrics')
+    .select('metric_value')
     .eq('organization_id', organizationId)
+    .eq('metric_type', 'minutes_transcribed')
     .gte('created_at', periodStart)
-    .lte('created_at', periodEnd)
-    .not('duration_minutes', 'is', null)
-    .eq('status', 'completed'); // Only count completed calls
+    .lte('created_at', periodEnd);
 
-  const minutesUsed = (calls || []).reduce((sum, call) => sum + (call.duration_minutes || 0), 0);
+  const minutesUsed = (usageMetrics || []).reduce((sum, metric) => sum + (metric.metric_value || 0), 0);
 
   // Calculate available minutes (base plan + purchased overages)
   const baseMinutes = org.max_minutes_monthly;
