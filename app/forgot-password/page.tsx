@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { authHelpers } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { Phone, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
@@ -20,7 +20,10 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await authHelpers.resetPassword(email)
+    const supabase = createClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
 
     if (error) {
       setError(error.message)

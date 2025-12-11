@@ -42,9 +42,20 @@ export default function AcceptInvitationPage() {
     // Add a flag to prevent multiple simultaneous invitation acceptances
     let isProcessing = false;
 
-    if (authLoading) return;
+    // Wait a moment for auth to initialize, but don't block if user is not authenticated
+    // This allows non-authenticated users to be redirected to signup
+    const authCheckTimeout = setTimeout(() => {
+      if (authLoading) {
+        console.log('⏳ Auth still loading after timeout, proceeding anyway to allow redirect');
+      }
+    }, 1500); // Give auth 1.5 seconds to load
 
     async function acceptInvitation() {
+      // Wait briefly for auth to stabilize if still loading
+      if (authLoading) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       if (isProcessing) return;
       isProcessing = true;
       if (!token) {

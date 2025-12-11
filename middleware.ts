@@ -126,26 +126,51 @@ export async function middleware(req: NextRequest) {
   )
 
   // Refresh session if expired - required for Server Components
-  const { data: { session } } = await supabase.auth.getSession()
+  let session = null;
+  let user = null;
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      // If refresh token error, try to clear the invalid session
+      if (error.message?.includes('Refresh Token') || error.code === 'refresh_token_not_found') {
+        console.log('Middleware: Invalid refresh token detected, clearing session');
+        // Don't log the full error to avoid cluttering logs
+        await supabase.auth.signOut();
+      } else {
+        console.error('Middleware: Error getting session:', error);
+      }
+    } else {
+      session = data?.session;
+      user = session?.user || null;
+    }
+  } catch (err) {
+    console.error('Middleware: Unexpected error getting session:', err);
+  }
 
   console.log('Middleware: Session check', {
     pathname: req.nextUrl.pathname,
     hasSession: !!session,
-    hasUser: !!session?.user
+    hasUser: !!user
   })
 
-  const publicPaths = ['/login', '/signup', '/forgot-password', '/reset-password', '/', '/api/auth/signup', '/api/health']
+  // Include invite paths as public since they handle their own auth flow
+  const publicPaths = ['/login', '/signup', '/forgot-password', '/reset-password', '/', '/api/auth/signup', '/api/health', '/invite/', '/invite-signup/']
   const isPublicPath = publicPaths.some(path => req.nextUrl.pathname.startsWith(path))
 
+  // Check if user is authenticated (either via session or user)
+  const isAuthenticated = !!(session || user)
+
   // If user is signed in and on root path, redirect to dashboard
-  if (session && req.nextUrl.pathname === '/') {
-    console.log('Middleware: Session found on root path, redirecting to /dashboard')
+  if (isAuthenticated && req.nextUrl.pathname === '/') {
+    console.log('Middleware: User authenticated on root path, redirecting to /dashboard')
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
   // If user is not signed in and trying to access protected route, redirect to login
-  if (!session && !isPublicPath) {
-    console.log('Middleware: No session on protected route, redirecting to /login')
+  if (!isAuthenticated && !isPublicPath) {
+    console.log('Middleware: No authentication on protected route, redirecting to /login')
     const redirectUrl = new URL('/login', req.url)
     redirectUrl.searchParams.set('redirect', req.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
@@ -153,8 +178,8 @@ export async function middleware(req: NextRequest) {
 
   // If user is signed in and trying to access auth pages, redirect to dashboard
   const isAuthPage = ['/login', '/signup', '/forgot-password', '/reset-password'].some(path => req.nextUrl.pathname.startsWith(path))
-  if (session && isAuthPage) {
-    console.log('Middleware: Session found on auth page, redirecting to /dashboard')
+  if (isAuthenticated && isAuthPage) {
+    console.log('Middleware: User authenticated on auth page, redirecting to /dashboard')
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 

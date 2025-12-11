@@ -160,25 +160,80 @@ export async function GET(
       const cost_cents = Math.round(minutes * 1.5);
 
       // Only record metrics if we have actual minutes
-      if (minutes > 0 && call.organization_id) {
-        await supabase.from('usage_metrics').insert([
-          {
-            user_id: user.id,
-            organization_id: call.organization_id,
-            metric_type: 'minutes_transcribed', // Use the allowed metric type
-            metric_value: minutes,
-            cost_cents,
-            metadata: {
-              call_id: call.id, // Store call_id in metadata
-              provider: 'assemblyai',
-              duration_seconds: durationSeconds,
-              duration_minutes: minutes,
-              customer_name: call.customer_name,
-              sales_rep: call.sales_rep,
-              processed_at: new Date().toISOString(),
+      if (minutes > 0) {
+        if (call.organization_id) {
+          const { error: metricsError } = await supabase.from('usage_metrics').insert([
+            {
+              user_id: user.id,
+              organization_id: call.organization_id,
+              metric_type: 'minutes_transcribed', // Use the allowed metric type
+              metric_value: minutes,
+              cost_cents,
+              metadata: {
+                call_id: call.id, // Store call_id in metadata
+                provider: 'assemblyai',
+                duration_seconds: durationSeconds,
+                duration_minutes: minutes,
+                customer_name: call.customer_name,
+                sales_rep: call.sales_rep,
+                processed_at: new Date().toISOString(),
+              },
             },
-          },
-        ]);
+          ]);
+
+          if (metricsError) {
+            console.error('Failed to record usage metrics:', metricsError);
+          } else {
+            console.log(`Recorded ${minutes} minutes usage for org ${call.organization_id}`);
+          }
+        } else {
+          console.error('CRITICAL: No organization_id on call, cannot record usage!');
+          console.error('Call ID:', call.id);
+          console.error('User ID:', user.id);
+
+          // Try to get and update organization_id
+          const { data: userOrg } = await supabase
+            .from('user_organizations')
+            .select('organization_id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (userOrg?.organization_id) {
+            // Update call with organization_id
+            await supabase
+              .from('calls')
+              .update({ organization_id: userOrg.organization_id })
+              .eq('id', call.id);
+
+            // Now record the metrics
+            const { error: metricsError } = await supabase.from('usage_metrics').insert([
+              {
+                user_id: user.id,
+                organization_id: userOrg.organization_id,
+                metric_type: 'minutes_transcribed',
+                metric_value: minutes,
+                cost_cents,
+                metadata: {
+                  call_id: call.id,
+                  provider: 'assemblyai',
+                  duration_seconds: durationSeconds,
+                  duration_minutes: minutes,
+                  customer_name: call.customer_name,
+                  sales_rep: call.sales_rep,
+                  processed_at: new Date().toISOString(),
+                },
+              },
+            ]);
+
+            if (metricsError) {
+              console.error('Failed to record usage metrics after org update:', metricsError);
+            } else {
+              console.log(`Fixed missing org and recorded ${minutes} minutes usage`);
+            }
+          } else {
+            console.error('User has no organization - cannot track usage!');
+          }
+        }
       }
 
       // Phase 4: Trigger GPT-4o extraction automatically

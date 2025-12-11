@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { authHelpers } from '@/lib/supabase'
+// Note: Auth is handled via /api/auth/signup endpoint
 import { useAuth } from '@/lib/AuthContext'
 import { Phone, Loader2, CheckCircle2, Users } from 'lucide-react'
 

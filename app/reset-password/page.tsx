@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { authHelpers } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { Phone, Loader2 } from 'lucide-react'
 
 export default function ResetPasswordPage() {
@@ -35,7 +35,10 @@ export default function ResetPasswordPage() {
       return
     }
 
-    const { error } = await authHelpers.updatePassword(password)
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({
+      password: password,
+    })
 
     if (error) {
       setError(error.message)

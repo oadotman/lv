@@ -74,25 +74,32 @@ export default function Dashboard() {
 
         if (organization) {
           planLimit = organization.max_minutes_monthly || 30;
+          console.log('Using organization from context:', organization.name, 'Limit:', planLimit);
         } else {
           // Fallback: fetch user's organization if not in context
-          const { data: userOrg } = await supabase
-            .from('user_organizations')
-            .select('organization_id, role')
-            .eq('user_id', user.id)
-            .single();
-
-          if (userOrg?.organization_id) {
-            orgId = userOrg.organization_id;
-            const { data: org } = await supabase
-              .from('organizations')
-              .select('max_minutes_monthly, plan_type')
-              .eq('id', userOrg.organization_id)
+          console.log('Organization not in context, fetching...');
+          try {
+            const { data: userOrg, error: orgError } = await supabase
+              .from('user_organizations')
+              .select('organization_id, role')
+              .eq('user_id', user.id)
               .single();
 
-            if (org?.max_minutes_monthly) {
-              planLimit = org.max_minutes_monthly;
+            if (!orgError && userOrg?.organization_id) {
+              orgId = userOrg.organization_id;
+              const { data: org } = await supabase
+                .from('organizations')
+                .select('max_minutes_monthly, plan_type, name')
+                .eq('id', userOrg.organization_id)
+                .single();
+
+              if (org) {
+                planLimit = org.max_minutes_monthly || 30;
+                console.log('Fetched organization:', org.name, 'Plan:', org.plan_type, 'Limit:', planLimit);
+              }
             }
+          } catch (err) {
+            console.log('No organization found for user, using defaults');
           }
         }
 
@@ -160,35 +167,55 @@ export default function Dashboard() {
 
         // Calculate minutes used from usage_metrics table
         // Look for minutes_transcribed which tracks actual call minutes
-        // IMPORTANT: Only query if we have a valid organization ID
         let totalMinutesThisMonth = 0;
 
-        if (orgId) {
-          const { data: usageMetrics } = await supabase
-            .from('usage_metrics')
-            .select('metric_value')
-            .eq('organization_id', orgId)
-            .eq('metric_type', 'minutes_transcribed')
-            .gte('created_at', startOfMonth.toISOString())
-            .lte('created_at', now.toISOString());
+        try {
+          if (orgId) {
+            // For organizations, aggregate ALL team member usage
+            const { data: usageMetrics, error: usageError } = await supabase
+              .from('usage_metrics')
+              .select('metric_value, user_id')
+              .eq('organization_id', orgId)
+              .eq('metric_type', 'minutes_transcribed')
+              .gte('created_at', startOfMonth.toISOString())
+              .lte('created_at', now.toISOString());
 
-          totalMinutesThisMonth = (usageMetrics || []).reduce(
-            (sum, metric) => sum + (metric.metric_value || 0),
-            0
-          );
-        } else {
-          // Fallback: If no org, check user-specific metrics
-          // This handles free tier users who might not have an organization
-          const { data: usageMetrics } = await supabase
-            .from('usage_metrics')
-            .select('metric_value')
-            .eq('user_id', user.id)
-            .eq('metric_type', 'minutes_transcribed')
-            .gte('created_at', startOfMonth.toISOString())
-            .lte('created_at', now.toISOString());
+            if (!usageError && usageMetrics) {
+              totalMinutesThisMonth = usageMetrics.reduce(
+                (sum, metric) => sum + (metric.metric_value || 0),
+                0
+              );
+              console.log(`Organization usage: ${totalMinutesThisMonth} minutes from ${usageMetrics.length} entries`);
+            }
+          } else {
+            // Fallback: If no org, check user-specific metrics or calculate from calls
+            const { data: usageMetrics, error: usageError } = await supabase
+              .from('usage_metrics')
+              .select('metric_value')
+              .eq('user_id', user.id)
+              .eq('metric_type', 'minutes_transcribed')
+              .gte('created_at', startOfMonth.toISOString())
+              .lte('created_at', now.toISOString());
 
-          totalMinutesThisMonth = (usageMetrics || []).reduce(
-            (sum, metric) => sum + (metric.metric_value || 0),
+            if (!usageError && usageMetrics) {
+              totalMinutesThisMonth = usageMetrics.reduce(
+                (sum, metric) => sum + (metric.metric_value || 0),
+                0
+              );
+              console.log(`Individual usage: ${totalMinutesThisMonth} minutes`);
+            } else {
+              // If no usage metrics, calculate from completed calls
+              totalMinutesThisMonth = (currentMonthCalls || []).reduce(
+                (sum, call) => sum + (call.duration || 0) / 60, // Convert seconds to minutes
+                0
+              );
+              console.log(`Calculated from calls: ${totalMinutesThisMonth} minutes`);
+            }
+          }
+        } catch (err) {
+          console.log('Error fetching usage metrics, using call duration fallback');
+          totalMinutesThisMonth = (currentMonthCalls || []).reduce(
+            (sum, call) => sum + (call.duration || 0) / 60,
             0
           );
         }

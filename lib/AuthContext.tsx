@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { User, Session } from '@supabase/supabase-js'
-import { supabase } from './supabase'
+import { createClient } from './supabase/client'
 import { useRouter } from 'next/navigation'
 
 interface OrganizationData {
@@ -45,6 +45,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [organization, setOrganization] = useState<OrganizationData | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+
+  // Create supabase client lazily to avoid SSR issues
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient()
+    }
+    return supabaseRef.current
+  }, [])
 
   // Track if component is mounted
   const mountedRef = useRef(true)
@@ -89,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🏢 Fetching organization for user:', userId)
 
       // Quick fetch without invitation processing to avoid delays
-      const { data: userOrgs } = await supabase
+      const { data: userOrgs } = await getSupabase()
         .from('user_organizations')
         .select(`
           organization_id,
@@ -110,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userOrgs && userOrgs.length > 0 && userOrgs[0].organization) {
         const orgData = userOrgs[0].organization
         const org = Array.isArray(orgData) ? orgData[0] : orgData
-        console.log('✅ Organization found:', org.name)
+        console.log('✅ Organization found:', org.name, 'Plan:', org.plan_type, 'Limit:', org.max_minutes_monthly)
         safeSetState(setOrganization)(org as OrganizationData)
       } else {
         console.log('⚠️ No organization found for user')
@@ -126,14 +135,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ Error fetching organization:', error)
       safeSetState(setOrganization)(null)
     }
-  }, [safeSetState])
+  }, [safeSetState, getSupabase])
 
   // Process invitations without blocking the UI
   const processInvitationsInBackground = useCallback(async (userId: string, userEmail: string) => {
     try {
       console.log('📬 Processing invitations in background for:', userEmail)
 
-      const { data: pendingInvites } = await supabase
+      const { data: pendingInvites } = await getSupabase()
         .from('team_invitations')
         .select('*, organization:organizations(id, name)')
         .eq('email', userEmail.toLowerCase())
@@ -148,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!invite.organization_id) continue
 
           // Add to organization
-          await supabase
+          await getSupabase()
             .from('user_organizations')
             .insert({
               user_id: userId,
@@ -158,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             })
 
           // Mark as accepted
-          await supabase
+          await getSupabase()
             .from('team_invitations')
             .update({
               accepted_at: new Date().toISOString(),
@@ -174,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ Error processing invitations:', error)
       // Don't block on invitation errors
     }
-  }, [fetchOrganization])
+  }, [fetchOrganization, getSupabase])
 
   // Assign the ref after creation to solve circular dependency
   processInvitationsInBackgroundRef.current = processInvitationsInBackground
@@ -192,24 +201,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔐 Starting auth initialization...')
 
-      const { data: { session }, error } = await supabase.auth.getSession()
+      let currentSession = null
+      let currentUser = null
+
+      // Try to get session
+      const { data: { session }, error: sessionError } = await getSupabase().auth.getSession()
 
       if (!mountedRef.current) return
 
-      if (error) {
-        console.error('❌ Error getting session:', error)
+      if (sessionError) {
+        console.error('❌ Error getting session:', sessionError)
         safeSetState(setLoading)(false)
         clearLoadingTimeout()
         return
       }
 
-      if (session?.user) {
-        console.log('✅ User found:', session.user.id)
-        safeSetState(setUser)(session.user)
-        safeSetState(setSession)(session)
+      if (session) {
+        currentSession = session
+        currentUser = session.user
+      }
+
+      if (currentUser) {
+        console.log('✅ User authenticated:', currentUser.id)
+        safeSetState(setUser)(currentUser)
+        safeSetState(setSession)(currentSession)
 
         // Fetch organization but don't wait for it
-        fetchOrganization(session.user.id, session.user.email).finally(() => {
+        fetchOrganization(currentUser.id, currentUser.email).finally(() => {
           safeSetState(setLoading)(false)
           clearLoadingTimeout()
         })
@@ -228,30 +246,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       initializationRef.current = false
     }
-  }, [startLoadingTimeout, clearLoadingTimeout, safeSetState, fetchOrganization])
+  }, [startLoadingTimeout, clearLoadingTimeout, safeSetState, fetchOrganization, getSupabase])
 
   // Refresh user data
   const refreshUser = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user && mountedRef.current) {
-        safeSetState(setUser)(session.user)
-        await fetchOrganization(session.user.id, session.user.email)
+      let currentUser = null
+
+      // Try getSession first
+      const { data: { session }, error: sessionError } = await getSupabase().auth.getSession()
+
+      if (sessionError && sessionError.message?.includes('Refresh Token')) {
+        // If refresh token error, try getUser
+        const { data: { user }, error: userError } = await getSupabase().auth.getUser()
+        if (!userError && user) {
+          currentUser = user
+        }
+      } else if (session?.user) {
+        currentUser = session.user
+      }
+
+      if (currentUser && mountedRef.current) {
+        safeSetState(setUser)(currentUser)
+        await fetchOrganization(currentUser.id, currentUser.email)
       }
     } catch (error) {
       console.error('❌ Error refreshing user:', error)
     }
-  }, [safeSetState, fetchOrganization])
+  }, [safeSetState, fetchOrganization, getSupabase])
 
   // Sign out
   const signOut = useCallback(async () => {
     try {
-      await supabase.auth.signOut()
+      await getSupabase().auth.signOut()
       router.push('/login')
     } catch (error) {
       console.error('❌ Error signing out:', error)
     }
-  }, [router])
+  }, [router, getSupabase])
 
   useEffect(() => {
     mountedRef.current = true
@@ -260,7 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = getSupabase().auth.onAuthStateChange(
       async (event, session) => {
         if (!mountedRef.current) return
 

@@ -407,7 +407,7 @@ export async function POST(
         }
       }
 
-      // Only record metrics if we have an organization
+      // Record metrics - organization_id is required
       if (organizationId) {
         const { error: metricsError } = await supabase
           .from('usage_metrics')
@@ -428,11 +428,15 @@ export async function POST(
 
         if (metricsError) {
           console.error('[Process] ⚠️ Failed to record usage metrics:', metricsError);
+          console.error('[Process] Metrics error details:', metricsError);
         } else {
-          console.log(`[Process] ✅ Recorded ${durationMinutes} minutes usage for organization`);
+          console.log(`[Process] ✅ Recorded ${durationMinutes} minutes usage for organization ${organizationId}`);
         }
       } else {
-        console.warn('[Process] ⚠️ No organization found for user, skipping usage metrics');
+        console.error('[Process] ❌ CRITICAL: No organization found for user, CANNOT record usage metrics!');
+        console.error('[Process] User ID:', call.user_id);
+        console.error('[Process] Call ID:', callId);
+        // This is a critical issue - usage won't be tracked!
       }
     }
     console.log('[Process] ========================================');
