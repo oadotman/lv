@@ -173,18 +173,18 @@ export default function UpgradePage() {
             >
               <ToggleGroupItem
                 value="monthly"
-                className="px-8 py-2 data-[state=on]:bg-white data-[state=on]:shadow-sm rounded-md"
+                className="px-8 py-2 data-[state=on]:bg-white data-[state=on]:text-gray-900 data-[state=on]:shadow-sm rounded-md font-medium text-gray-600 hover:text-gray-900 transition-all"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
                 Monthly
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="annual"
-                className="px-8 py-2 data-[state=on]:bg-white data-[state=on]:shadow-sm rounded-md"
+                className="px-8 py-2 data-[state=on]:bg-white data-[state=on]:text-gray-900 data-[state=on]:shadow-sm rounded-md font-medium text-gray-600 hover:text-gray-900 transition-all"
               >
                 <Calendar className="w-4 h-4 mr-2" />
                 Annual
-                <Badge className="ml-2 bg-green-100 text-green-800">Save 17%</Badge>
+                <Badge className="ml-2 bg-green-100 text-green-800 font-semibold">Save 17%</Badge>
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
@@ -250,8 +250,10 @@ export default function UpgradePage() {
                     onClick={() => handleUpgrade(planId)}
                     disabled={loading}
                     className={cn(
-                      "w-full",
-                      isPopular ? "bg-violet-600 hover:bg-violet-700" : ""
+                      "w-full text-white font-semibold",
+                      isPopular
+                        ? "bg-violet-600 hover:bg-violet-700"
+                        : "bg-blue-600 hover:bg-blue-700"
                     )}
                     size="lg"
                   >
