@@ -65,11 +65,11 @@ const nextConfig = {
     // Content Security Policy
     const cspHeader = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://cdn.paddle.com https://app.posthog.com https://*.sentry.io",
-      "style-src 'self' 'unsafe-inline' https://cdn.paddle.com",
-      "img-src 'self' data: blob: https://*.supabase.co https: https://cdn.paddle.com",
-      "font-src 'self' data: https://cdn.paddle.com",
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.assemblyai.com https://api.openai.com https://api.paddle.com https://cdn.paddle.com https://app.posthog.com https://*.sentry.io https://*.inngest.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://cdn.paddle.com https://sandbox-cdn.paddle.com https://app.posthog.com https://*.sentry.io",
+      "style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://sandbox-cdn.paddle.com",
+      "img-src 'self' data: blob: https://*.supabase.co https: https://cdn.paddle.com https://sandbox-cdn.paddle.com",
+      "font-src 'self' data: https://cdn.paddle.com https://sandbox-cdn.paddle.com",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.assemblyai.com https://api.openai.com https://api.paddle.com https://sandbox-api.paddle.com https://cdn.paddle.com https://sandbox-cdn.paddle.com https://app.posthog.com https://*.sentry.io https://*.inngest.com",
       "media-src 'self' blob: https://*.supabase.co",
       "object-src 'none'",
       "base-uri 'self'",

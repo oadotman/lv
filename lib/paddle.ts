@@ -130,21 +130,21 @@ export function initializePaddle(callback?: () => void) {
     return;
   }
 
-  // Load Paddle.js v2 script
+  // Load Paddle.js v2 script - different URL for sandbox vs production
   const script = document.createElement('script');
-  script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+  const isSandbox = paddleConfig.environment === 'sandbox';
+  script.src = isSandbox
+    ? 'https://sandbox-cdn.paddle.com/paddle/v2/paddle.js'
+    : 'https://cdn.paddle.com/paddle/v2/paddle.js';
   script.async = true;
 
   script.onload = () => {
     if ((window as any).Paddle) {
-      // Initialize Paddle v2 with environment
-      const environment = paddleConfig.environment === 'production' ? 'production' : 'sandbox';
-
-      // For v2 API, use Initialize method with token or seller ID
+      // For v2 API, use Initialize method with seller ID only
+      // Environment is determined by which script URL we loaded
       if (paddleConfig.vendorId) {
         (window as any).Paddle.Initialize({
           seller: parseInt(paddleConfig.vendorId),
-          environment: environment,
         });
         callback?.();
       } else {
