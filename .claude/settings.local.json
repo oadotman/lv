@@ -68,7 +68,8 @@
       "Bash(node test-invitation-flow.js:*)",
       "Bash(npx shadcn@latest add progress --yes)",
       "WebFetch(domain:developer.paddle.com)",
-      "WebFetch(domain:makerkit.dev)"
+      "WebFetch(domain:makerkit.dev)",
+      "Bash(node scripts/check-paddle-config.js:*)"
     ],
     "deny": [],
     "ask": []
