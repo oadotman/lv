@@ -125,8 +125,9 @@ export async function GET(
       }
 
       // Update call status with proper duration tracking
+      // IMPORTANT: AssemblyAI returns audio_duration in SECONDS, not milliseconds!
       const durationSeconds = transcript.audio_duration
-        ? Math.round(transcript.audio_duration / 1000)
+        ? Math.round(transcript.audio_duration)
         : null;
 
       const durationMinutes = durationSeconds

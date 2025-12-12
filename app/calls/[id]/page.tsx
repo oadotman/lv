@@ -69,6 +69,7 @@ interface CallRecord {
   sales_rep: string | null;
   call_date: string;
   duration: number | null;
+  duration_minutes: number | null;
   sentiment_type: string | null;
   sentiment_score: number | null;
   status: string;
@@ -1182,7 +1183,7 @@ export default function CallDetailPage() {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
-                  {call.duration ? Math.floor(call.duration / 60) : 0} minutes
+                  {call.duration_minutes || (call.duration ? Math.ceil(call.duration / 60) : 0)} minutes
                 </span>
                 <span className="flex items-center gap-1.5">
                   <User className="w-4 h-4" />

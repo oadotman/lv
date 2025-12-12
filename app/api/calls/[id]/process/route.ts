@@ -113,6 +113,9 @@ export async function POST(
     );
 
     console.log('[Process] ✅ Transcription completed');
+    console.log('[Process] 🕐 Audio duration from AssemblyAI:', transcriptionResult.audio_duration, 'seconds');
+    console.log('[Process] 🕐 Duration in seconds:', transcriptionResult.audio_duration ? Math.round(transcriptionResult.audio_duration) : 'N/A');
+    console.log('[Process] 🕐 Duration in minutes:', transcriptionResult.audio_duration ? Math.ceil(transcriptionResult.audio_duration / 60) : 'N/A');
 
     // =====================================================
     // STEP 2: SAVE TRANSCRIPT
@@ -355,8 +358,9 @@ export async function POST(
     // STEP 5: UPDATE CALL WITH FINAL DATA
     // =====================================================
 
+    // IMPORTANT: AssemblyAI returns audio_duration in SECONDS, not milliseconds!
     const durationSeconds = transcriptionResult.audio_duration
-      ? Math.round(transcriptionResult.audio_duration / 1000) // Convert ms to seconds
+      ? Math.round(transcriptionResult.audio_duration) // Already in seconds from AssemblyAI
       : call.duration || null;
 
     const durationMinutes = durationSeconds
@@ -383,6 +387,10 @@ export async function POST(
     // =====================================================
     // STEP 6: RECORD USAGE METRICS FOR BILLING
     // =====================================================
+
+    console.log('[Process] 💰 Recording usage metrics:');
+    console.log('[Process] 💰 Duration seconds:', durationSeconds);
+    console.log('[Process] 💰 Duration minutes to bill:', durationMinutes);
 
     if (durationMinutes && durationMinutes > 0) {
       // Get organization_id if not present

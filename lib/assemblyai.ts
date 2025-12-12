@@ -275,7 +275,7 @@ export async function submitTranscriptionJob(
     console.log('[AssemblyAI] ========================================');
     console.log('[AssemblyAI] ✅ Transcription completed!');
     console.log('[AssemblyAI] Status:', transcript.status);
-    console.log('[AssemblyAI] Duration:', transcript.audio_duration, 'ms');
+    console.log('[AssemblyAI] Duration:', transcript.audio_duration, 'seconds');
     console.log('[AssemblyAI] Text length:', transcript.text?.length || 0, 'characters');
     console.log('[AssemblyAI] Utterances:', transcript.utterances?.length || 0);
     console.log('[AssemblyAI] Words:', transcript.words?.length || 0);
