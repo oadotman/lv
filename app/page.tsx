@@ -1347,8 +1347,6 @@ export default function LandingPage() {
               <h3 className="font-bold mb-4">Contact</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><a href="mailto:support@synqall.com" className="hover:text-white transition-colors">support@synqall.com</a></li>
-                <li><a href="tel:+12125551234" className="hover:text-white transition-colors">+1 (212) 555-1234</a></li>
-                <li className="text-slate-400">United States</li>
               </ul>
             </div>
             <div>
