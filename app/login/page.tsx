@@ -19,9 +19,10 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Get message and returnTo from URL params
+  // Get message, returnTo, and invite token from URL params
   const message = searchParams?.get('message')
   const returnTo = searchParams?.get('returnTo')
+  const inviteToken = searchParams?.get('invite')
 
   useEffect(() => {
     if (message) {
@@ -58,8 +59,20 @@ function LoginForm() {
         const searchParams = new URLSearchParams(window.location.search)
         const inviteAccepted = searchParams.get('inviteAccepted') === 'true'
 
-        // If invitation was already accepted, go straight to dashboard
-        const redirectPath = inviteAccepted ? '/dashboard' : (returnTo || '/dashboard')
+        // Determine redirect path
+        let redirectPath = '/dashboard'
+
+        if (inviteToken) {
+          // If there's an invitation token, redirect to invitation acceptance page
+          redirectPath = `/invite/${inviteToken}`
+        } else if (inviteAccepted) {
+          // If invitation was already accepted, go straight to dashboard
+          redirectPath = '/dashboard'
+        } else if (returnTo) {
+          // Otherwise use the returnTo parameter
+          redirectPath = returnTo
+        }
+
         console.log('Redirecting to:', redirectPath)
 
         // Increased delay to ensure auth state is properly propagated
@@ -156,7 +169,10 @@ function LoginForm() {
             </Button>
             <p className="text-sm text-center text-slate-600 dark:text-slate-400">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline">
+              <Link
+                href={inviteToken ? `/invite-signup/${inviteToken}` : "/signup"}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline"
+              >
                 Sign up
               </Link>
             </p>

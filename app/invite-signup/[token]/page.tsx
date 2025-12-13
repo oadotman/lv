@@ -383,7 +383,7 @@ export default function InviteSignupPage() {
 
             <div className="text-center text-sm text-gray-600">
               Already have an account?{' '}
-              <a href="/login" className="text-blue-600 hover:underline">
+              <a href={`/login?invite=${token}`} className="text-blue-600 hover:underline">
                 Sign in
               </a>
             </div>
