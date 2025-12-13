@@ -27,6 +27,7 @@ import {
   Folder,
   MessageSquare,
   Award,
+  Menu,
 } from "lucide-react";
 import Link from "next/link";
 import { getPublicPlans } from "@/lib/pricing";
@@ -39,6 +40,7 @@ export default function LandingPage() {
   const [callsPerWeek, setCallsPerWeek] = useState(10);
   const [minsPerCall, setMinsPerCall] = useState(15);
   const [showStickyCta, setShowStickyCta] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const plans = getPublicPlans();
 
@@ -75,6 +77,21 @@ export default function LandingPage() {
               </div>
               <span className="text-xl font-bold text-slate-900 dark:text-slate-100">SynQall</span>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6 text-slate-900 dark:text-slate-100" />
+              ) : (
+                <Menu className="w-6 h-6 text-slate-900 dark:text-slate-100" />
+              )}
+            </button>
+
+            {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
                 Features
@@ -102,6 +119,57 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+            <div className="px-4 py-4 space-y-3">
+              <a
+                href="#features"
+                className="block px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Features
+              </a>
+              <a
+                href="#security"
+                className="block px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Security
+              </a>
+              <a
+                href="#pricing"
+                className="block px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pricing
+              </a>
+              <a
+                href="#faq"
+                className="block px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                FAQ
+              </a>
+              <div className="pt-3 pb-1 px-4">
+                <ThemeToggle />
+              </div>
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-center text-sm font-medium">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full justify-center bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -179,7 +247,7 @@ export default function LandingPage() {
           <div className="text-center mb-10">
             <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wider">Works with every CRM — No Integration Required</p>
             <p className="text-sm text-slate-500 dark:text-slate-500 mb-6">Works even with custom, internal, or legacy CRMs.</p>
-            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 items-center justify-items-center">
               {/* Salesforce */}
               <div className="flex items-center gap-2 group">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
@@ -1347,6 +1415,8 @@ export default function LandingPage() {
               <h3 className="font-bold mb-4">Contact</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><a href="mailto:support@synqall.com" className="hover:text-white transition-colors">support@synqall.com</a></li>
+                <li><a href="tel:+12125551234" className="hover:text-white transition-colors">+1 (212) 555-1234</a></li>
+                <li className="text-slate-400">United States</li>
               </ul>
             </div>
             <div>
