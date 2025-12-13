@@ -50,9 +50,10 @@ export async function POST(req: NextRequest) {
       email: body.email,
       fullName: body.fullName,
       hasOrgName: !!body.organizationName,
-      hasInviteToken: !!body.inviteToken
+      hasInviteToken: !!body.inviteToken,
+      hasReferralCode: !!body.referralCode
     });
-    const { email, password, fullName, organizationName, inviteToken } = body;
+    const { email, password, fullName, organizationName, inviteToken, referralCode } = body;
 
     // Validate required fields
     if (!email || !password || !fullName) {
@@ -105,6 +106,56 @@ export async function POST(req: NextRequest) {
 
     const userId = authData.user.id;
     console.log('✅ Signup API: User created', { userId });
+
+    // Track referral if referral code is provided
+    let referralId: string | null = null;
+    if (referralCode) {
+      console.log('🔵 Signup API: Processing referral code', { referralCode });
+
+      // Find referral by code
+      const { data: referral, error: referralError } = await supabaseAdmin
+        .from('referrals')
+        .select('id, referrer_id')
+        .eq('referral_code', referralCode)
+        .single();
+
+      if (!referralError && referral) {
+        // Create or update referral record for this specific email
+        const { data: updatedReferral, error: updateError } = await supabaseAdmin
+          .from('referrals')
+          .upsert({
+            referrer_id: referral.referrer_id,
+            referral_code: referralCode,
+            referred_email: cleanEmail,
+            referred_user_id: userId,
+            status: 'signed_up',
+            signup_at: new Date().toISOString(),
+            product_type: 'calliq',
+          }, {
+            onConflict: 'referred_email,product_type'
+          })
+          .select()
+          .single();
+
+        if (!updateError && updatedReferral) {
+          referralId = updatedReferral.id;
+          console.log('✅ Signup API: Referral tracked', { referralId });
+
+          // Track signup in statistics
+          await supabaseAdmin.rpc('increment_counter', {
+            table_name: 'referral_statistics',
+            user_id: referral.referrer_id,
+            column_name: 'total_signups',
+          }).catch((err: any) => {
+            console.warn('Failed to update referral statistics:', err);
+          });
+        } else {
+          console.warn('⚠️ Signup API: Failed to track referral', { updateError });
+        }
+      } else {
+        console.warn('⚠️ Signup API: Invalid referral code', { referralCode });
+      }
+    }
 
     // Check if this is an invited signup
     let orgData = null;
@@ -190,17 +241,37 @@ export async function POST(req: NextRequest) {
         serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20)
       });
 
+      // Build organization data with referral info if applicable
+      const orgInsertData: any = {
+        name: cleanOrgName,
+        slug: orgSlug,
+        plan_type: 'free',
+        max_members: 1,
+        max_minutes_monthly: 30,
+        billing_email: cleanEmail,
+        subscription_status: 'active'
+      };
+
+      // Add referral tracking to organization if referred
+      if (referralId && referralCode) {
+        // Get referrer info
+        const { data: referralInfo } = await supabaseAdmin
+          .from('referrals')
+          .select('referrer_id')
+          .eq('id', referralId)
+          .single();
+
+        if (referralInfo) {
+          orgInsertData.referred_by = referralInfo.referrer_id;
+          orgInsertData.referral_code_used = referralCode;
+          // Add initial bonus minutes from referral (60 minutes for first tier)
+          orgInsertData.bonus_minutes_balance = 60;
+        }
+      }
+
       const { data: newOrgData, error: orgError } = await supabaseAdmin
         .from('organizations')
-        .insert({
-          name: cleanOrgName,
-          slug: orgSlug,
-          plan_type: 'free',
-          max_members: 1,
-          max_minutes_monthly: 30,
-          billing_email: cleanEmail,
-          subscription_status: 'active'
-        })
+        .insert(orgInsertData)
         .select()
         .single();
 

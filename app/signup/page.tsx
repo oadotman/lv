@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 // Note: Auth is handled via /api/auth/signup endpoint
 import { useAuth } from '@/lib/AuthContext'
-import { Phone, Loader2, CheckCircle2, Users } from 'lucide-react'
+import { Phone, Loader2, CheckCircle2, Users, Gift } from 'lucide-react'
 
 function SignUpForm() {
   const [fullName, setFullName] = useState('')
@@ -29,6 +29,9 @@ function SignUpForm() {
   const inviteEmail = searchParams?.get('email')
   const returnTo = searchParams?.get('returnTo')
   const isInvited = !!inviteEmail && !!returnTo
+
+  // Check for referral code
+  const referralCode = searchParams?.get('ref')
 
   // Pre-fill email if coming from invitation
   useEffect(() => {
@@ -93,6 +96,7 @@ function SignUpForm() {
           fullName,
           organizationName: organizationName || `${fullName}'s Organization`,
           inviteToken, // Pass invitation token if present
+          referralCode, // Pass referral code if present
         }),
       })
 
@@ -168,6 +172,15 @@ function SignUpForm() {
                 <span className="text-blue-700 dark:text-blue-300">
                   You're joining an existing team. Your account will be linked to their organization.
                 </span>
+              </div>
+            ) : referralCode ? (
+              <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <span className="text-green-700 dark:text-green-300">
+                    You've been referred! You'll receive 60 free minutes when you sign up.
+                  </span>
+                </div>
               </div>
             ) : (
               'Start automating your CRM data entry today'

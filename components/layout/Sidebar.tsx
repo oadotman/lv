@@ -16,6 +16,7 @@ import {
   LogOut,
   Users,
   Sparkles,
+  Gift,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -33,6 +34,7 @@ const navItems = [
   { icon: Phone, label: "Calls", href: "/calls" },
   { icon: FileText, label: "Templates", href: "/templates" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
+  { icon: Gift, label: "Referrals", href: "/referrals" },
   { icon: Users, label: "Team", href: "/settings/team" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
