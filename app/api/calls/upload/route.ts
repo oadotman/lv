@@ -64,14 +64,23 @@ export async function POST(req: NextRequest) {
     const supabase = createServerClient();
 
     // Check usage limits BEFORE accepting upload
-    // Get user's organization
-    const { data: userOrg } = await supabase
-      .from('user_organizations')
-      .select('organization_id')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // CRITICAL: Ensure user has an organization
+    const { ensureUserOrganization } = await import('@/lib/ensure-organization');
+    const orgResult = await ensureUserOrganization(userId);
 
-    const organizationId = userOrg?.organization_id || null;
+    if (!orgResult.success) {
+      console.error('Failed to ensure organization for user:', userId);
+      return NextResponse.json(
+        { error: 'Failed to determine organization. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    const organizationId = orgResult.organizationId;
+
+    if (orgResult.wasCreated) {
+      console.log(`Created default organization for user ${userId}`);
+    }
 
     if (organizationId) {
       // Fetch organization details including overage settings
