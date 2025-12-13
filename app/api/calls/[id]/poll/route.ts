@@ -186,6 +186,33 @@ export async function GET(
             console.error('Failed to record usage metrics:', metricsError);
           } else {
             console.log(`Recorded ${minutes} minutes usage for org ${call.organization_id}`);
+
+            // CRITICAL: Update organization's used_minutes
+            const { error: updateError } = await supabase.rpc('increment_used_minutes', {
+              org_id: call.organization_id,
+              minutes_to_add: minutes
+            });
+
+            if (updateError) {
+              console.error('Failed to update organization used_minutes:', updateError);
+              // Try direct update as fallback
+              const { data: org } = await supabase
+                .from('organizations')
+                .select('used_minutes')
+                .eq('id', call.organization_id)
+                .single();
+
+              if (org) {
+                const newUsedMinutes = (org.used_minutes || 0) + minutes;
+                await supabase
+                  .from('organizations')
+                  .update({ used_minutes: newUsedMinutes })
+                  .eq('id', call.organization_id);
+                console.log(`Updated org ${call.organization_id} used_minutes to ${newUsedMinutes}`);
+              }
+            } else {
+              console.log(`Successfully updated organization used_minutes`);
+            }
           }
         } else {
           console.error('CRITICAL: No organization_id on call, cannot record usage!');
@@ -230,6 +257,33 @@ export async function GET(
               console.error('Failed to record usage metrics after org update:', metricsError);
             } else {
               console.log(`Fixed missing org and recorded ${minutes} minutes usage`);
+
+              // CRITICAL: Update organization's used_minutes
+              const { error: updateError } = await supabase.rpc('increment_used_minutes', {
+                org_id: userOrg.organization_id,
+                minutes_to_add: minutes
+              });
+
+              if (updateError) {
+                console.error('Failed to update organization used_minutes:', updateError);
+                // Try direct update as fallback
+                const { data: org } = await supabase
+                  .from('organizations')
+                  .select('used_minutes')
+                  .eq('id', userOrg.organization_id)
+                  .single();
+
+                if (org) {
+                  const newUsedMinutes = (org.used_minutes || 0) + minutes;
+                  await supabase
+                    .from('organizations')
+                    .update({ used_minutes: newUsedMinutes })
+                    .eq('id', userOrg.organization_id);
+                  console.log(`Updated org ${userOrg.organization_id} used_minutes to ${newUsedMinutes}`);
+                }
+              } else {
+                console.log(`Successfully updated organization used_minutes`);
+              }
             }
           } else {
             console.error('User has no organization - cannot track usage!');
