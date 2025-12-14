@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Download, Eye, EyeOff, Copy, RefreshCw, Settings, User, CreditCard, Bell, Key, AlertTriangle, Loader2, Mic } from "lucide-react";
+import { Download, Eye, EyeOff, Copy, RefreshCw, Settings, User, CreditCard, Bell, AlertTriangle, Loader2, Mic } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import type { UserPreferences } from "@/lib/types/preferences";
@@ -193,13 +193,6 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
               >
                 <Bell className="w-4 h-4 mr-2" />
                 Notifications
-              </TabsTrigger>
-              <TabsTrigger
-                value="api"
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/30 rounded-xl font-semibold transition-all duration-300"
-              >
-                <Key className="w-4 h-4 mr-2" />
-                API
               </TabsTrigger>
               <TabsTrigger
                 value="danger"
@@ -470,23 +463,6 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                       </div>
                     </>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* API Keys Tab */}
-            <TabsContent value="api">
-              <Card className="border-0 shadow-xl rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-700/50 border-b border-slate-100 dark:border-slate-700">
-                  <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">API Access</CardTitle>
-                  <CardDescription className="text-slate-600 dark:text-slate-400 font-medium">
-                    API access coming soon - stay tuned!
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6 bg-white dark:bg-slate-800">
-                  <p className="text-slate-600 dark:text-slate-400">
-                    API functionality will be available in a future update.
-                  </p>
                 </CardContent>
               </Card>
             </TabsContent>

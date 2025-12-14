@@ -251,12 +251,6 @@ export async function canPerformAction(
       }
       return { allowed: true };
 
-    case 'api_access':
-      // Only available on higher tier plans
-      if (org.plan_type === 'free' || org.plan_type === 'starter') {
-        return { allowed: false, reason: 'Upgrade required for API access' };
-      }
-      return { allowed: true };
 
     default:
       return { allowed: true };
