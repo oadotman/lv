@@ -105,6 +105,9 @@ export default function LandingPage() {
               <a href="#faq" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
                 FAQ
               </a>
+              <Link href="/partners" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+                Partners
+              </Link>
               <ThemeToggle />
               <Link href="/login">
                 <Button variant="ghost" className="text-sm font-medium">
@@ -152,6 +155,13 @@ export default function LandingPage() {
               >
                 FAQ
               </a>
+              <Link
+                href="/partners"
+                className="block px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Partners
+              </Link>
               <div className="pt-3 pb-1 px-4">
                 <ThemeToggle />
               </div>

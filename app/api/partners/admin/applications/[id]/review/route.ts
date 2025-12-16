@@ -36,13 +36,13 @@ export async function POST(
     }
 
     // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, full_name')
-      .eq('id', user.id)
+    const { data: userOrg } = await supabase
+      .from('user_organizations')
+      .select('role')
+      .eq('user_id', user.id)
       .single();
 
-    if (profile?.role !== 'admin') {
+    if (userOrg?.role !== 'owner' && userOrg?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -73,7 +73,7 @@ export async function POST(
               action === 'reject' ? 'rejected' :
               'more_info_needed',
       reviewed_at: new Date().toISOString(),
-      reviewed_by: profile.full_name || user.email,
+      reviewed_by: user.email,
       review_notes: notes,
     };
 
