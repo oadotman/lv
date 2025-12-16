@@ -78,7 +78,8 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(del test-referral-system.js)",
       "Bash(node verify-team-usage-tracking.js:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx shadcn@latest init)"
     ],
     "deny": [],
     "ask": []

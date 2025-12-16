@@ -2,9 +2,35 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getAllowedOrigins, getBaseUrlOrFallback } from './lib/utils/urls'
+import { partnerAuthMiddleware } from './middleware/partner-auth'
 
 export async function middleware(req: NextRequest) {
   console.log('Middleware: Processing request for', req.nextUrl.pathname)
+
+  // =====================================================
+  // PARTNER ROUTES HANDLING
+  // Handle partner-specific authentication and tracking
+  // =====================================================
+  const pathname = req.nextUrl.pathname;
+  if (pathname.startsWith('/partners') || pathname.startsWith('/api/partners')) {
+    // Check for partner referral tracking
+    const ref = req.nextUrl.searchParams.get('ref');
+    if (ref && pathname === '/partners') {
+      // Track the partner click
+      try {
+        const { PartnerTracking } = await import('./lib/partners/tracking');
+        await PartnerTracking.trackClick(ref, req);
+      } catch (error) {
+        console.error('Failed to track partner click:', error);
+      }
+    }
+
+    // Apply partner authentication middleware
+    const partnerResponse = await partnerAuthMiddleware(req);
+    if (partnerResponse.status !== 200 || partnerResponse.headers.get('Location')) {
+      return partnerResponse;
+    }
+  }
 
   // =====================================================
   // CSRF PROTECTION

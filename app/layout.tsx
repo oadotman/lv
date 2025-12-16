@@ -11,8 +11,66 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SynQall - CRM Data Entry Automation",
-  description: "Upload your sales calls and get CRM-ready data instantly. No integrations required.",
+  metadataBase: new URL('https://synqall.com'),
+  title: {
+    default: "SynQall - AI-Powered CRM Data Entry Automation for Sales Teams",
+    template: "%s | SynQall"
+  },
+  description: "Transform sales calls into CRM-ready data instantly with AI. Save 15+ minutes per call. Upload audio, get transcripts, extract key insights. No CRM integration required. Try free!",
+  keywords: [
+    "CRM automation",
+    "sales call transcription",
+    "AI data entry",
+    "sales productivity",
+    "call recording software",
+    "CRM data extraction",
+    "sales automation tool",
+    "call analytics",
+    "AssemblyAI transcription",
+    "OpenAI integration"
+  ],
+  authors: [{ name: "SynQall Team" }],
+  creator: "SynQall",
+  publisher: "SynQall",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "SynQall - AI-Powered CRM Data Entry Automation",
+    description: "Upload sales calls and get CRM-ready data instantly. Save 15+ minutes per call with AI-powered transcription and data extraction.",
+    url: 'https://synqall.com',
+    siteName: 'SynQall',
+    type: 'website',
+    locale: 'en_US',
+    images: [
+      {
+        url: '/og-image.png', // You should create this image (1200x630px)
+        width: 1200,
+        height: 630,
+        alt: 'SynQall - CRM Data Entry Automation',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SynQall - AI-Powered CRM Data Entry Automation',
+    description: 'Transform sales calls into CRM-ready data instantly. Save 15+ minutes per call.',
+    images: ['/og-image.png'], // Same as OG image
+    creator: '@synqall',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -20,7 +78,18 @@ export const metadata: Metadata = {
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
     ],
     apple: '/apple-touch-icon.png',
+    other: [
+      {
+        rel: 'android-chrome',
+        url: '/android-chrome-192x192.png',
+      },
+      {
+        rel: 'android-chrome',
+        url: '/android-chrome-512x512.png',
+      },
+    ],
   },
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({

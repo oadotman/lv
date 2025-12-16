@@ -90,6 +90,11 @@ export function Footer() {
                   Team Management
                 </Link>
               </li>
+              <li>
+                <Link href="/partners" className="text-gray-600 hover:text-blue-600 transition font-medium">
+                  Partners
+                </Link>
+              </li>
             </ul>
           </div>
 

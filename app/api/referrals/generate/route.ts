@@ -122,15 +122,15 @@ export async function GET(req: NextRequest) {
       tiers: tiers || [],
       shareLinks: {
         twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          `Join me on CallIQ and get 60 free minutes when you sign up!`
+          `Join me on SynQall and get 30 free minutes when you sign up!`
         )}&url=${encodeURIComponent(referralLink)}`,
         linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
           referralLink
         )}`,
         email: `mailto:?subject=${encodeURIComponent(
-          'Join me on CallIQ'
+          'Join me on SynQall'
         )}&body=${encodeURIComponent(
-          `I've been using CallIQ for call recording and transcription. Join using my referral link and get 60 free minutes when you sign up!\n\n${referralLink}`
+          `I've been using SynQall for call recording and transcription. Join using my referral link and get 30 free minutes when you sign up!\n\n${referralLink}`
         )}`,
       },
     });
@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, productType = 'calliq' } = body;
+    const { email, productType = 'synqall' } = body;
 
     if (!email) {
       return NextResponse.json(
