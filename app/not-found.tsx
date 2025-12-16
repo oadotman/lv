@@ -43,10 +43,10 @@ export default function NotFound() {
           <p className="text-sm text-gray-500">
             Need help? Contact{' '}
             <a
-              href="mailto:support@your-domain.com"
+              href="mailto:support@synqall.com"
               className="text-blue-600 hover:underline"
             >
-              support@your-domain.com
+              support@synqall.com
             </a>
           </p>
         </div>

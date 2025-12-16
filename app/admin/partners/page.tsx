@@ -103,14 +103,62 @@ export default function AdminPartnersPage() {
       if (!response.ok) throw new Error('Failed to fetch partner data');
       const data = await response.json();
 
-      setPartners(data.partners || []);
-      setStats(data.statistics || null);
+      // Map the API response to our expected structure
+      const mappedPartners = (data.partners || []).map((p: any) => ({
+        id: p.id,
+        full_name: p.name || p.email,
+        email: p.email,
+        company_name: p.company,
+        status: p.status || 'active',
+        tier: p.tier || 'bronze',
+        referral_code: p.referralCode || '',
+        total_referrals: 0,
+        active_customers: 0,
+        total_revenue: 0,
+        total_commission_earned: 0,
+        total_commission_paid: 0,
+        joined_date: p.joinedAt || p.created_at,
+        last_activity: null
+      }));
+
+      // Map stats from the API response
+      const mappedStats = data.stats ? {
+        total_partners: data.stats.totalPartners || 0,
+        active_partners: data.stats.totalPartners || 0,
+        total_referrals: data.stats.totalReferrals || 0,
+        total_revenue_generated: 0,
+        total_commission_owed: data.stats.pendingCommissions || 0,
+        pending_applications: data.stats.pendingApplications || 0,
+        pending_payouts: data.stats.pendingCommissions || 0
+      } : {
+        total_partners: 0,
+        active_partners: 0,
+        total_referrals: 0,
+        total_revenue_generated: 0,
+        total_commission_owed: 0,
+        pending_applications: 0,
+        pending_payouts: 0
+      };
+
+      setPartners(mappedPartners);
+      setStats(mappedStats);
     } catch (error) {
       console.error('Error fetching partner data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load partner data',
         variant: 'destructive',
+      });
+      // Set empty state on error
+      setPartners([]);
+      setStats({
+        total_partners: 0,
+        active_partners: 0,
+        total_referrals: 0,
+        total_revenue_generated: 0,
+        total_commission_owed: 0,
+        pending_applications: 0,
+        pending_payouts: 0
       });
     } finally {
       setIsLoading(false);
