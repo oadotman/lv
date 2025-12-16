@@ -131,7 +131,7 @@ export async function POST(
 
       // Send welcome email
       await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
+        from: process.env.RESEND_PARTNER_EMAIL || 'partners@synqall.com',
         to: application.email,
         subject: 'Welcome to the SynQall Partner Program!',
         html: `
@@ -177,7 +177,7 @@ export async function POST(
     } else if (action === 'reject') {
       // Send rejection email
       await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
+        from: process.env.RESEND_PARTNER_EMAIL || 'partners@synqall.com',
         to: application.email,
         subject: 'SynQall Partner Application Update',
         html: `
@@ -195,7 +195,7 @@ export async function POST(
     } else if (action === 'more_info') {
       // Send request for more info
       await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
+        from: process.env.RESEND_PARTNER_EMAIL || 'partners@synqall.com',
         to: application.email,
         subject: 'SynQall Partner Application - Additional Information Needed',
         html: `

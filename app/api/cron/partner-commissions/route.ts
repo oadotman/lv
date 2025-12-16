@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
     for (const notification of emailNotifications) {
       try {
         await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
+          from: process.env.RESEND_PARTNER_EMAIL || 'partners@synqall.com',
           to: notification.partner.email,
           subject: `Your SynQall Partner Commission is Ready - $${notification.amount.toFixed(2)}`,
           html: `
