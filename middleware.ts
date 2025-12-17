@@ -8,6 +8,19 @@ export async function middleware(req: NextRequest) {
   console.log('Middleware: Processing request for', req.nextUrl.pathname)
 
   // =====================================================
+  // SEARCH BOT DETECTION
+  // Skip all cookie operations for search engine bots
+  // =====================================================
+  const userAgent = req.headers.get('user-agent') || '';
+  const isSearchBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|applebot/i.test(userAgent);
+
+  // For search bots, return a clean response without any cookie operations
+  if (isSearchBot) {
+    console.log('Middleware: Search bot detected, skipping cookie operations', userAgent);
+    return NextResponse.next();
+  }
+
+  // =====================================================
   // ADMIN ROUTES PROTECTION
   // Protect all admin routes - check before partner routes
   // =====================================================
@@ -21,7 +34,7 @@ export async function middleware(req: NextRequest) {
     // Check for partner referral tracking
     const ref = req.nextUrl.searchParams.get('ref');
     if (ref && pathname === '/partners') {
-      // Track the partner click
+      // Track the partner click (search bots already filtered out above)
       try {
         const { PartnerTracking } = await import('./lib/partners/tracking');
         await PartnerTracking.trackClick(ref, req);
