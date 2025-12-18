@@ -110,9 +110,45 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating partner application:', error);
+      console.error('Error creating partner application:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        application
+      });
+
+      // Provide more specific error messages
+      let errorMessage = 'Failed to submit application';
+
+      if (error.code === '23505') {
+        errorMessage = 'An application with this email already exists';
+      } else if (error.code === '42P01') {
+        errorMessage = 'Database table not found. Please contact support.';
+      } else if (error.code === '23502') {
+        errorMessage = 'Missing required information. Please fill all required fields.';
+      } else if (error.message?.includes('permission')) {
+        errorMessage = 'Permission denied. Please try again or contact support.';
+      } else if (error.message?.includes('connection')) {
+        errorMessage = 'Database connection error. Please try again.';
+      }
+
+      // In development, include more details
+      const isDev = process.env.NODE_ENV === 'development';
+
       return NextResponse.json(
-        { success: false, message: 'Failed to submit application' },
+        {
+          success: false,
+          message: errorMessage,
+          ...(isDev && {
+            debug: {
+              code: error.code,
+              details: error.message,
+              hint: error.hint
+            }
+          })
+        },
         { status: 500 }
       );
     }
@@ -156,9 +192,24 @@ export async function POST(req: NextRequest) {
       message: 'Application submitted successfully',
     });
   } catch (error) {
-    console.error('Partner application error:', error);
+    console.error('Partner application error:', {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
+    const errorMessage = error instanceof Error
+      ? `Application error: ${error.message}`
+      : 'An unexpected error occurred while processing your application';
+
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
+      {
+        success: false,
+        message: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && {
+          debug: error instanceof Error ? error.message : String(error)
+        })
+      },
       { status: 500 }
     );
   }

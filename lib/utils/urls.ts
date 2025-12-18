@@ -90,10 +90,34 @@ export function getAllowedOrigins(): string[] {
   const appUrl = new URL(baseUrl);
   const origins = [appUrl.origin];
 
+  // In production, also allow the non-www version if www is configured (and vice versa)
+  if (process.env.NODE_ENV === 'production') {
+    if (appUrl.hostname.startsWith('www.')) {
+      // If using www, also allow non-www
+      const nonWwwOrigin = appUrl.origin.replace('://www.', '://');
+      origins.push(nonWwwOrigin);
+    } else if (!appUrl.hostname.includes('localhost')) {
+      // If not using www and not localhost, also allow www version
+      const wwwOrigin = appUrl.origin.replace('://', '://www.');
+      origins.push(wwwOrigin);
+    }
+  }
+
   // Add localhost variants in development
   if (process.env.NODE_ENV === 'development') {
-    origins.push('http://localhost:3000');
-    origins.push('http://127.0.0.1:3000');
+    // Add common development ports
+    const devPorts = ['3000', '3001', '3002', '3003'];
+    devPorts.forEach(port => {
+      origins.push(`http://localhost:${port}`);
+      origins.push(`http://127.0.0.1:${port}`);
+    });
+
+    // Also add the actual port if it's set
+    const actualPort = process.env.PORT;
+    if (actualPort && !devPorts.includes(actualPort)) {
+      origins.push(`http://localhost:${actualPort}`);
+      origins.push(`http://127.0.0.1:${actualPort}`);
+    }
   }
 
   return origins;
