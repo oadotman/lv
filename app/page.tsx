@@ -198,28 +198,10 @@ export default function LandingPage() {
             </h1>
             <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
               Upload your sales call → SynQall transcribes it → 60-second extraction → Perfect CRM-ready data.<br />
-              <span className="font-semibold text-slate-900 dark:text-slate-100">No integrations. No IT. Just accurate data.</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-100">Zero IT involvement. Just accurate data.</span>
             </p>
 
             {/* Social Proof Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 pt-4">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Trusted by 100+ sales teams</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">2,000+ calls processed last month</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">4.9/5 from sales teams</span>
-              </div>
-            </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/signup">
@@ -257,7 +239,7 @@ export default function LandingPage() {
       <section className="py-16 px-4 lg:px-8 bg-white dark:bg-slate-950 border-y border-slate-200 dark:border-slate-800">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-10">
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wider">Works with every CRM — No Integration Required</p>
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wider">Works With Any CRM—Zero IT Required</p>
             <p className="text-sm text-slate-500 dark:text-slate-500 mb-6">Works even with custom, internal, or legacy CRMs.</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 items-center justify-items-center">
               {/* Salesforce */}
@@ -304,20 +286,6 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-8 pt-8 border-t border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">500+ reps save 15 hours/week</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Rated 4.9/5 by sales teams</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">95%+ accuracy guaranteed</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -326,61 +294,12 @@ export default function LandingPage() {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-6">
-              The Hidden Cost of Manual CRM Updates
+              The Real Cost of Manual CRM Updates
             </h2>
             <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
-              Sales reps lose 2+ hours every day updating the CRM—time they should be selling.<br />
-              For a 10-person team, that's <span className="font-bold text-red-600 dark:text-red-500">$400K+ per year</span> in lost productivity.
+              Sales reps lose 2+ hours daily on data entry—time that should be spent selling.<br /><br />
+              The result: incomplete data, inconsistent fields across reps, and forecasts nobody trusts.
             </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="border-2 border-red-100 dark:border-red-900 bg-red-50/50 dark:bg-red-950/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-900 dark:text-red-300">
-                  <X className="w-6 h-6" />
-                  What Happens Now
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-slate-700 dark:text-slate-300">Details get forgotten between calls</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-slate-700 dark:text-slate-300">Key fields are skipped or rushed</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-slate-700 dark:text-slate-300">Data becomes inconsistent across reps</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-slate-700 dark:text-slate-300">Leaders manage pipeline with incomplete information</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
-                  <TrendingUp className="w-6 h-6 text-red-600 dark:text-red-500" />
-                  The Impact
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">2+ hours/day</div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Per rep on manual data entry</p>
-                </div>
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">60-70%</div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Typical CRM data accuracy</p>
-                </div>
-                <p className="text-sm font-semibold text-red-600 dark:text-red-500 pt-2">
-                  Outcome: Slower deals, weaker coaching, and forecasts no one trusts.
-                </p>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
@@ -447,7 +366,7 @@ export default function LandingPage() {
                   <p className="text-violet-100">Detail accuracy</p>
                 </div>
                 <div>
-                  <div className="text-4xl font-bold mb-2">14-19 min</div>
+                  <div className="text-4xl font-bold mb-2">15+ minutes</div>
                   <p className="text-violet-100">Saved per call</p>
                 </div>
               </div>
@@ -456,7 +375,7 @@ export default function LandingPage() {
                 <span className="text-violet-100">(because reps only review → not type)</span>
               </p>
               <p className="text-center mt-4 text-lg font-medium">
-                Your team instantly recovers 15–20 hours weekly, and your CRM becomes a reliable source of truth.
+                Your team instantly recovers 15+ hours weekly, and your CRM becomes a reliable source of truth.
               </p>
             </CardContent>
           </Card>
@@ -479,7 +398,7 @@ export default function LandingPage() {
               <CardContent className="pt-6 space-y-4">
                 <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-950/50 rounded-lg">
                   <span className="font-medium text-slate-700 dark:text-slate-300">Time per call</span>
-                  <span className="font-bold text-red-600 dark:text-red-500">15–20 minutes</span>
+                  <span className="font-bold text-red-600 dark:text-red-500">15+ minutes</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-950/50 rounded-lg">
                   <span className="font-medium text-slate-700 dark:text-slate-300">Notes quality</span>
@@ -845,15 +764,15 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-4 gap-6 mb-12">
-            {/* SOC 2 Practices */}
+            {/* Bank-Level Encryption */}
             <Card className="border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-xl transition-all">
               <CardContent className="pt-8 pb-6 text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2">SOC 2 Type II Compliant Practices</h3>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2">Bank-Level Encryption</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Following SOC 2 Type II security standards for enterprise data protection
+                  AES-256 encryption for all data at rest, SSL/TLS in transit
                 </p>
               </CardContent>
             </Card>
@@ -1148,83 +1067,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-20 px-4 lg:px-8 bg-slate-50 dark:bg-slate-900">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-6">
-              What Sales Teams Are Saying
-            </h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-2 border-slate-200 dark:border-slate-700 shadow-xl">
-              <CardContent className="pt-6">
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 dark:text-slate-300 mb-6 italic">
-                  "We cut call follow-up from 18 minutes to 2 minutes per rep. Data quality is 10x better. Our team saves over 15 hours per week."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    MS
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Micheal Sanni</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Sales Ops Manager, TechFlow Solutions</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-slate-200 dark:border-slate-700 shadow-xl">
-              <CardContent className="pt-6">
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 dark:text-slate-300 mb-6 italic">
-                  "Setup took 5 minutes, no IT needed. Our 12-person team now processes 300+ calls weekly with 95% accuracy. ROI in first month."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-violet-400 to-violet-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    JO
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Jules Oliver</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">VP of Sales, DataSync Corp</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-slate-200 dark:border-slate-700 shadow-xl">
-              <CardContent className="pt-6">
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 dark:text-slate-300 mb-6 italic">
-                  "Perfect for our custom CRM. Reduced data entry errors by 89% and saved $48K annually in admin costs. Best investment this year."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    JM
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Jessica Marlone</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Head of RevOps, CloudFirst Systems</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+      {/* TODO: Add real customer testimonials with verified names and LinkedIn profiles */}
 
       {/* FAQ */}
       <section id="faq" className="py-20 px-4 lg:px-8 bg-white dark:bg-slate-950">
@@ -1429,7 +1272,6 @@ export default function LandingPage() {
               <h3 className="font-bold mb-4">Contact</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><a href="mailto:support@synqall.com" className="hover:text-white transition-colors">support@synqall.com</a></li>
-                <li><a href="tel:+12125551234" className="hover:text-white transition-colors">+1 (212) 555-1234</a></li>
                 <li className="text-slate-400">United States</li>
               </ul>
             </div>
