@@ -122,7 +122,10 @@ export default function AdminApplicationsPage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to process application');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process application');
+      }
 
       toast({
         title: 'Success',
@@ -131,10 +134,11 @@ export default function AdminApplicationsPage() {
 
       setShowReviewDialog(false);
       fetchApplications();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Application review error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process application',
+        description: error.message || 'Failed to process application',
         variant: 'destructive',
       });
     } finally {

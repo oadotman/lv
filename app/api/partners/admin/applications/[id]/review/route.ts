@@ -24,9 +24,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  console.log('Review application endpoint called for ID:', params.id);
+
   try {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
+
+    console.log('User authentication check:', { userId: user?.id, email: user?.email });
 
     if (!user) {
       return NextResponse.json(
@@ -53,6 +57,8 @@ export async function POST(
     const { action, notes } = body;
     const applicationId = params.id;
 
+    console.log('Review action:', { action, hasNotes: !!notes, applicationId });
+
     // Get application
     const { data: application, error: appError } = await supabase
       .from('partner_applications')
@@ -60,7 +66,14 @@ export async function POST(
       .eq('id', applicationId)
       .single();
 
+    console.log('Application fetch result:', {
+      found: !!application,
+      error: appError?.message,
+      applicationEmail: application?.email
+    });
+
     if (appError || !application) {
+      console.error('Application not found:', appError);
       return NextResponse.json(
         { error: 'Application not found' },
         { status: 404 }
@@ -77,21 +90,47 @@ export async function POST(
       review_notes: notes,
     };
 
+    console.log('Updating application status:', updateData);
+
     const { error: updateError } = await supabase
       .from('partner_applications')
       .update(updateData)
       .eq('id', applicationId);
 
     if (updateError) {
+      console.error('Failed to update application status:', updateError);
       throw updateError;
     }
 
+    console.log('Application status updated successfully');
+
     // If approved, create partner account
     if (action === 'approve') {
+      console.log('Starting partner account creation...');
+
       const tempPassword = generateTempPassword();
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(tempPassword, salt);
       const referralCode = generateReferralCode(application.full_name);
+
+      console.log('Partner account details prepared:', {
+        email: application.email,
+        name: application.full_name,
+        referralCode,
+        applicationId
+      });
+
+      // Check if partner already exists
+      const { data: existingPartner } = await supabase
+        .from('partners')
+        .select('id, email')
+        .eq('email', application.email)
+        .single();
+
+      if (existingPartner) {
+        console.error('Partner already exists with this email:', application.email);
+        throw new Error(`Partner account already exists for ${application.email}`);
+      }
 
       // Create partner account
       const { data: partner, error: partnerError } = await supabase
@@ -113,12 +152,22 @@ export async function POST(
         .select()
         .single();
 
+      console.log('Partner creation result:', {
+        success: !!partner,
+        partnerId: partner?.id,
+        error: partnerError?.message,
+        errorDetails: partnerError
+      });
+
       if (partnerError) {
+        console.error('Failed to create partner account:', partnerError);
         throw partnerError;
       }
 
       // Initialize statistics
-      await supabase
+      console.log('Creating partner statistics for partner ID:', partner.id);
+
+      const { error: statsError } = await supabase
         .from('partner_statistics')
         .insert({
           partner_id: partner.id,
@@ -129,9 +178,17 @@ export async function POST(
           churn_rate: 0,
         });
 
+      if (statsError) {
+        console.error('Failed to create partner statistics:', statsError);
+        // Continue anyway - stats can be created later
+      }
+
       // Send welcome email
+      console.log('Sending welcome email to:', application.email);
+      console.log('Email from address:', process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com');
+
       try {
-        await resend.emails.send({
+        const emailResult = await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
           to: application.email,
           subject: 'Welcome to the SynQall Partner Program!',
@@ -165,19 +222,30 @@ export async function POST(
             </div>
           `,
         });
+
+        console.log('Welcome email sent successfully:', emailResult);
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
         // Continue without failing the approval
       }
 
       // Log activity
-      await supabase
+      console.log('Creating activity log for partner ID:', partner.id);
+
+      const { error: logError } = await supabase
         .from('partner_activity_logs')
         .insert({
           partner_id: partner.id,
           action: 'account_created',
           details: 'Partner account created from approved application',
         });
+
+      if (logError) {
+        console.error('Failed to create activity log:', logError);
+        // Continue anyway - this is not critical
+      }
+
+      console.log('Partner approval completed successfully!');
 
     } else if (action === 'reject') {
       // Send rejection email
@@ -231,10 +299,23 @@ export async function POST(
       success: true,
       message: `Application ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'updated'}`,
     });
-  } catch (error) {
-    console.error('Review application error:', error);
+  } catch (error: any) {
+    console.error('Review application error:', {
+      message: error?.message,
+      code: error?.code,
+      details: error?.details,
+      hint: error?.hint,
+      stack: error?.stack
+    });
+
+    // Return more specific error message
+    const errorMessage = error?.message || 'Internal server error';
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error?.details : undefined
+      },
       { status: 500 }
     );
   }
