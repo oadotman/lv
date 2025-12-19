@@ -4,7 +4,7 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServerClient, createAdminClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 import bcrypt from 'bcryptjs';
 
@@ -27,6 +27,7 @@ export async function POST(
   console.log('Review application endpoint called for ID:', params.id);
 
   try {
+    // Use regular client for auth check
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -39,7 +40,7 @@ export async function POST(
       );
     }
 
-    // Check if user is admin
+    // Check if user is admin (using regular client is fine here)
     const { data: userOrg } = await supabase
       .from('user_organizations')
       .select('role')
@@ -59,8 +60,11 @@ export async function POST(
 
     console.log('Review action:', { action, hasNotes: !!notes, applicationId });
 
+    // Use admin client for partner operations (bypasses RLS)
+    const adminClient = createAdminClient();
+
     // Get application
-    const { data: application, error: appError } = await supabase
+    const { data: application, error: appError } = await adminClient
       .from('partner_applications')
       .select('*')
       .eq('id', applicationId)
@@ -92,7 +96,7 @@ export async function POST(
 
     console.log('Updating application status:', updateData);
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminClient
       .from('partner_applications')
       .update(updateData)
       .eq('id', applicationId);
@@ -121,7 +125,7 @@ export async function POST(
       });
 
       // Check if partner already exists
-      const { data: existingPartner } = await supabase
+      const { data: existingPartner } = await adminClient
         .from('partners')
         .select('id, email')
         .eq('email', application.email)
@@ -133,7 +137,7 @@ export async function POST(
       }
 
       // Create partner account
-      const { data: partner, error: partnerError } = await supabase
+      const { data: partner, error: partnerError } = await adminClient
         .from('partners')
         .insert({
           email: application.email,
@@ -167,7 +171,7 @@ export async function POST(
       // Initialize statistics
       console.log('Creating partner statistics for partner ID:', partner.id);
 
-      const { error: statsError } = await supabase
+      const { error: statsError } = await adminClient
         .from('partner_statistics')
         .insert({
           partner_id: partner.id,
@@ -232,7 +236,7 @@ export async function POST(
       // Log activity
       console.log('Creating activity log for partner ID:', partner.id);
 
-      const { error: logError } = await supabase
+      const { error: logError } = await adminClient
         .from('partner_activity_logs')
         .insert({
           partner_id: partner.id,
