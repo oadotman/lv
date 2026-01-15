@@ -7,7 +7,7 @@ module.exports = {
       cwd: '/var/www/loadvoice',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: 3001,
       },
       instances: 1,
       exec_mode: 'fork',
@@ -44,9 +44,9 @@ module.exports = {
   deploy: {
     production: {
       user: 'root',
-      host: 'YOUR_VPS_IP',
+      host: 'datalix.eu',
       ref: 'origin/main',
-      repo: 'YOUR_GIT_REPO_URL',
+      repo: 'https://github.com/oadotman/lv.git',
       path: '/var/www/loadvoice',
       'pre-deploy-local': '',
       'post-deploy': 'npm install --production && npm run build && pm2 reload ecosystem.config.js --env production',
