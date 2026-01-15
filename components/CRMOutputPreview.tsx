@@ -67,7 +67,7 @@ export const CRMOutputPreview: React.FC<CRMOutputPreviewProps> = ({
     { id: 'monday', label: 'Monday', icon: Table, color: 'bg-pink-500' },
     { id: 'zoho', label: 'Zoho', icon: Building2, color: 'bg-red-500' },
     { id: 'csv', label: 'CSV/Excel', icon: Table, color: 'bg-emerald-500' },
-    { id: 'email', label: 'Email', icon: Mail, color: 'bg-purple-500' },
+    { id: 'email', label: 'Email', icon: Mail, color: 'bg-sky-500' },
   ];
 
   return (
@@ -176,9 +176,9 @@ export const CRMOutputPreview: React.FC<CRMOutputPreviewProps> = ({
           {customTemplates.map((template) => (
             <TabsContent key={`template_${template.id}`} value={`template_${template.id}`}>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-sky-50 dark:bg-sky-950 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-purple-600">Custom Template</Badge>
+                    <Badge className="bg-sky-600">Custom Template</Badge>
                     <span className="font-medium">{template.name}</span>
                   </div>
                   <Button

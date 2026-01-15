@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, requireAuth } from '@/lib/supabase/server';
 import { validateUploadedFile, generateSecureFileName, sanitizeFileName } from '@/lib/security/file-validation';
-import { calculateUsageAndOverage } from '@/lib/overage';
+import { getUsageStatus } from '@/lib/simple-usage';
+import { canProcessCall, estimateMinutesFromFileSize } from '@/lib/usage-guard';
 import { uploadRateLimiter } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
@@ -82,64 +83,35 @@ export async function POST(req: NextRequest) {
       console.log(`Created default organization for user ${userId}`);
     }
 
+    // Phase 1: Early check BEFORE accepting the file
+    // This is crucial - we need to reject BEFORE they upload
     if (organizationId) {
-      // Fetch organization details including overage settings
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('max_minutes_monthly, plan_type, current_period_start, current_period_end')
-        .eq('id', organizationId)
-        .single();
+      // We need the file size first to estimate minutes
+      // But we haven't parsed the form data yet...
+      // For now, do a preliminary check with current usage
+      const usage = await getUsageStatus(organizationId, supabase as any);
 
-      if (org) {
-        // Use overage-aware usage calculation
-        const now = new Date();
-        const periodStart = org.current_period_start || new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const periodEnd = org.current_period_end || new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-
-        const usage = await calculateUsageAndOverage(organizationId, periodStart, periodEnd);
-
-        // Block upload only if user has exceeded even purchased overages
-        if (!usage.canUpload) {
-          console.log('Usage limit exceeded (including overages):', {
-            organizationId,
-            minutesUsed: usage.minutesUsed,
-            baseLimit: usage.baseMinutes,
-            overageMinutes: usage.purchasedOverageMinutes,
-            totalLimit: usage.totalAvailableMinutes,
-            planType: org.plan_type,
-          });
-
-          return NextResponse.json(
-            {
-              error: 'Monthly transcription limit exceeded',
-              details: {
-                used: Math.round(usage.minutesUsed),
-                baseLimit: usage.baseMinutes,
-                overageMinutesAvailable: usage.purchasedOverageMinutes,
-                totalLimit: usage.totalAvailableMinutes,
-                planType: org.plan_type,
-                hasOverage: usage.hasOverage,
-                message: usage.hasOverage
-                  ? `You've used ${Math.round(usage.minutesUsed)} minutes including your overage allowance. Purchase additional overage packs or upgrade your plan.`
-                  : `You've used all ${usage.totalAvailableMinutes} minutes this month. Purchase an overage pack to continue processing calls.`,
-                canPurchaseOverage: true,
-              },
-            },
-            { status: 402 } // Payment Required
-          );
-        }
-
-        // Log usage info (including overage status)
-        console.log('Usage check passed:', {
+      // HARD STOP at $20 overage (100 minutes over limit)
+      if (usage.overageCharge >= 20.00) {
+        console.error('🚫 BLOCKED: User at overage cap:', {
           organizationId,
-          minutesUsed: Math.round(usage.minutesUsed),
-          baseLimit: usage.baseMinutes,
-          overageMinutes: usage.purchasedOverageMinutes,
-          totalLimit: usage.totalAvailableMinutes,
-          remaining: Math.round(usage.totalAvailableMinutes - usage.minutesUsed),
-          percentUsed: Math.round(usage.percentUsed),
-          inOverage: usage.minutesUsed > usage.baseMinutes,
+          minutesUsed: usage.minutesUsed,
+          overageCharge: usage.overageCharge,
         });
+
+        return NextResponse.json(
+          {
+            error: 'Monthly overage limit exceeded',
+            details: {
+              used: usage.minutesUsed,
+              limit: usage.minutesLimit,
+              overageCharge: usage.overageCharge,
+              message: `You've reached the $20 overage cap (${usage.overageMinutes} minutes over your ${usage.minutesLimit} minute plan). Please upgrade your plan to continue.`,
+              isHardLimit: true,
+            },
+          },
+          { status: 402 } // Payment Required
+        );
       }
     }
 
@@ -205,6 +177,46 @@ export async function POST(req: NextRequest) {
       detectedType: validation.detectedType,
       sizeMB: validation.sizeMB
     });
+
+    // Phase 2: CRITICAL - Check if we can process this file with usage guard
+    if (organizationId) {
+      const estimatedMinutes = estimateMinutesFromFileSize(file.size);
+      const usageCheck = await canProcessCall(organizationId, estimatedMinutes, supabase as any);
+
+      if (!usageCheck.allowed) {
+        console.error('🚫 BLOCKED by usage guard:', {
+          organizationId,
+          reason: usageCheck.reason,
+          projectedCharge: usageCheck.projectedCharge,
+        });
+
+        return NextResponse.json(
+          {
+            error: 'Usage limit would be exceeded',
+            details: {
+              currentUsage: usageCheck.currentUsage,
+              limit: usageCheck.limit,
+              pendingJobs: usageCheck.pendingMinutes,
+              estimatedMinutes,
+              projectedTotal: usageCheck.projectedTotal,
+              projectedOverageCharge: usageCheck.projectedCharge,
+              reason: usageCheck.reason,
+              message: 'This file would exceed your $20 overage cap. Please wait for pending jobs to complete or upgrade your plan.',
+            },
+          },
+          { status: 402 } // Payment Required
+        );
+      }
+
+      // Log that we're allowing but watching
+      if (usageCheck.projectedCharge > 10) {
+        console.warn('⚠️ User approaching overage cap:', {
+          organizationId,
+          projectedCharge: usageCheck.projectedCharge,
+          remainingBeforeCap: 20 - usageCheck.projectedCharge,
+        });
+      }
+    }
 
     // Generate secure unique filename
     const fileName = `${userId}/${generateSecureFileName(file.name, userId)}`;
@@ -334,6 +346,27 @@ export async function POST(req: NextRequest) {
               : 'Failed to start processing',
           })
           .eq('id', callData.id);
+
+        // Send failure email notification
+        try {
+          const { sendFailedProcessingEmail } = await import('@/lib/emails/failed-processing');
+
+          await sendFailedProcessingEmail({
+            callId: callData.id,
+            userId: userId,
+            customerName: customerName || undefined,
+            customerPhone: customerPhone || undefined,
+            salesRep: salesRep || undefined,
+            fileName: file.name,
+            uploadedAt: new Date().toISOString(),
+            errorMessage: error instanceof Error ? error.message : 'Failed to start processing',
+            errorType: 'unknown',
+          });
+
+          console.log('📧 Failure notification email sent to user');
+        } catch (emailError) {
+          console.error('Failed to send failure email:', emailError);
+        }
       }
     } else {
       console.log('Auto-transcribe disabled, leaving call in uploaded state');

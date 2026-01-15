@@ -12,7 +12,7 @@ export interface TeamInvitationEmailProps {
 }
 
 // Base email styles
-const emailStyles = `
+export const emailStyles = `
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     margin: 0;
@@ -101,7 +101,7 @@ export function renderTeamInvitationEmail(props: TeamInvitationEmailProps): stri
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="You're invited to join ${props.organizationName} on SynQall" />
+  <meta name="description" content="You're invited to join ${props.organizationName} on LoadVoice" />
   <style>${emailStyles}</style>
 </head>
 <body>
@@ -115,12 +115,12 @@ export function renderTeamInvitationEmail(props: TeamInvitationEmailProps): stri
 
         <p>
           <span class="highlight">${props.inviterName}</span> has invited you to join
-          <span class="highlight">${props.organizationName}</span> on SynQall as a
+          <span class="highlight">${props.organizationName}</span> on LoadVoice as a
           <span class="highlight">${props.role}</span>.
         </p>
 
         <p>
-          SynQall helps sales teams automatically transcribe calls and extract CRM data using AI.
+          LoadVoice helps sales teams automatically transcribe calls and extract CRM data using AI.
           With your team, you'll be able to:
         </p>
 
@@ -144,7 +144,7 @@ export function renderTeamInvitationEmail(props: TeamInvitationEmailProps): stri
           <p>If you didn't expect this invitation, you can safely ignore this email.</p>
           <p>
             Questions? Reply to this email or visit
-            <a href="https://synqall.com/help">our help center</a>.
+            <a href="https://loadvoice.com/help">our help center</a>.
           </p>
         </div>
       </div>
@@ -161,9 +161,9 @@ You're Invited to Join ${props.organizationName}!
 
 Hi there,
 
-${props.inviterName} has invited you to join ${props.organizationName} on SynQall as a ${props.role}.
+${props.inviterName} has invited you to join ${props.organizationName} on LoadVoice as a ${props.role}.
 
-SynQall helps sales teams automatically transcribe calls and extract CRM data using AI.
+LoadVoice helps sales teams automatically transcribe calls and extract CRM data using AI.
 
 Accept your invitation by clicking this link:
 ${props.inviteLink}
@@ -173,8 +173,8 @@ This invitation expires on ${props.expiresAt}.
 If you didn't expect this invitation, you can safely ignore this email.
 
 ---
-SynQall
-https://synqall.com
+LoadVoice
+https://loadvoice.com
   `.trim();
 }
 
@@ -195,14 +195,14 @@ export function renderWelcomeEmail(props: WelcomeEmailProps): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Welcome to SynQall! Let's get started." />
+  <meta name="description" content="Welcome to LoadVoice! Let's get started." />
   <style>${emailStyles}</style>
 </head>
 <body>
   <div class="container">
     <div class="email-card">
       <div class="header">
-        <h1>Welcome to SynQall! 👋</h1>
+        <h1>Welcome to LoadVoice! 👋</h1>
       </div>
       <div class="content">
         <p>Hi ${props.userName},</p>
@@ -229,7 +229,7 @@ export function renderWelcomeEmail(props: WelcomeEmailProps): string {
         <div class="footer">
           <p><strong>Need help?</strong></p>
           <p>
-            Check out our <a href="https://synqall.com/help">help center</a> or reply to this email anytime.
+            Check out our <a href="https://loadvoice.com/help">help center</a> or reply to this email anytime.
           </p>
         </div>
       </div>
@@ -257,7 +257,7 @@ export function renderPasswordResetEmail(props: PasswordResetEmailProps): string
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Reset your SynQall password" />
+  <meta name="description" content="Reset your LoadVoice password" />
   <style>${emailStyles}</style>
 </head>
 <body>
@@ -270,7 +270,7 @@ export function renderPasswordResetEmail(props: PasswordResetEmailProps): string
         <p>Hi${props.userName ? ` ${props.userName}` : ''},</p>
 
         <p>
-          We received a request to reset your password for your SynQall account.
+          We received a request to reset your password for your LoadVoice account.
         </p>
 
         <a href="${props.resetLink}" class="button">
@@ -326,7 +326,7 @@ export function renderMemberRemovedEmail(props: MemberRemovedEmailProps): string
 
         <p>
           ${props.removedBy} has removed you from the <strong>${props.organizationName}</strong> team
-          on SynQall.
+          on LoadVoice.
         </p>
 
         <p>
@@ -339,7 +339,7 @@ export function renderMemberRemovedEmail(props: MemberRemovedEmailProps): string
 
         <div class="footer">
           <p>
-            Questions? Visit <a href="https://synqall.com/help">our help center</a> or reply to this email.
+            Questions? Visit <a href="https://loadvoice.com/help">our help center</a> or reply to this email.
           </p>
         </div>
       </div>

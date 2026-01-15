@@ -5,9 +5,9 @@
 # =====================================================
 
 # Load environment variables
-source /var/www/synqall/.env.production
+source /var/www/loadvoice/.env.production
 
-CRON_URL="https://synqall.com/api/cron/retention-cleanup"
+CRON_URL="https://loadvoice.com/api/cron/retention-cleanup"
 
 echo "[Cron] ========================================"
 echo "[Cron] Retention cleanup cron job starting"

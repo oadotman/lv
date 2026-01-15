@@ -1,6 +1,6 @@
 -- =====================================================
 -- PARTNER PROGRAM DATABASE SCHEMA
--- Complete schema for SynQall Partner Program
+-- Complete schema for LoadVoice Partner Program
 -- =====================================================
 
 -- Enable UUID extension if not already enabled
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS partner_applications (
     crms_used TEXT[],
     how_heard TEXT,
     why_partner TEXT NOT NULL,
-    has_used_synqall BOOLEAN DEFAULT false,
+    has_used_loadvoice BOOLEAN DEFAULT false,
     terms_accepted BOOLEAN NOT NULL DEFAULT false,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'more_info_needed')),
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -585,12 +585,12 @@ CREATE INDEX idx_partner_payouts_partner_status ON partner_payouts(partner_id, s
 
 -- Insert default partner resources
 INSERT INTO partner_resources (resource_type, title, description, content, category, is_active) VALUES
-('email_template', 'Introduction Email', 'Introduce SynQall to your clients',
+('email_template', 'Introduction Email', 'Introduce LoadVoice to your clients',
 'Subject: Tool I''ve been recommending to my clients
 
 Hey [Client Name],
 
-Quick note. I''ve been working with a tool called SynQall that I think would save your sales team serious time.
+Quick note. I''ve been working with a tool called LoadVoice that I think would save your sales team serious time.
 
 It automatically extracts CRM data from sales calls. Your reps upload a call recording, AI pulls out all the key details (pain points, budget, timeline, next steps), and they paste it into [CRM] in 60 seconds instead of 20 minutes.
 
@@ -602,11 +602,11 @@ Let me know if you want me to walk you through it.
 'email', true),
 
 ('email_template', 'Follow-up Email', 'Follow up with interested prospects',
-'Subject: Following up on SynQall
+'Subject: Following up on LoadVoice
 
 Hi [Client Name],
 
-Just wanted to follow up on our conversation about SynQall.
+Just wanted to follow up on our conversation about LoadVoice.
 
 Have you had a chance to check it out? I''ve seen it save my other clients 15-20 hours per week on CRM updates.
 

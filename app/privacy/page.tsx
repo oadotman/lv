@@ -1,3 +1,34 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy - LoadVoice | Data Protection & GDPR',
+  description: 'LoadVoice Privacy Policy - Learn how we protect your freight data, ensure GDPR compliance, and maintain industry-leading security standards for your call recordings and business information.',
+  keywords: [
+    'LoadVoice privacy policy',
+    'data protection',
+    'GDPR compliance',
+    'freight data security',
+    'call recording privacy',
+    'data processing agreement'
+  ],
+  alternates: {
+    canonical: 'https://loadvoice.com/privacy'
+  },
+  openGraph: {
+    title: 'Privacy Policy - LoadVoice',
+    description: 'Learn how LoadVoice protects your data and ensures compliance with GDPR and data protection regulations.',
+    url: 'https://loadvoice.com/privacy',
+    siteName: 'LoadVoice',
+    locale: 'en_US',
+    type: 'website',
+  },
+  robots: {
+    index: false,  // Legal pages don't need to be indexed for SEO
+    follow: true,
+    noarchive: true,
+  }
+};
+
 export default function PrivacyPolicyPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 py-12 space-y-8">
@@ -6,7 +37,7 @@ export default function PrivacyPolicyPage() {
         <h1 className="text-4xl font-bold text-gray-900">Privacy Policy</h1>
         <p className="text-gray-600">Last updated: January 21, 2025</p>
         <p className="text-sm text-gray-500">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
 
@@ -16,7 +47,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            Nikola Innovations Limited ("we", "us", or "our") operates SynQall, an AI-powered platform for
+            Nikola Innovations Limited ("we", "us", or "our") operates Loadvoice, an AI-powered platform for
             transcribing sales call recordings and extracting CRM data. This Privacy Policy explains how we collect,
             use, disclose, and protect your personal information when you use our Service.
           </p>
@@ -25,7 +56,7 @@ export default function PrivacyPolicyPage() {
             the General Data Protection Regulation (GDPR) and the UK Data Protection Act 2018.
           </p>
           <p className="text-gray-700 leading-relaxed">
-            By using SynQall, you consent to the data practices described in this Privacy Policy.
+            By using Loadvoice, you consent to the data practices described in this Privacy Policy.
           </p>
         </section>
 
@@ -95,7 +126,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Third-Party Services and Data Sharing</h2>
           <p className="text-gray-700 leading-relaxed mb-4">
-            We use the following third-party services to operate SynQall. Your data is shared with these providers
+            We use the following third-party services to operate Loadvoice. Your data is shared with these providers
             only as necessary to provide the Service:
           </p>
 
@@ -117,8 +148,8 @@ export default function PrivacyPolicyPage() {
               </p>
             </div>
 
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-purple-900 mb-2">3.2 Supabase (Database & Storage)</h3>
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-sky-900 mb-2">3.2 Supabase (Database & Storage)</h3>
               <p className="text-gray-800 mb-2">
                 <strong>Purpose:</strong> User authentication, database storage, file storage
               </p>
@@ -234,7 +265,7 @@ export default function PrivacyPolicyPage() {
             </li>
           </ul>
           <p className="text-gray-800 leading-relaxed mt-4 font-semibold">
-            To exercise any of these rights, contact us at <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a>. We will respond within 30 days.
+            To exercise any of these rights, contact us at <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a>. We will respond within 30 days.
           </p>
         </section>
 
@@ -262,7 +293,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">7. International Data Transfers</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            SynQall operates globally and may transfer data across borders. Some of our third-party providers
+            Loadvoice operates globally and may transfer data across borders. Some of our third-party providers
             are based in the United States or other countries outside the EEA/UK.
           </p>
           <p className="text-gray-700 leading-relaxed mb-3">
@@ -274,7 +305,7 @@ export default function PrivacyPolicyPage() {
             <li>GDPR-compliant data processing agreements with all third-party providers</li>
           </ul>
           <p className="text-gray-700 leading-relaxed mt-3">
-            You may request details about international data transfers by contacting <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a>.
+            You may request details about international data transfers by contacting <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a>.
           </p>
         </section>
 
@@ -282,9 +313,9 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Children's Privacy</h2>
           <p className="text-gray-700 leading-relaxed">
-            SynQall is not intended for use by individuals under the age of 18. We do not knowingly collect
+            Loadvoice is not intended for use by individuals under the age of 18. We do not knowingly collect
             personal information from children. If you believe we have inadvertently collected data from a child,
-            please contact us immediately at <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a>
+            please contact us immediately at <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a>
             and we will delete it promptly.
           </p>
         </section>
@@ -293,7 +324,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Cookies and Tracking Technologies</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            We use cookies and similar tracking technologies to improve your experience on SynQall. For detailed
+            We use cookies and similar tracking technologies to improve your experience on Loadvoice. For detailed
             information about the cookies we use and how to manage them, please see our{' '}
             <a href="/cookies" className="text-blue-600 underline font-semibold">Cookie Policy</a>.
           </p>
@@ -322,9 +353,9 @@ export default function PrivacyPolicyPage() {
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <p className="text-gray-800 font-semibold">Nikola Innovations Limited</p>
             <p className="text-gray-700">Data Protection Officer</p>
-            <p className="text-gray-700">Email: <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a></p>
-            <p className="text-gray-700">General Support: <a href="mailto:support@synqall.com" className="text-blue-600 underline">support@synqall.com</a></p>
-            <p className="text-gray-700">Website: <a href="https://synqall.com" className="text-blue-600 underline">https://synqall.com</a></p>
+            <p className="text-gray-700">Email: <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a></p>
+            <p className="text-gray-700">General Support: <a href="mailto:support@loadvoice.com" className="text-blue-600 underline">support@loadvoice.com</a></p>
+            <p className="text-gray-700">Website: <a href="https://loadvoice.com" className="text-blue-600 underline">https://loadvoice.com</a></p>
           </div>
           <p className="text-gray-700 leading-relaxed mt-4">
             <strong>EU Representative:</strong> If you are located in the EU and have concerns about our data
@@ -344,7 +375,7 @@ export default function PrivacyPolicyPage() {
       {/* Footer */}
       <div className="border-t pt-6 mt-12">
         <p className="text-sm text-gray-500 text-center">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
     </div>

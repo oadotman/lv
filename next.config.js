@@ -1,45 +1,13 @@
-const { withSentryConfig } = require('@sentry/nextjs');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+
+  // Experimental features optimized for SEO
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
     },
-  },
-  reactStrictMode: true,
-
-  // Enable standalone output for production deployment
-  output: 'standalone',
-
-  // Enable SWC minification (faster than Terser)
-  swcMinify: true,
-
-  // Suppress non-critical warnings
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Suppress Edge Runtime warnings for Node.js runtime
-      config.infrastructureLogging = {
-        level: 'error',
-      };
-    }
-    return config;
-  },
-
-  // Optimize images
-  images: {
-    formats: ['image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-  },
-
-  // Production-ready optimizations
-  productionBrowserSourceMaps: false,
-  compress: true,
-  poweredByHeader: false,
-
-  // Enable experimental features for better performance
-  experimental: {
     optimizePackageImports: [
       'lucide-react',
       '@radix-ui/react-dialog',
@@ -53,41 +21,42 @@ const nextConfig = {
       'recharts',
       'date-fns'
     ],
-    // Use lighter build analysis
     typedRoutes: false,
   },
 
-  // Security Headers
+  // Enable static generation for better SEO
+  // output: 'standalone',
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' && {
+      exclude: ['error', 'warn'],
+    },
+  },
+
+  // Webpack optimization
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.infrastructureLogging = {
+        level: 'error',
+      };
+    }
+    return config;
+  },
+
+  // Image optimization for better Core Web Vitals
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+  },
+
+  // SEO-friendly headers
   async headers() {
-    // Build CSP based on environment
-    const isDev = process.env.NODE_ENV === 'development';
-
-    // Content Security Policy
-    const cspHeader = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://cdn.paddle.com https://sandbox-cdn.paddle.com https://app.posthog.com https://*.sentry.io",
-      "style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://sandbox-cdn.paddle.com",
-      "img-src 'self' data: blob: https://*.supabase.co https: https://cdn.paddle.com https://sandbox-cdn.paddle.com",
-      "font-src 'self' data: https://cdn.paddle.com https://sandbox-cdn.paddle.com",
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://api.assemblyai.com https://api.openai.com https://api.paddle.com https://sandbox-api.paddle.com https://buy.paddle.com https://cdn.paddle.com https://sandbox-cdn.paddle.com https://app.posthog.com https://*.sentry.io https://*.inngest.com",
-      "media-src 'self' blob: https://*.supabase.co",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "frame-src 'self' https://checkout.paddle.com https://sandbox-checkout.paddle.com https://buy.paddle.com",
-      "upgrade-insecure-requests",
-      isDev && "worker-src 'self' blob:", // Allow service workers in dev
-    ].filter(Boolean).join('; ');
-
     return [
       {
         source: '/:path*',
         headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: cspHeader
-          },
           {
             key: 'X-DNS-Prefetch-Control',
             value: 'on'
@@ -97,12 +66,12 @@ const nextConfig = {
             value: 'max-age=63072000; includeSubDomains; preload'
           },
           {
-            key: 'X-Frame-Options',
-            value: 'DENY' // Stricter than SAMEORIGIN
-          },
-          {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
           },
           {
             key: 'X-XSS-Protection',
@@ -110,67 +79,73 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(self "https://buy.paddle.com" "https://checkout.paddle.com"), usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
-          },
-          {
-            key: 'X-Permitted-Cross-Domain-Policies',
-            value: 'none'
+            value: 'origin-when-cross-origin'
           }
-        ],
+        ]
       },
-      // Internal processing endpoints - minimal headers to avoid HTTP parsing issues
+      // Cache static assets for better performance
       {
-        source: '/api/calls/:id/process',
+        source: '/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'public, max-age=31536000, immutable'
           }
-        ],
+        ]
       },
-      // Special headers for API routes
+      // Cache images
       {
-        source: '/api/:path*',
+        source: '/images/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, private'
-          },
-          {
-            key: 'X-Robots-Tag',
-            value: 'noindex, nofollow'
+            value: 'public, max-age=31536000, must-revalidate'
           }
-        ],
-      },
+        ]
+      }
     ]
   },
+
+  // Redirects for SEO
+  async redirects() {
+    return [
+      // Redirect www to non-www
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.loadvoice.com',
+          },
+        ],
+        destination: 'https://loadvoice.com/:path*',
+        permanent: true,
+      },
+      // Fix common URL issues
+      {
+        source: '/signin',
+        destination: '/login',
+        permanent: true,
+      },
+      {
+        source: '/sign-in',
+        destination: '/login',
+        permanent: true,
+      },
+      {
+        source: '/sign-up',
+        destination: '/signup',
+        permanent: true,
+      }
+    ]
+  },
+
+  // Trailing slash handling for consistent URLs
+  trailingSlash: false,
+
+  productionBrowserSourceMaps: false,
+  compress: true,
+  poweredByHeader: false,
 };
 
-// Sentry configuration options
-const sentryWebpackPluginOptions = {
-  // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options
-
-  // Suppresses source map uploading logs during build
-  silent: true,
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-
-  // Upload source maps in production only
-  widenClientFileUpload: true,
-  hideSourceMaps: true,
-  disableLogger: true,
-};
-
-// Make sure adding Sentry options is the last code to run before exporting
-module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
-  : nextConfig;
+module.exports = nextConfig;

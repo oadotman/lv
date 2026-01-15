@@ -23,11 +23,11 @@ export function QuickActions({ onProcessNewCall }: QuickActionsProps) {
           className={cn(
             "h-[72px] rounded-xl border-[1.5px] border-gray-200 bg-white",
             "flex flex-col items-center justify-center gap-3",
-            "hover:border-violet-500 transition-colors duration-200",
+            "hover:border-blue-500 transition-colors duration-200",
             "group"
           )}
         >
-          <Phone className="w-6 h-6 text-violet-600 group-hover:scale-110 transition-transform" />
+          <Phone className="w-6 h-6 text-blue-600 group-hover:scale-110 transition-transform" />
           <span className="text-[15px] font-medium text-gray-700">
             View All Calls
           </span>
@@ -38,9 +38,9 @@ export function QuickActions({ onProcessNewCall }: QuickActionsProps) {
           onClick={onProcessNewCall}
           className={cn(
             "h-[72px] rounded-xl",
-            "bg-gradient-to-b from-violet-600 to-purple-700",
+            "bg-gradient-to-b from-blue-600 to-sky-700",
             "flex flex-col items-center justify-center gap-3",
-            "hover:from-violet-700 hover:to-purple-800",
+            "hover:from-blue-700 hover:to-sky-800",
             "hover:shadow-lg hover:-translate-y-0.5",
             "transition-all duration-200",
             "group"
@@ -58,11 +58,11 @@ export function QuickActions({ onProcessNewCall }: QuickActionsProps) {
           className={cn(
             "h-[72px] rounded-xl border-[1.5px] border-gray-200 bg-white",
             "flex flex-col items-center justify-center gap-3",
-            "hover:border-violet-500 transition-colors duration-200",
+            "hover:border-blue-500 transition-colors duration-200",
             "group"
           )}
         >
-          <FileText className="w-6 h-6 text-violet-600 group-hover:scale-110 transition-transform" />
+          <FileText className="w-6 h-6 text-blue-600 group-hover:scale-110 transition-transform" />
           <span className="text-[15px] font-medium text-gray-700">
             Manage Templates
           </span>

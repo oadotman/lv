@@ -132,17 +132,17 @@ export default function PartnerDashboardLayout({
               </button>
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/partners/dashboard" className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-sky-600 flex items-center justify-center">
                     <Award className="w-5 h-5 text-white" />
                   </div>
-                  <span className="font-bold text-lg text-gray-900">SynQall Partners</span>
+                  <span className="font-bold text-lg text-gray-900">LoadVoice Partners</span>
                 </Link>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               {partner?.tier === 'premium' && (
-                <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800">
+                <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-sky-100 to-blue-100 text-sky-800">
                   <Award className="w-3 h-3 mr-1" />
                   Premium Partner
                 </span>
@@ -205,7 +205,7 @@ export default function PartnerDashboardLayout({
 
             {/* Partner Info Card */}
             <div className="px-4 py-4 border-t">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg p-4">
                 <div className="text-sm">
                   <p className="font-medium text-gray-900">Your Referral Code</p>
                   <p className="font-mono text-blue-600 mt-1">{partner?.referral_code}</p>

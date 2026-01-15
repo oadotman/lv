@@ -34,19 +34,19 @@ export function sanitizeEmail(email: string): string {
   const emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
 
   if (!emailRegex.test(cleaned)) {
-    throw new Error('Invalid email format');
+    throw new Error('Please enter a valid email address (e.g., name@gmail.com or name@company.com)');
   }
 
   // Additional validation: check for invalid patterns
   if (cleaned.includes('..') || cleaned.startsWith('.') || cleaned.endsWith('.')) {
-    throw new Error('Invalid email format: consecutive dots or leading/trailing dots');
+    throw new Error('Invalid email format: Please check for extra dots in your email');
   }
 
-  // Block common invalid domains
+  // Block common invalid/test domains only
   const domain = cleaned.split('@')[1];
   const invalidDomains = ['localhost', 'test', 'example', 'invalid'];
   if (invalidDomains.some(invalid => domain?.startsWith(invalid))) {
-    throw new Error('Invalid email domain');
+    throw new Error('Please use a real email address, not a test domain');
   }
 
   return cleaned.substring(0, 255);

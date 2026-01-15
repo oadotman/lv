@@ -1,0 +1,22 @@
+
+> loadvoice@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.20
+  - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./lib/rate-confirmation/pdf-template.tsx:549:37
+Type error: Property 'companyName' does not exist on type '{ page: { padding: number; fontSize: number; fontFamily: string; color: string; }; header: { marginBottom: number; }; headerTop: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "flex-start"; marginBottom: number; }; ... 40 more ...; success: { ...; }; }'.
+
+[0m [90m 547 |[39m               )}[0m
+[0m [90m 548 |[39m               {[33m![39morganization[33m.[39mlogo_url [33m&&[39m ([0m
+[0m[31m[1m>[22m[39m[90m 549 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mcompanyName}[33m>[39m{organization[33m.[39mname}[33m<[39m[33m/[39m[33mText[39m[33m>[39m[0m
+[0m [90m     |[39m                                     [31m[1m^[22m[39m[0m
+[0m [90m 550 |[39m               )}[0m
+[0m [90m 551 |[39m             [33m<[39m[33m/[39m[33mView[39m[33m>[39m[0m
+[0m [90m 552 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39mheaderInfo}[33m>[39m[0m

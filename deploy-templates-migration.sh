@@ -10,8 +10,8 @@ set -e  # Exit on any error
 echo "🚀 Starting deployment with templates migration..."
 
 # Configuration
-DEPLOY_DIR="/var/www/synqall"
-APP_NAME="synqall"
+DEPLOY_DIR="/var/www/loadvoice"
+APP_NAME="loadvoice"
 MIGRATION_FILE="database/migrations/005_fix_templates_system.sql"
 
 # Colors for output
@@ -157,7 +157,7 @@ echo ""
 echo -e "${GREEN}═══════════════════════════════════════${NC}"
 echo -e "${GREEN}🎉 Templates & Email Migration Complete!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════${NC}"
-echo -e "${GREEN}🌐 Application: https://synqall.com${NC}"
+echo -e "${GREEN}🌐 Application: https://loadvoice.com${NC}"
 echo -e "${GREEN}✅ Templates system: Fixed${NC}"
 echo -e "${GREEN}✅ Email generation: Fixed${NC}"
 echo -e "${GREEN}✅ PDF export: Implemented${NC}"

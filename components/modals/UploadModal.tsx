@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -74,6 +74,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     { id: "1", fieldName: "", fieldType: "text", description: "" }
   ]);
   const [typedNotes, setTypedNotes] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { user, organization } = useAuth();
@@ -120,6 +121,224 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
     fetchTemplates();
   }, [user, isOpen]);
+
+  // handleFileSelect - moved here to fix temporal dead zone issue
+  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = event.target.files;
+    if (!selectedFiles) return;
+
+    const newFiles: FileUpload[] = [];
+
+    // Show toast if multiple files selected
+    if (selectedFiles.length > 1) {
+      toast({
+        title: "Multiple files selected",
+        description: `Processing ${selectedFiles.length} files. Each will be uploaded separately.`,
+      });
+    }
+
+    for (const file of Array.from(selectedFiles)) {
+      const fileUpload: FileUpload = {
+        id: Math.random().toString(36).substr(2, 9),
+        file: file,
+        name: file.name,
+        status: "validating",
+        progress: 0,
+      };
+
+      newFiles.push(fileUpload);
+    }
+
+    setFiles((prev) => [...prev, ...newFiles]);
+
+    // Validate files in parallel for better performance
+    const validationPromises = newFiles.map(async (fileUpload) => {
+      const validation = await validateAudioFile(fileUpload.file);
+
+      // Check actual audio duration against user's plan limits
+      let actualDuration: number | null = null;
+      let durationError: string | null = null;
+
+      if (validation.valid) {
+        try {
+          actualDuration = await getAudioDuration(fileUpload.file);
+
+          // For free tier, check per-file duration limit (30 minutes per file)
+          // For paid tiers, the limit is monthly total, not per-file
+          if (userPlan === 'free') {
+            const MAX_FREE_TIER_DURATION = 30 * 60; // 30 minutes in seconds
+            if (actualDuration > MAX_FREE_TIER_DURATION) {
+              durationError = `Recording duration (${Math.ceil(actualDuration / 60)} minutes) exceeds the 30-minute free tier limit per file. Please upgrade your plan or use a shorter recording.`;
+            }
+          }
+          // For paid plans, we don't enforce per-file limits, only monthly totals
+          // The server will handle monthly limit checks
+        } catch (error) {
+          console.warn("Could not determine audio duration:", error);
+          // Don't block upload if duration check fails
+          if (userPlan === 'free' && selectedFiles.length === 1) {
+            toast({
+              title: "Warning",
+              description: "Could not verify recording duration. Upload may fail if it exceeds 30 minutes on the free plan.",
+              variant: "default",
+            });
+          }
+        }
+      }
+
+      return {
+        fileUpload,
+        validation,
+        durationError
+      };
+    });
+
+    // Wait for all validations to complete
+    const validationResults = await Promise.all(validationPromises);
+
+    // Update all file statuses at once
+    setFiles((prev) =>
+      prev.map((f) => {
+        const result = validationResults.find(r => r.fileUpload.id === f.id);
+        if (result) {
+          return {
+            ...f,
+            status: (result.validation.valid && !result.durationError) ? ("idle" as UploadStatus) : ("error" as UploadStatus),
+            error: result.durationError || result.validation.error,
+            validation: result.validation,
+          };
+        }
+        return f;
+      })
+    );
+
+    // Show warnings if any
+    const warningFiles = validationResults.filter(r => r.validation.warnings && r.validation.warnings.length > 0);
+    if (warningFiles.length > 0) {
+      const warningCount = warningFiles.length;
+      toast({
+        title: `File warnings (${warningCount} file${warningCount > 1 ? 's' : ''})`,
+        description: warningFiles[0].validation.warnings?.join(". "),
+        variant: "default",
+      });
+    }
+  }, [toast, userPlan, setFiles]);
+
+  // Enhanced drag and drop handlers
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let dragCounter = 0;
+
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter++;
+
+      // Check if dragging files
+      if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+        const hasFiles = Array.from(e.dataTransfer.items).some(item => item.kind === 'file');
+        if (hasFiles) {
+          setIsDragging(true);
+        }
+      }
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter--;
+
+      if (dragCounter === 0) {
+        setIsDragging(false);
+      }
+    };
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    };
+
+    const handleDrop = async (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter = 0;
+      setIsDragging(false);
+
+      if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) {
+        return;
+      }
+
+      // Don't process if already processing
+      if (isProcessing || isImporting || isUploadInProgress) {
+        toast({
+          title: "Upload in progress",
+          description: "Please wait for the current upload to complete.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const droppedFiles = Array.from(e.dataTransfer.files);
+
+      // Filter for audio files
+      const audioFiles = droppedFiles.filter(file => {
+        const isAudio = file.type.startsWith('audio/') ||
+                       ['.mp3', '.wav', '.m4a', '.webm', '.ogg', '.flac'].some(ext =>
+                         file.name.toLowerCase().endsWith(ext)
+                       );
+        return isAudio;
+      });
+
+      if (audioFiles.length === 0) {
+        toast({
+          title: "No audio files",
+          description: "Please drop audio files (MP3, WAV, M4A, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (audioFiles.length < droppedFiles.length) {
+        toast({
+          title: "Some files skipped",
+          description: `${droppedFiles.length - audioFiles.length} non-audio file(s) were skipped.`,
+          variant: "default",
+        });
+      }
+
+      // Create a synthetic event to reuse handleFileSelect logic
+      const dataTransfer = new DataTransfer();
+      audioFiles.forEach(file => dataTransfer.items.add(file));
+
+      const syntheticEvent = {
+        target: {
+          files: dataTransfer.files
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+
+      handleFileSelect(syntheticEvent);
+    };
+
+    // Add event listeners
+    window.addEventListener('dragenter', handleDragEnter);
+    window.addEventListener('dragleave', handleDragLeave);
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('drop', handleDrop);
+
+    return () => {
+      window.removeEventListener('dragenter', handleDragEnter);
+      window.removeEventListener('dragleave', handleDragLeave);
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('drop', handleDrop);
+      dragCounter = 0;
+      setIsDragging(false);
+    };
+  }, [isOpen, isProcessing, isImporting, isUploadInProgress, toast, handleFileSelect]);
 
   // Browser visibility detection and upload protection
   useEffect(() => {
@@ -224,83 +443,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     );
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = event.target.files;
-    if (!selectedFiles) return;
-
-    const newFiles: FileUpload[] = [];
-
-    for (const file of Array.from(selectedFiles)) {
-      const fileUpload: FileUpload = {
-        id: Math.random().toString(36).substr(2, 9),
-        file: file,
-        name: file.name,
-        status: "validating",
-        progress: 0,
-      };
-
-      newFiles.push(fileUpload);
-    }
-
-    setFiles((prev) => [...prev, ...newFiles]);
-
-    // Validate files
-    for (const fileUpload of newFiles) {
-      const validation = await validateAudioFile(fileUpload.file);
-
-      // Check actual audio duration against user's plan limits
-      let actualDuration: number | null = null;
-      let durationError: string | null = null;
-
-      if (validation.valid) {
-        try {
-          actualDuration = await getAudioDuration(fileUpload.file);
-
-          // For free tier, check per-file duration limit (30 minutes per file)
-          // For paid tiers, the limit is monthly total, not per-file
-          if (userPlan === 'free') {
-            const MAX_FREE_TIER_DURATION = 30 * 60; // 30 minutes in seconds
-            if (actualDuration > MAX_FREE_TIER_DURATION) {
-              durationError = `Recording duration (${Math.ceil(actualDuration / 60)} minutes) exceeds the 30-minute free tier limit per file. Please upgrade your plan or use a shorter recording.`;
-            }
-          }
-          // For paid plans, we don't enforce per-file limits, only monthly totals
-          // The server will handle monthly limit checks
-        } catch (error) {
-          console.warn("Could not determine audio duration:", error);
-          // Don't block upload if duration check fails
-          if (userPlan === 'free') {
-            toast({
-              title: "Warning",
-              description: "Could not verify recording duration. Upload may fail if it exceeds 30 minutes on the free plan.",
-              variant: "default",
-            });
-          }
-        }
-      }
-
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === fileUpload.id
-            ? {
-                ...f,
-                status: (validation.valid && !durationError) ? ("idle" as UploadStatus) : ("error" as UploadStatus),
-                error: durationError || validation.error,
-                validation: validation,
-              }
-            : f
-        )
-      );
-
-      if (validation.warnings && validation.warnings.length > 0) {
-        toast({
-          title: "File warnings",
-          description: validation.warnings.join(". "),
-          variant: "default",
-        });
-      }
-    }
-  };
+  // handleFileSelect moved earlier in the file to fix temporal dead zone issue
 
   const uploadFile = async (fileUpload: FileUpload) => {
     try {
@@ -628,29 +771,66 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
     setIsProcessing(true);
 
+    // Show initial toast for multiple files
+    if (validFiles.length > 1) {
+      toast({
+        title: "Processing multiple calls",
+        description: `Uploading ${validFiles.length} files. They will be processed sequentially.`,
+      });
+    }
+
     try {
       // Upload files sequentially
       const uploadedCallIds: string[] = [];
+      const failedUploads: string[] = [];
 
-      for (const file of validFiles) {
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+
+        // Show progress for multiple files
+        if (validFiles.length > 1) {
+          toast({
+            title: `Uploading file ${i + 1} of ${validFiles.length}`,
+            description: file.name,
+          });
+        }
+
         const callId = await uploadFile(file);
         if (callId) {
           uploadedCallIds.push(callId);
+        } else {
+          failedUploads.push(file.name);
         }
       }
 
-      // If at least one file uploaded successfully
+      // Show summary
       if (uploadedCallIds.length > 0) {
+        const message = failedUploads.length > 0
+          ? `${uploadedCallIds.length} call(s) uploaded successfully. ${failedUploads.length} failed.`
+          : `All ${uploadedCallIds.length} call(s) uploaded successfully!`;
+
         toast({
-          title: "Processing started",
-          description: `${uploadedCallIds.length} call(s) are being transcribed and analyzed.`,
+          title: "Processing complete",
+          description: message,
+          variant: failedUploads.length > 0 ? "default" : undefined,
         });
 
-        // Navigate to first call detail page after a short delay
+        // Navigate to first successful call or calls page
         setTimeout(() => {
-          router.push(`/calls/${uploadedCallIds[0]}`);
+          if (uploadedCallIds.length === 1) {
+            router.push(`/calls/${uploadedCallIds[0]}`);
+          } else {
+            // For multiple uploads, go to calls page to see all
+            router.push('/calls');
+          }
           handleClose();
         }, 1500);
+      } else {
+        toast({
+          title: "All uploads failed",
+          description: "Please check your files and try again.",
+          variant: "destructive",
+        });
       }
     } finally {
       setIsProcessing(false);
@@ -720,7 +900,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
       case "uploading":
         return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
       case "transcribing":
-        return <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />;
+        return <Loader2 className="w-5 h-5 text-sky-500 animate-spin" />;
       case "extracting":
         return <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />;
       case "processing":
@@ -758,9 +938,29 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+    <>
+      {/* Full-screen drag overlay */}
+      {isDragging && (
+        <div className="fixed inset-0 z-[100] bg-blue-500/20 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border-4 border-dashed border-blue-500 animate-pulse">
+            <Upload className="w-20 h-20 mx-auto mb-4 text-blue-500" />
+            <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">Drop your audio files here!</p>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+              Release to upload multiple files at once
+            </p>
+            <div className="mt-4 flex justify-center gap-2">
+              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">MP3</span>
+              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">WAV</span>
+              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">M4A</span>
+              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">WEBM</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Process Sales Call
             {(isProcessing || isImporting || isUploadInProgress) && (
@@ -798,15 +998,15 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
         )}
 
         {/* Template Selection */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-violet-200 rounded-xl">
+        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-sky-50 border-2 border-blue-200 rounded-xl">
           <div className="flex items-center justify-between mb-2">
-            <Label className="text-sm font-semibold text-violet-900">
+            <Label className="text-sm font-semibold text-blue-900">
               Select Output Template
             </Label>
             <Button
               variant="ghost"
               size="sm"
-              className="text-violet-700 hover:text-violet-900 hover:bg-violet-100 h-8"
+              className="text-blue-700 hover:text-blue-900 hover:bg-blue-100 h-8"
               onClick={() => setShowTemplateCreator(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
@@ -832,7 +1032,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-violet-700 mt-2">
+          <p className="text-xs text-blue-700 mt-2">
             AI will extract fields matching this template. You can change templates later.
           </p>
         </div>
@@ -893,7 +1093,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
                           <div
                             className={`h-1.5 rounded-full transition-all ${
                               file.status === "uploading" ? "bg-blue-500" :
-                              file.status === "transcribing" ? "bg-purple-500" :
+                              file.status === "transcribing" ? "bg-sky-500" :
                               file.status === "extracting" ? "bg-indigo-500" :
                               "bg-primary"
                             }`}
@@ -1045,8 +1245,10 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="customer">Customer</SelectItem>
-                        <SelectItem value="sales_rep">Sales Rep</SelectItem>
+                        <SelectItem value="broker">Broker (You)</SelectItem>
+                        <SelectItem value="shipper">Shipper</SelectItem>
+                        <SelectItem value="carrier">Carrier/Dispatcher</SelectItem>
+                        <SelectItem value="driver">Driver</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1124,6 +1326,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
           </Button>
         </DialogFooter>
       </DialogContent>
+      </Dialog>
 
       {/* Quick Template Creator Dialog */}
       <Dialog open={showTemplateCreator} onOpenChange={setShowTemplateCreator}>
@@ -1344,6 +1547,6 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Dialog>
+    </>
   );
 }

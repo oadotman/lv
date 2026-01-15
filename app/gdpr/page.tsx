@@ -1,3 +1,34 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'GDPR Compliance - LoadVoice | EU Data Protection',
+  description: 'LoadVoice GDPR Compliance - Full EU data protection compliance for freight brokers. Data portability, right to erasure, and transparent data processing for your freight operations.',
+  keywords: [
+    'LoadVoice GDPR',
+    'EU data protection',
+    'GDPR compliance freight',
+    'data portability',
+    'right to erasure',
+    'data processing agreement'
+  ],
+  alternates: {
+    canonical: 'https://loadvoice.com/gdpr'
+  },
+  openGraph: {
+    title: 'GDPR Compliance - LoadVoice',
+    description: 'Full GDPR compliance for EU freight brokers. Data protection and privacy rights guaranteed.',
+    url: 'https://loadvoice.com/gdpr',
+    siteName: 'LoadVoice',
+    locale: 'en_US',
+    type: 'website',
+  },
+  robots: {
+    index: false,  // Legal pages don't need to be indexed for SEO
+    follow: true,  // But should allow following links
+    noarchive: true,  // Don't cache legal content
+  }
+};
+
 export default function GDPRCompliancePage() {
   return (
     <div className="max-w-4xl mx-auto p-6 py-12 space-y-8">
@@ -6,7 +37,7 @@ export default function GDPRCompliancePage() {
         <h1 className="text-4xl font-bold text-gray-900">GDPR Compliance</h1>
         <p className="text-gray-600">Last updated: January 21, 2025</p>
         <p className="text-sm text-gray-500">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
 
@@ -16,12 +47,12 @@ export default function GDPRCompliancePage() {
         <section className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
           <h2 className="text-2xl font-bold text-blue-900 mb-4">Our Commitment to GDPR</h2>
           <p className="text-gray-800 leading-relaxed mb-3">
-            SynQall is committed to full compliance with the General Data Protection Regulation (GDPR),
+            Loadvoice is committed to full compliance with the General Data Protection Regulation (GDPR),
             the UK Data Protection Act 2018, and other applicable data protection laws. This page explains
             how we meet our obligations as a data controller and processor.
           </p>
           <p className="text-gray-800 leading-relaxed">
-            Nikola Innovations Limited is the data controller for all personal data collected through SynQall.
+            Nikola Innovations Limited is the data controller for all personal data collected through Loadvoice.
             We take our responsibility for protecting your data seriously and have implemented comprehensive
             technical and organizational measures to ensure GDPR compliance.
           </p>
@@ -111,7 +142,7 @@ export default function GDPRCompliancePage() {
                 <li>CRM extractions and templates</li>
               </ul>
               <p className="text-xs text-green-800 font-semibold">
-                How to exercise: Email <a href="mailto:privacy@synqall.com" className="underline">privacy@synqall.com</a> with subject "Data Access Request"
+                How to exercise: Email <a href="mailto:privacy@loadvoice.com" className="underline">privacy@loadvoice.com</a> with subject "Data Access Request"
               </p>
             </div>
 
@@ -132,7 +163,7 @@ export default function GDPRCompliancePage() {
                 we have a legal obligation to retain it (e.g., billing records for tax purposes).
               </p>
               <p className="text-xs text-green-800 font-semibold">
-                How to exercise: Settings → Danger Zone → Delete Account or email <a href="mailto:privacy@synqall.com" className="underline">privacy@synqall.com</a>
+                How to exercise: Settings → Danger Zone → Delete Account or email <a href="mailto:privacy@loadvoice.com" className="underline">privacy@loadvoice.com</a>
               </p>
             </div>
 
@@ -143,7 +174,7 @@ export default function GDPRCompliancePage() {
                 disputing accuracy).
               </p>
               <p className="text-xs text-green-800 font-semibold">
-                How to exercise: Email <a href="mailto:privacy@synqall.com" className="underline">privacy@synqall.com</a> with details
+                How to exercise: Email <a href="mailto:privacy@loadvoice.com" className="underline">privacy@loadvoice.com</a> with details
               </p>
             </div>
 
@@ -154,7 +185,7 @@ export default function GDPRCompliancePage() {
                 and transmit it to another controller.
               </p>
               <p className="text-xs text-green-800 font-semibold">
-                How to exercise: Email <a href="mailto:privacy@synqall.com" className="underline">privacy@synqall.com</a> with subject "Data Portability Request"
+                How to exercise: Email <a href="mailto:privacy@loadvoice.com" className="underline">privacy@loadvoice.com</a> with subject "Data Portability Request"
               </p>
             </div>
 
@@ -164,7 +195,7 @@ export default function GDPRCompliancePage() {
                 You have the right to object to processing based on legitimate interests or for direct marketing purposes.
               </p>
               <p className="text-xs text-green-800 font-semibold">
-                How to exercise: Settings → Privacy or email <a href="mailto:privacy@synqall.com" className="underline">privacy@synqall.com</a>
+                How to exercise: Settings → Privacy or email <a href="mailto:privacy@loadvoice.com" className="underline">privacy@loadvoice.com</a>
               </p>
             </div>
 
@@ -202,8 +233,8 @@ export default function GDPRCompliancePage() {
           </p>
 
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-purple-900 mb-2">Technical Measures</h3>
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-sky-900 mb-2">Technical Measures</h3>
               <ul className="space-y-2 text-gray-700 text-sm">
                 <li><strong>Encryption:</strong> TLS 1.3 in transit, AES-256 at rest</li>
                 <li><strong>Access Control:</strong> Role-based permissions (RBAC)</li>
@@ -361,7 +392,7 @@ export default function GDPRCompliancePage() {
             </div>
           </div>
           <p className="text-gray-800 leading-relaxed mt-4 text-sm">
-            To date, SynQall has experienced zero data breaches. We maintain comprehensive incident response
+            To date, Loadvoice has experienced zero data breaches. We maintain comprehensive incident response
             plans and conduct regular security drills.
           </p>
         </section>
@@ -381,7 +412,7 @@ export default function GDPRCompliancePage() {
           </ul>
           <p className="text-gray-700 leading-relaxed mt-3">
             You may request details about specific data transfers by contacting{' '}
-            <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a>.
+            <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a>.
           </p>
         </section>
 
@@ -389,9 +420,9 @@ export default function GDPRCompliancePage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Children's Data (Article 8)</h2>
           <p className="text-gray-700 leading-relaxed">
-            SynQall is not intended for use by children under 18. We do not knowingly process data of children.
+            Loadvoice is not intended for use by children under 18. We do not knowingly process data of children.
             If you believe we have inadvertently collected data from a child, please contact us immediately at{' '}
-            <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a> and
+            <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a> and
             we will delete it within 72 hours.
           </p>
         </section>
@@ -400,7 +431,7 @@ export default function GDPRCompliancePage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Automated Decision-Making (Article 22)</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            SynQall uses AI (OpenAI) to extract CRM data from transcripts. However:
+            Loadvoice uses AI (OpenAI) to extract CRM data from transcripts. However:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
             <li>We do NOT make automated decisions that have legal or similarly significant effects on you</li>
@@ -420,9 +451,9 @@ export default function GDPRCompliancePage() {
           <div className="bg-white border border-blue-200 rounded-lg p-4">
             <p className="text-gray-800 font-semibold">Nikola Innovations Limited</p>
             <p className="text-gray-700">Data Protection Officer</p>
-            <p className="text-gray-700">Email: <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a></p>
-            <p className="text-gray-700">General Support: <a href="mailto:support@synqall.com" className="text-blue-600 underline">support@synqall.com</a></p>
-            <p className="text-gray-700">Website: <a href="https://synqall.com" className="text-blue-600 underline">https://synqall.com</a></p>
+            <p className="text-gray-700">Email: <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a></p>
+            <p className="text-gray-700">General Support: <a href="mailto:support@loadvoice.com" className="text-blue-600 underline">support@loadvoice.com</a></p>
+            <p className="text-gray-700">Website: <a href="https://loadvoice.com" className="text-blue-600 underline">https://loadvoice.com</a></p>
           </div>
           <p className="text-gray-800 leading-relaxed mt-4 text-sm">
             We will respond to all GDPR requests within 30 days (or 60 days for complex requests, with notification).
@@ -452,7 +483,7 @@ export default function GDPRCompliancePage() {
       {/* Footer */}
       <div className="border-t pt-6 mt-12">
         <p className="text-sm text-gray-500 text-center">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
     </div>

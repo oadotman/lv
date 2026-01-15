@@ -4,7 +4,7 @@ echo "🚀 Deploying Navigation Fix to Production..."
 
 # Server details
 SERVER="root@datalix.eu"
-REMOTE_PATH="/var/www/synqall"
+REMOTE_PATH="/var/www/loadvoice"
 
 echo "📦 Building production bundle..."
 npm run build
@@ -34,7 +34,7 @@ scp lib/AuthContext.tsx $SERVER:$REMOTE_PATH/lib/
 scp app/api/auth/signup/route.ts $SERVER:$REMOTE_PATH/app/api/auth/signup/
 
 echo "🔄 Restarting application on server..."
-ssh $SERVER "cd $REMOTE_PATH && pm2 restart synqall"
+ssh $SERVER "cd $REMOTE_PATH && pm2 restart loadvoice"
 
 echo "✅ Deployment complete!"
 echo ""
@@ -46,5 +46,5 @@ echo "4. Fixed all login/signup redirects to go to /dashboard"
 echo "5. Fixed team invitation flow with proper organization linking"
 echo "6. Navigation sidebar will now ALWAYS appear for logged-in users"
 echo ""
-echo "🌐 Your application is now live at https://synqall.com"
+echo "🌐 Your application is now live at https://loadvoice.com"
 echo "👥 The navigation issue has been resolved!"

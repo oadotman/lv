@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { PartnerCookie, PartnerClick, PartnerReferral } from './types';
 
-const PARTNER_COOKIE_NAME = 'synqall_partner_ref';
+const PARTNER_COOKIE_NAME = 'loadvoice_partner_ref';
 const PARTNER_COOKIE_DURATION = 90 * 24 * 60 * 60 * 1000; // 90 days
 
 export class PartnerTracking {

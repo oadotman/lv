@@ -58,7 +58,7 @@ interface Application {
   crms_used?: string[];
   how_heard?: string;
   why_partner: string;
-  has_used_synqall: boolean;
+  has_used_loadvoice: boolean;
   status: 'pending' | 'approved' | 'rejected' | 'more_info_needed';
   submitted_at: string;
   reviewed_at?: string;
@@ -312,7 +312,7 @@ export default function AdminApplicationsPage() {
                             </div>
                           )}
                           <p className="text-xs text-gray-500">
-                            Used SynQall: {application.has_used_synqall ? 'Yes' : 'No'}
+                            Used LoadVoice: {application.has_used_loadvoice ? 'Yes' : 'No'}
                           </p>
                         </div>
                       </TableCell>
@@ -417,8 +417,8 @@ export default function AdminApplicationsPage() {
                                       )}
                                     </div>
                                     <div>
-                                      <span className="text-gray-500">Has Used SynQall:</span>
-                                      <p className="font-medium">{application.has_used_synqall ? 'Yes' : 'No'}</p>
+                                      <span className="text-gray-500">Has Used LoadVoice:</span>
+                                      <p className="font-medium">{application.has_used_loadvoice ? 'Yes' : 'No'}</p>
                                     </div>
                                   </div>
                                 </div>

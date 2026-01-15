@@ -281,7 +281,7 @@ export default function AnalyticsPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="flex items-center justify-center p-8 lg:p-16">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-violet-600 mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
             <p className="text-slate-600 font-medium">Loading analytics...</p>
           </div>
         </div>
@@ -331,14 +331,14 @@ export default function AnalyticsPage() {
       <div className="p-4 lg:p-8 space-y-8 animate-in fade-in duration-200">
         {/* Page Header */}
         <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 via-purple-600/10 to-pink-600/10 rounded-3xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-sky-600/10 to-pink-600/10 rounded-3xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
           <div className="relative bg-white rounded-2xl p-8 border border-slate-200 shadow-xl">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl shadow-lg">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-sky-600 rounded-2xl shadow-lg">
                 <BarChart3 className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 bg-clip-text text-transparent tracking-tight mb-1">
+                <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-sky-900 to-slate-900 bg-clip-text text-transparent tracking-tight mb-1">
                   Analytics
                 </h1>
                 <p className="text-slate-600 font-medium">
@@ -379,13 +379,13 @@ export default function AnalyticsPage() {
           </Card>
 
           {/* Avg. Sentiment */}
-          <Card className="relative border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 to-pink-50 overflow-hidden group hover:-translate-y-1">
+          <Card className="relative border border-sky-100 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-sky-50 to-pink-50 overflow-hidden group hover:-translate-y-1">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold text-slate-700 tracking-wide uppercase">
                   Avg. Sentiment
                 </CardTitle>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-600 to-pink-600 flex items-center justify-center shadow-lg shadow-sky-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -396,7 +396,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="flex items-center gap-2 text-sm font-medium">
                 <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg ${
-                  sentimentTrend >= 0 ? 'bg-purple-100 text-purple-700' : 'bg-red-100 text-red-700'
+                  sentimentTrend >= 0 ? 'bg-sky-100 text-sky-700' : 'bg-red-100 text-red-700'
                 }`}>
                   <TrendingUp className={`w-4 h-4 ${sentimentTrend < 0 ? 'rotate-180' : ''}`} />
                   <span>{sentimentTrend >= 0 ? '+' : ''}{sentimentTrend} vs last month</span>
@@ -454,7 +454,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Time Saved Over Time - Line Chart */}
           <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 via-purple-50/30 to-slate-50 border-b border-slate-100">
+            <CardHeader className="bg-gradient-to-r from-slate-50 via-sky-50/30 to-slate-50 border-b border-slate-100">
               <CardTitle className="text-xl font-bold text-slate-900 tracking-tight">
                 Time Saved Over Time
               </CardTitle>
@@ -506,7 +506,7 @@ export default function AnalyticsPage() {
 
           {/* Calls Processed by Rep - Bar Chart */}
           <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 via-purple-50/30 to-slate-50 border-b border-slate-100">
+            <CardHeader className="bg-gradient-to-r from-slate-50 via-sky-50/30 to-slate-50 border-b border-slate-100">
               <CardTitle className="text-xl font-bold text-slate-900 tracking-tight">
                 Calls Processed by Rep
               </CardTitle>
@@ -558,7 +558,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Call Sentiment Distribution - Pie Chart */}
           <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 via-purple-50/30 to-slate-50 border-b border-slate-100">
+            <CardHeader className="bg-gradient-to-r from-slate-50 via-sky-50/30 to-slate-50 border-b border-slate-100">
               <CardTitle className="text-xl font-bold text-slate-900 tracking-tight">
                 Call Sentiment Distribution
               </CardTitle>
@@ -612,7 +612,7 @@ export default function AnalyticsPage() {
 
           {/* Top Keywords & Objections - List View */}
           <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gradient-to-r from-slate-50 via-purple-50/30 to-slate-50 border-b border-slate-100">
+            <CardHeader className="bg-gradient-to-r from-slate-50 via-sky-50/30 to-slate-50 border-b border-slate-100">
               <CardTitle className="text-xl font-bold text-slate-900 tracking-tight">
                 Top Keywords & Objections
               </CardTitle>
@@ -624,7 +624,7 @@ export default function AnalyticsPage() {
                   {analytics.keywordsData.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-transparent rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition-all duration-200 group"
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-transparent rounded-xl border border-slate-100 hover:border-sky-200 hover:bg-sky-50/30 transition-all duration-200 group"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">

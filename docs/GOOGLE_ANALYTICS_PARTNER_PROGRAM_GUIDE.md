@@ -1,4 +1,4 @@
-# Google Analytics 4 (GA4) Implementation Guide for SynQall Partner Program
+# Google Analytics 4 (GA4) Implementation Guide for Loadvoice Partner Program
 
 ## Table of Contents
 1. [Initial Setup](#initial-setup)
@@ -19,7 +19,7 @@
 ### Prerequisites
 - Google Analytics 4 Property created
 - Google Tag Manager (GTM) account (optional but recommended)
-- Access to SynQall codebase
+- Access to Loadvoice codebase
 
 ### Step 1: Install GA4 in Your Application
 

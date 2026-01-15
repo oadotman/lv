@@ -1,6 +1,6 @@
 // =====================================================
 // PARTNER PROGRAM LANDING PAGE
-// Main landing page for the SynQall Partner Program
+// Main landing page for the LoadVoice Partner Program
 // =====================================================
 
 'use client';
@@ -60,7 +60,7 @@ export default function PartnerLandingPage() {
           </h1>
 
           <p className="max-w-2xl mx-auto mb-8 text-xl text-gray-600">
-            Join the SynQall Partner Program and earn generous recurring commissions
+            Join the LoadVoice Partner Program and earn generous recurring commissions
             by referring sales teams to our AI-powered CRM automation platform.
           </p>
 
@@ -107,13 +107,13 @@ export default function PartnerLandingPage() {
         </div>
       </section>
 
-      {/* What is SynQall Section */}
+      {/* What is LoadVoice Section */}
       <section className="px-6 py-16">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900">What is SynQall?</h2>
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">What is LoadVoice?</h2>
             <p className="mb-8 text-lg text-gray-600">
-              SynQall is an AI-powered platform that automatically extracts CRM data from sales calls.
+              LoadVoice is an AI-powered platform that automatically extracts CRM data from sales calls.
               Sales reps upload a call recording, and our AI instantly pulls out all key details -
               pain points, budget, timeline, next steps - ready to paste into any CRM in 60 seconds
               instead of 20 minutes.
@@ -417,7 +417,7 @@ export default function PartnerLandingPage() {
             Ready to Start Earning?
           </h2>
           <p className="mb-8 text-xl text-blue-100">
-            Join the SynQall Partner Program today and start earning recurring commissions
+            Join the LoadVoice Partner Program today and start earning recurring commissions
           </p>
           <Link href="/partners/apply">
             <Button size="lg" variant="secondary" className="min-w-[200px]">
@@ -436,8 +436,8 @@ export default function PartnerLandingPage() {
         <div className="mx-auto text-center max-w-7xl">
           <p className="text-gray-600">
             Questions? Contact us at{' '}
-            <a href="mailto:partners@synqall.com" className="text-blue-600 hover:underline">
-              partners@synqall.com
+            <a href="mailto:partners@loadvoice.com" className="text-blue-600 hover:underline">
+              partners@loadvoice.com
             </a>
           </p>
         </div>

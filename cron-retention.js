@@ -8,7 +8,7 @@ require('dotenv').config({ path: '.env.production' });
 
 const https = require('https');
 
-const CRON_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://synqall.com') + '/api/cron/retention-cleanup';
+const CRON_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://loadvoice.com') + '/api/cron/retention-cleanup';
 const CRON_SECRET = process.env.CRON_SECRET;
 
 console.log('[Cron] ========================================');

@@ -29,7 +29,7 @@ export function ReferralInviteModal({
 }: ReferralInviteModalProps) {
   const [emails, setEmails] = useState<string[]>([""]);
   const [message, setMessage] = useState(
-    `Hi there!\n\nI've been using SynQall for call recording and AI-powered transcription, and I think you'd find it really valuable for your business.\n\nSign up using my referral link to get started with 30 free minutes!\n\nBest regards`
+    `Hi there!\n\nI've been using LoadVoice for call recording and AI-powered transcription, and I think you'd find it really valuable for your business.\n\nSign up using my referral link to get started with 30 free minutes!\n\nBest regards`
   );
   const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState<{ [key: number]: string }>({});
@@ -112,7 +112,7 @@ export function ReferralInviteModal({
         },
         body: JSON.stringify({
           emails: validEmails.map(email => email.trim()),
-          personalMessage: message !== `Hi there!\n\nI've been using SynQall for call recording and AI-powered transcription, and I think you'd find it really valuable for your business.\n\nSign up using my referral link to get started with 30 free minutes!\n\nBest regards` ? message : undefined,
+          personalMessage: message !== `Hi there!\n\nI've been using LoadVoice for call recording and AI-powered transcription, and I think you'd find it really valuable for your business.\n\nSign up using my referral link to get started with 30 free minutes!\n\nBest regards` ? message : undefined,
         }),
       });
 

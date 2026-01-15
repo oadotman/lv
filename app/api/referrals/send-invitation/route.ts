@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
           .from('referrals')
           .select('id')
           .eq('referred_email', cleanEmail)
-          .eq('product_type', 'synqall')
+          .eq('product_type', 'loadvoice')
           .maybeSingle();
 
         if (existingReferral) {
@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
             organization_id: userOrg?.organization_id,
             referral_code: referralCode,
             referred_email: cleanEmail,
-            product_type: 'synqall',
+            product_type: 'loadvoice',
             status: 'pending',
           })
           .select()

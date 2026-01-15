@@ -208,15 +208,29 @@ export async function POST(req: NextRequest) {
           if (customData.type === 'overage_pack' && customData.pack_size) {
             console.log('[Paddle] Processing overage pack purchase:', customData.pack_size);
 
-            try {
-              await creditOveragePack(
-                customData.organization_id,
-                customData.pack_size as 'small' | 'medium' | 'large' | 'xlarge',
-                payload.data.id
-              );
-              console.log('[Paddle] Overage pack credited successfully');
-            } catch (error) {
-              console.error('[Paddle] Error crediting overage pack:', error);
+            // Map pack sizes to minutes
+            const packSizeToMinutes: Record<string, number> = {
+              'small': 500,
+              'medium': 1000,
+              'large': 2500,
+              'xlarge': 5000,
+            };
+
+            const packMinutes = packSizeToMinutes[customData.pack_size];
+
+            if (packMinutes) {
+              try {
+                await creditOveragePack(
+                  customData.organization_id,
+                  packMinutes,
+                  payload.data.id
+                );
+                console.log('[Paddle] Overage pack credited successfully');
+              } catch (error) {
+                console.error('[Paddle] Error crediting overage pack:', error);
+              }
+            } else {
+              console.error('[Paddle] Invalid pack size:', customData.pack_size);
             }
           }
 

@@ -201,16 +201,16 @@ export async function POST(
 
       // Send welcome email
       console.log('Sending welcome email to:', application.email);
-      console.log('Email from address:', process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com');
+      console.log('Email from address:', process.env.RESEND_FROM_EMAIL || 'noreply@loadvoice.com');
 
       try {
         const emailResult = await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
+          from: process.env.RESEND_FROM_EMAIL || 'noreply@loadvoice.com',
           to: application.email,
-          subject: 'Welcome to the SynQall Partner Program!',
+          subject: 'Welcome to the LoadVoice Partner Program!',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #1a73e8;">Welcome to the SynQall Partner Program!</h1>
+              <h1 style="color: #1a73e8;">Welcome to the LoadVoice Partner Program!</h1>
               <p>Hi ${application.full_name},</p>
               <p>Great news! Your partner application has been approved.</p>
 
@@ -234,7 +234,7 @@ export async function POST(
 
               <p>If you have any questions, please don't hesitate to reach out to our partner support team.</p>
 
-              <p>Best regards,<br>The SynQall Team</p>
+              <p>Best regards,<br>The LoadVoice Team</p>
             </div>
           `,
         });
@@ -271,18 +271,18 @@ export async function POST(
       // Send rejection email
       try {
         await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
+          from: process.env.RESEND_FROM_EMAIL || 'noreply@loadvoice.com',
           to: application.email,
-          subject: 'SynQall Partner Application Update',
+          subject: 'LoadVoice Partner Application Update',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #1a73e8;">Partner Application Update</h1>
               <p>Hi ${application.full_name},</p>
-              <p>Thank you for your interest in the SynQall Partner Program.</p>
+              <p>Thank you for your interest in the LoadVoice Partner Program.</p>
               <p>After careful review, we've decided not to move forward with your application at this time.</p>
               ${notes ? `<p>Feedback: ${notes}</p>` : ''}
               <p>We encourage you to reapply in the future as our program evolves and expands.</p>
-              <p>Best regards,<br>The SynQall Team</p>
+              <p>Best regards,<br>The LoadVoice Team</p>
             </div>
           `,
         });
@@ -293,20 +293,20 @@ export async function POST(
       // Send request for more info
       try {
         await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'noreply@synqall.com',
+          from: process.env.RESEND_FROM_EMAIL || 'noreply@loadvoice.com',
           to: application.email,
-          subject: 'SynQall Partner Application - Additional Information Needed',
+          subject: 'LoadVoice Partner Application - Additional Information Needed',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #1a73e8;">Additional Information Needed</h1>
               <p>Hi ${application.full_name},</p>
-              <p>Thank you for applying to the SynQall Partner Program.</p>
+              <p>Thank you for applying to the LoadVoice Partner Program.</p>
               <p>To complete our review, we need some additional information:</p>
               <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p>${notes || 'Please provide more details about your experience and how you plan to promote SynQall.'}</p>
+                <p>${notes || 'Please provide more details about your experience and how you plan to promote LoadVoice.'}</p>
               </div>
               <p>Please reply to this email with the requested information.</p>
-              <p>Best regards,<br>The SynQall Team</p>
+              <p>Best regards,<br>The LoadVoice Team</p>
             </div>
           `,
         });

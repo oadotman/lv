@@ -1,47 +1,24 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Sparkles, X, ShoppingCart } from 'lucide-react';
+import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
-import { OVERAGE_CONFIG } from '@/lib/overage';
-import { initializePaddle, openPaddleCheckout } from '@/lib/paddle';
+import { formatMinutes, formatOverageCharge } from '@/lib/simple-usage';
 
 interface OverageData {
   minutesUsed: number;
-  baseMinutes: number;
-  purchasedOverageMinutes: number;
-  totalAvailableMinutes: number;
+  minutesLimit: number;
+  overageMinutes: number;
+  overageCharge: number;
   percentUsed: number;
-  hasOverage: boolean;
-  canUpload: boolean;
-  organizationId: string;
-}
-
-interface OveragePack {
-  id: string;
-  minutes: number;
-  price: number;
-  paddlePriceId: string;
-  savings: number;
-  savingsPercent: number;
+  status: 'ok' | 'warning' | 'overage';
 }
 
 export function OverageBanner() {
-  const [overage, setOverage] = useState<OverageData | null>(null);
-  const [packs, setPacks] = useState<OveragePack[]>([]);
+  const [usage, setUsage] = useState<OverageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
-  const [showPurchase, setShowPurchase] = useState(false);
-  const [paddleReady, setPaddleReady] = useState(false);
-
-  // Initialize Paddle on mount
-  useEffect(() => {
-    initializePaddle(() => {
-      setPaddleReady(true);
-    });
-  }, []);
 
   useEffect(() => {
     async function fetchUsageData() {
@@ -71,16 +48,16 @@ export function OverageBanner() {
         }
 
         const data = await response.json();
-        setOverage({
-          ...data,
-          organizationId: userOrg.organization_id,
-        });
-
-        // Fetch available overage packs
-        const packsResponse = await fetch('/api/overage/purchase');
-        if (packsResponse.ok) {
-          const packsData = await packsResponse.json();
-          setPacks(packsData.packs || []);
+        if (data.usage) {
+          setUsage({
+            minutesUsed: data.usage.minutesUsed,
+            minutesLimit: data.usage.minutesLimit,
+            overageMinutes: data.usage.overageMinutes,
+            overageCharge: data.usage.overageCost,
+            percentUsed: data.usage.percentUsed,
+            status: data.usage.warningLevel === 'exceeded' ? 'overage' :
+                   data.usage.warningLevel === 'high' ? 'warning' : 'ok'
+          });
         }
 
         setLoading(false);
@@ -93,214 +70,84 @@ export function OverageBanner() {
     fetchUsageData();
   }, []);
 
-  const handlePurchaseOverage = async (pack: OveragePack) => {
-    if (!paddleReady || !overage) {
-      alert('Payment system is loading. Please try again in a moment.');
-      return;
-    }
-
-    try {
-      // Get checkout data from API
-      const response = await fetch('/api/overage/purchase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          packSize: pack.id,
-          organizationId: overage.organizationId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout');
-      }
-
-      const { checkout } = await response.json();
-
-      // Open Paddle checkout
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      openPaddleCheckout({
-        planId: checkout.priceId,
-        email: user?.email,
-        customData: checkout.customData,
-        successCallback: () => {
-          // Refresh usage data after successful purchase
-          window.location.reload();
-        },
-      });
-    } catch (error) {
-      console.error('Error purchasing overage:', error);
-      alert('Failed to open checkout. Please try again.');
-    }
-  };
-
-  if (loading || !overage || dismissed) {
+  if (loading || !usage || dismissed) {
     return null;
   }
 
-  // Show warning at 80% usage
-  const shouldWarn = overage.percentUsed >= 80;
-
-  // Show error at 100% usage (exceeded even with overages)
-  const isBlocked = !overage.canUpload;
-
-  if (!shouldWarn && !isBlocked) {
+  // Only show banner if warning or overage
+  if (usage.status === 'ok') {
     return null;
   }
+
+  const isOverage = usage.status === 'overage';
 
   return (
-    <div className="space-y-4">
-      {/* Main Warning Banner */}
-      {isBlocked ? (
-        // BLOCKED: Exceeded all limits
-        <div className="relative bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 rounded-2xl p-5 shadow-lg animate-in slide-in-from-top-2 duration-300">
-          <button
-            onClick={() => setDismissed(true)}
-            className="absolute top-3 right-3 p-1.5 hover:bg-red-100 rounded-lg transition-colors"
-          >
-            <X className="w-4 h-4 text-red-600" />
-          </button>
-          <div className="flex items-start gap-4 pr-8">
-            <div className="p-3 bg-red-500 rounded-xl shadow-lg flex-shrink-0">
-              <AlertTriangle className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-red-900 mb-1">
-                Upload limit reached
-              </h3>
-              <p className="text-sm text-red-700 mb-3">
-                You've used all {overage.totalAvailableMinutes} minutes this month
-                {overage.hasOverage && ' (including overage packs)'}.
-                Purchase additional overage to continue processing calls.
+    <div className={`relative bg-gradient-to-r ${
+      isOverage
+        ? 'from-red-50 to-rose-50 border-2 border-red-300'
+        : 'from-orange-50 to-amber-50 border-2 border-orange-300'
+    } rounded-2xl p-5 shadow-lg animate-in slide-in-from-top-2 duration-300`}>
+      <button
+        onClick={() => setDismissed(true)}
+        className={`absolute top-3 right-3 p-1.5 hover:${
+          isOverage ? 'bg-red-100' : 'bg-orange-100'
+        } rounded-lg transition-colors`}
+      >
+        <X className={`w-4 h-4 ${isOverage ? 'text-red-600' : 'text-orange-600'}`} />
+      </button>
+      <div className="flex items-start gap-4 pr-8">
+        <div className={`p-3 ${
+          isOverage ? 'bg-red-500' : 'bg-orange-500'
+        } rounded-xl shadow-lg flex-shrink-0`}>
+          <AlertTriangle className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1">
+          <h3 className={`text-lg font-bold ${
+            isOverage ? 'text-red-900' : 'text-orange-900'
+          } mb-1`}>
+            {isOverage ? "You're in overage" : "Approaching your limit"}
+          </h3>
+          <div className="space-y-2 mb-3">
+            <p className={`text-sm ${isOverage ? 'text-red-700' : 'text-orange-700'}`}>
+              You've used <span className="font-bold">{formatMinutes(usage.minutesUsed)}</span> of your <span className="font-bold">{formatMinutes(usage.minutesLimit)}</span> monthly allowance ({Math.round(usage.percentUsed)}%).
+            </p>
+            {isOverage && (
+              <p className="text-sm text-red-700 font-medium">
+                Overage: {formatMinutes(usage.overageMinutes)} • Additional cost: {formatOverageCharge(usage.overageCharge)}
               </p>
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => setShowPurchase(!showPurchase)}
-                  className="bg-red-600 hover:bg-red-700 text-white shadow-md rounded-xl font-semibold text-sm"
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Purchase Overage Pack
-                </Button>
-                <span className="text-xs text-red-600 font-medium">
-                  Starting at ${OVERAGE_CONFIG.packs.small.price} for {OVERAGE_CONFIG.packs.small.minutes} minutes
-                </span>
-              </div>
-            </div>
+            )}
           </div>
-        </div>
-      ) : (
-        // WARNING: Approaching limit
-        <div className="relative bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-5 shadow-lg animate-in slide-in-from-top-2 duration-300">
-          <button
-            onClick={() => setDismissed(true)}
-            className="absolute top-3 right-3 p-1.5 hover:bg-orange-100 rounded-lg transition-colors"
-          >
-            <X className="w-4 h-4 text-orange-600" />
-          </button>
-          <div className="flex items-start gap-4 pr-8">
-            <div className="p-3 bg-orange-500 rounded-xl shadow-lg flex-shrink-0">
-              <AlertTriangle className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-orange-900 mb-1">
-                {overage.percentUsed >= 95 ? "Almost at your limit" : "Approaching your limit"}
-              </h3>
-              <div className="space-y-2 mb-3">
-                <p className="text-sm text-orange-700">
-                  You've used <span className="font-bold">{Math.round(overage.minutesUsed)} minutes</span> of your <span className="font-bold">{overage.totalAvailableMinutes} total minutes</span> this month ({Math.round(overage.percentUsed)}%).
+          <div className="flex items-center gap-3">
+            {isOverage ? (
+              <>
+                <p className="text-xs text-red-600">
+                  Additional minutes are charged at <span className="font-bold">$0.20/minute</span>.
+                  Consider upgrading your plan to save on overage costs.
                 </p>
-                <div className="flex items-center gap-2 text-xs text-orange-600">
-                  <div className="flex items-center gap-1">
-                    <span className="font-semibold">Base plan:</span> {overage.baseMinutes} min
-                  </div>
-                  {overage.purchasedOverageMinutes > 0 && (
-                    <>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <span className="font-semibold">Overage packs:</span> {overage.purchasedOverageMinutes} min
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
                 <Button
-                  onClick={() => setShowPurchase(!showPurchase)}
-                  className="bg-orange-600 hover:bg-orange-700 text-white shadow-md rounded-xl font-semibold text-sm"
+                  onClick={() => window.location.href = '/upgrade'}
+                  className="bg-red-600 hover:bg-red-700 text-white shadow-md rounded-xl font-semibold text-sm ml-auto"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {overage.hasOverage ? 'Buy More Minutes' : 'Purchase Overage Pack'}
+                  Upgrade Plan
                 </Button>
-                <span className="text-xs text-orange-600 font-medium">
-                  Only ${OVERAGE_CONFIG.pricePerMinute}/minute
-                </span>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-orange-600">
+                  {usage.minutesLimit - usage.minutesUsed} minutes remaining.
+                  Overage is charged at <span className="font-bold">$0.20/minute</span>.
+                </p>
+                <Button
+                  onClick={() => window.location.href = '/settings'}
+                  className="bg-orange-600 hover:bg-orange-700 text-white shadow-md rounded-xl font-semibold text-sm ml-auto"
+                >
+                  View Usage
+                </Button>
+              </>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Overage Pack Purchase Options */}
-      {showPurchase && packs.length > 0 && (
-        <Card className="border-2 border-orange-200 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl p-6 shadow-lg animate-in slide-in-from-top-2 duration-200">
-          <div className="mb-4">
-            <h4 className="text-xl font-bold text-slate-900 mb-2">
-              Purchase Additional Minutes
-            </h4>
-            <p className="text-sm text-slate-600">
-              Choose an overage pack to add more minutes to your account. Unused minutes carry over until the end of your billing period.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {packs.map((pack) => (
-              <Card
-                key={pack.id}
-                className={`border-2 hover:border-orange-400 hover:shadow-xl transition-all duration-200 cursor-pointer ${
-                  pack.id === 'medium' ? 'border-orange-300 bg-orange-50/50' : 'border-slate-200'
-                }`}
-                onClick={() => handlePurchaseOverage(pack)}
-              >
-                <div className="p-4">
-                  {pack.id === 'medium' && (
-                    <div className="text-xs font-bold text-orange-600 mb-2 uppercase tracking-wide">
-                      Most Popular
-                    </div>
-                  )}
-                  <div className="text-3xl font-bold text-slate-900 mb-1">
-                    ${pack.price}
-                  </div>
-                  <div className="text-sm font-medium text-slate-600 mb-3">
-                    {pack.minutes} minutes
-                  </div>
-                  <div className="text-xs text-slate-500 mb-3">
-                    ${(pack.price / pack.minutes).toFixed(3)}/min
-                  </div>
-                  {pack.savingsPercent > 0 && (
-                    <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold mb-3">
-                      Save {pack.savingsPercent}%
-                    </div>
-                  )}
-                  <Button
-                    className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg"
-                    size="sm"
-                  >
-                    Select
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <p className="text-xs text-blue-700">
-              <span className="font-bold">Note:</span> Overage packs are valid until the end of your current billing period and reset monthly.
-              Any usage beyond your total available minutes (base + purchased overages) will be billed at ${OVERAGE_CONFIG.pricePerMinute}/minute at the end of your billing cycle.
-            </p>
-          </div>
-        </Card>
-      )}
+      </div>
     </div>
   );
 }

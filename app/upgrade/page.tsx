@@ -148,7 +148,7 @@ export default function UpgradePage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-16">
-            <Sparkles className="w-16 h-16 text-violet-600 mx-auto mb-4" />
+            <Sparkles className="w-16 h-16 text-blue-600 mx-auto mb-4" />
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               You're on the Enterprise Plan
             </h1>
@@ -219,12 +219,12 @@ export default function UpgradePage() {
                 id={`plan-${planId}`}
                 className={cn(
                   "relative transition-all duration-200",
-                  isPopular && "border-violet-600 shadow-xl scale-105"
+                  isPopular && "border-blue-600 shadow-xl scale-105"
                 )}
               >
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-violet-600 text-white">
+                    <Badge className="bg-blue-600 text-white">
                       Most Popular
                     </Badge>
                   </div>
@@ -268,7 +268,7 @@ export default function UpgradePage() {
                     className={cn(
                       "w-full text-white font-semibold",
                       isPopular
-                        ? "bg-violet-600 hover:bg-violet-700"
+                        ? "bg-blue-600 hover:bg-blue-700"
                         : "bg-blue-600 hover:bg-blue-700"
                     )}
                     size="lg"
@@ -294,7 +294,7 @@ export default function UpgradePage() {
             All plans include a 14-day money-back guarantee
           </p>
           <p className="text-sm">
-            Need help choosing? <a href="/help" className="text-violet-600 hover:underline">Contact our sales team</a>
+            Need help choosing? <a href="/help" className="text-blue-600 hover:underline">Contact our sales team</a>
           </p>
         </div>
       </div>

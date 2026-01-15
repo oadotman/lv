@@ -185,7 +185,7 @@ export function AudioTrimModal({
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Scissors className="w-5 h-5 text-violet-600" />
+            <Scissors className="w-5 h-5 text-blue-600" />
             Trim Audio for Transcription
           </DialogTitle>
           <DialogDescription>
@@ -198,7 +198,7 @@ export function AudioTrimModal({
           <div className="relative bg-gray-50 rounded-lg p-4">
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
-                <Loader2 className="w-6 h-6 animate-spin text-violet-600" />
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
             )}
             <div ref={waveformRef} className="w-full" />
@@ -233,7 +233,7 @@ export function AudioTrimModal({
             <div className="text-sm text-gray-600">
               <span className="font-medium">Selected:</span>{" "}
               {formatTime(trimStart)} - {formatTime(trimEnd)}{" "}
-              <span className="text-violet-600 font-medium">
+              <span className="text-blue-600 font-medium">
                 ({formatTime(trimEnd - trimStart)})
               </span>
             </div>
@@ -257,7 +257,7 @@ export function AudioTrimModal({
           <Button
             onClick={handleTrim}
             disabled={isTrimming || isLoading}
-            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+            className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700"
           >
             {isTrimming ? (
               <>

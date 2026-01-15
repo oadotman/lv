@@ -138,7 +138,7 @@ export default function OveragePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-8">
         <div className="max-w-4xl mx-auto">
-          <Card className="border-2 border-violet-200">
+          <Card className="border-2 border-blue-200">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Upgrade to Purchase Minutes</CardTitle>
               <CardDescription>
@@ -170,10 +170,10 @@ export default function OveragePage() {
         </div>
 
         {/* Current Usage Card */}
-        <Card className="border-2 border-violet-200">
+        <Card className="border-2 border-blue-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-violet-600" />
+              <Clock className="w-5 h-5 text-blue-600" />
               Current Month Usage
             </CardTitle>
           </CardHeader>
@@ -237,17 +237,17 @@ export default function OveragePage() {
                 key={pack.id}
                 className={cn(
                   "relative transition-all duration-200 hover:shadow-xl",
-                  pack.popular && "border-violet-600 shadow-lg scale-105"
+                  pack.popular && "border-blue-600 shadow-lg scale-105"
                 )}
               >
                 {pack.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-600 text-white">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white">
                     Most Popular
                   </Badge>
                 )}
 
                 <CardHeader className="text-center pb-4">
-                  <Package className="w-10 h-10 mx-auto mb-2 text-violet-600" />
+                  <Package className="w-10 h-10 mx-auto mb-2 text-blue-600" />
                   <CardTitle className="text-xl">{pack.name}</CardTitle>
                   <CardDescription className="text-sm">
                     {pack.description}
@@ -282,7 +282,7 @@ export default function OveragePage() {
                     disabled={loading}
                     className={cn(
                       "w-full",
-                      pack.popular && "bg-violet-600 hover:bg-violet-700"
+                      pack.popular && "bg-blue-600 hover:bg-blue-700"
                     )}
                   >
                     {loading && selectedPack === pack.id

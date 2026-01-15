@@ -104,19 +104,19 @@ export async function sendReferralRewardNotification({
 
             <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 20px;">
               <h4 style="margin-top: 0;">💡 Pro Tip</h4>
-              <p style="margin-bottom: 0;">Keep the momentum going! Share your referral link with more colleagues who could benefit from SynQall's AI-powered call transcription.</p>
+              <p style="margin-bottom: 0;">Keep the momentum going! Share your referral link with more colleagues who could benefit from LoadVoice's AI-powered call transcription.</p>
             </div>
           </div>
 
           <div class="footer">
-            <p>Thank you for spreading the word about SynQall!</p>
+            <p>Thank you for spreading the word about LoadVoice!</p>
             <p>
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}" style="color: #667eea;">Visit SynQall</a> |
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}" style="color: #667eea;">Visit LoadVoice</a> |
               <a href="${process.env.NEXT_PUBLIC_APP_URL}/referrals" style="color: #667eea;">Referral Dashboard</a> |
               <a href="${process.env.NEXT_PUBLIC_APP_URL}/help" style="color: #667eea;">Help Center</a>
             </p>
             <p style="font-size: 12px; color: #9ca3af;">
-              © ${new Date().getFullYear()} SynQall. All rights reserved.
+              © ${new Date().getFullYear()} LoadVoice. All rights reserved.
             </p>
           </div>
         </div>
@@ -148,9 +148,9 @@ ${nextTierInfo.reward}
 
 View your referral dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/referrals
 
-Pro Tip: Keep the momentum going! Share your referral link with more colleagues who could benefit from SynQall's AI-powered call transcription.
+Pro Tip: Keep the momentum going! Share your referral link with more colleagues who could benefit from LoadVoice's AI-powered call transcription.
 
-Thank you for spreading the word about SynQall!
+Thank you for spreading the word about LoadVoice!
   `.trim();
 
   try {

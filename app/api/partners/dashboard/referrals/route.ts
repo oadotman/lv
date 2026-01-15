@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build custom link with UTM parameters
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.synqall.com';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.loadvoice.com';
     const url = new URL('/signup', baseUrl);
     url.searchParams.append('ref', partner.referral_code);
 

@@ -147,9 +147,9 @@ export async function GET(request: NextRequest) {
     for (const notification of emailNotifications) {
       try {
         await resend.emails.send({
-          from: process.env.RESEND_PARTNER_EMAIL || 'partners@synqall.com',
+          from: process.env.RESEND_PARTNER_EMAIL || 'partners@loadvoice.com',
           to: notification.partner.email,
-          subject: `Your SynQall Partner Commission is Ready - $${notification.amount.toFixed(2)}`,
+          subject: `Your LoadVoice Partner Commission is Ready - $${notification.amount.toFixed(2)}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #1a73e8;">Commission Approved!</h1>
@@ -180,9 +180,9 @@ export async function GET(request: NextRequest) {
                 </a>
               </p>
 
-              <p>Thank you for being a valued SynQall partner!</p>
+              <p>Thank you for being a valued LoadVoice partner!</p>
 
-              <p>Best regards,<br>The SynQall Team</p>
+              <p>Best regards,<br>The LoadVoice Team</p>
             </div>
           `,
         });

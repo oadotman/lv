@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { canProcessCall, estimateMinutesFromFileSize, acquireProcessingLock, releaseProcessingLock } from '@/lib/usage-guard';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes max
@@ -69,7 +70,67 @@ export async function POST(
     console.log('[Process] Audio URL:', audioUrl);
 
     // =====================================================
-    // STEP 1: TRANSCRIBE AUDIO
+    // CRITICAL: CHECK USAGE BEFORE TRANSCRIPTION
+    // =====================================================
+
+    if (call.organization_id) {
+      // Estimate minutes from file size
+      const estimatedMinutes = call.file_size
+        ? estimateMinutesFromFileSize(call.file_size)
+        : 10; // Conservative estimate if no file size
+
+      console.log('[Process] 🔒 Checking usage guard...');
+      const usageCheck = await canProcessCall(call.organization_id, estimatedMinutes, supabase as any);
+
+      if (!usageCheck.allowed) {
+        console.error('[Process] 🚫 BLOCKED by usage guard:', {
+          callId,
+          organizationId: call.organization_id,
+          reason: usageCheck.reason,
+          projectedCharge: usageCheck.projectedCharge,
+        });
+
+        // Mark call as failed due to usage limit
+        await supabase
+          .from('calls')
+          .update({
+            status: 'failed',
+            assemblyai_error: `Usage limit exceeded: ${usageCheck.reason}`,
+            processing_message: 'Processing blocked: Would exceed $20 overage cap',
+          })
+          .eq('id', callId);
+
+        return NextResponse.json(
+          {
+            error: 'Usage limit exceeded',
+            details: {
+              reason: usageCheck.reason,
+              currentUsage: usageCheck.currentUsage,
+              projectedOverageCharge: usageCheck.projectedCharge,
+              message: 'This transcription would exceed your $20 overage cap. Please upgrade your plan.',
+            },
+          },
+          { status: 402 }
+        );
+      }
+
+      // Try to acquire processing lock to prevent concurrent abuse
+      console.log('[Process] 🔐 Acquiring processing lock...');
+      const lockAcquired = await acquireProcessingLock(
+        call.organization_id,
+        callId,
+        estimatedMinutes,
+        supabase as any
+      );
+
+      if (!lockAcquired) {
+        console.warn('[Process] ⚠️ Failed to acquire lock, but continuing...');
+        // Continue anyway - lock is advisory
+      }
+    }
+
+    // =====================================================
+    // STEP 1: TRANSCRIBE AUDIO (NOW SAFE TO PROCEED)
     // =====================================================
 
     await supabase
@@ -188,16 +249,24 @@ export async function POST(
       })
       .eq('id', callId);
 
-    const { extractCRMData } = await import('@/lib/openai');
+    // Use the negotiation-aware extraction for LoadVoice
+    const { extractFreightData } = await import('@/lib/openai-loadvoice');
 
-    const extraction = await extractCRMData({
-      transcript: transcriptionResult.text || '',
-      utterances: transcriptionResult.utterances || [],
-      speakerMapping: speakerMapping,
-      customerName: call.customer_name || undefined,
-      callType: call.call_type || undefined,
-      typedNotes: call.typed_notes || undefined,
-    });
+    // Determine call type for extraction
+    let extractionCallType: 'shipper' | 'carrier' | 'check' | undefined;
+    if (call.call_type === 'carrier') {
+      extractionCallType = 'carrier';
+    } else if (call.call_type === 'shipper') {
+      extractionCallType = 'shipper';
+    } else if (call.call_type === 'check_call') {
+      extractionCallType = 'check';
+    }
+
+    const extraction = await extractFreightData(
+      transcriptionResult.text || '',
+      extractionCallType,
+      call.template_id || undefined
+    );
 
     console.log('[Process] ✅ CRM data extracted');
 
@@ -214,30 +283,110 @@ export async function POST(
     // STEP 4: SAVE EXTRACTED FIELDS
     // =====================================================
 
-    // Store core fields from extraction
+    // Store extracted fields including negotiation data
     const coreFields = [
-      { name: 'summary', value: extraction.summary, type: 'text' },
-      { name: 'key_points', value: JSON.stringify(extraction.keyPoints), type: 'json' },
-      { name: 'next_steps', value: JSON.stringify(extraction.nextSteps), type: 'json' },
-      { name: 'pain_points', value: JSON.stringify(extraction.painPoints), type: 'json' },
-      { name: 'requirements', value: JSON.stringify(extraction.requirements), type: 'json' },
-      { name: 'budget', value: extraction.budget || null, type: 'text' },
-      { name: 'timeline', value: extraction.timeline || null, type: 'text' },
-      { name: 'decision_maker', value: extraction.decisionMaker || null, type: 'text' },
-      { name: 'product_interest', value: JSON.stringify(extraction.productInterest), type: 'json' },
-      { name: 'competitors_mentioned', value: JSON.stringify(extraction.competitorsMentioned), type: 'json' },
-      { name: 'objections', value: JSON.stringify(extraction.objections), type: 'json' },
-      { name: 'buying_signals', value: JSON.stringify(extraction.buyingSignals), type: 'json' },
-      { name: 'call_outcome', value: extraction.callOutcome, type: 'select' },
-      { name: 'qualification_score', value: extraction.qualificationScore.toString(), type: 'number' },
-      { name: 'urgency', value: extraction.urgency, type: 'select' },
-      { name: 'customer_company', value: (extraction.raw as any).customerCompany || null, type: 'text' },
-      { name: 'industry', value: (extraction.raw as any).industry || null, type: 'text' },
-      { name: 'company_size', value: (extraction.raw as any).companySize || null, type: 'text' },
-      { name: 'current_solution', value: (extraction.raw as any).currentSolution || null, type: 'text' },
-      { name: 'decision_process', value: (extraction.raw as any).decisionProcess || null, type: 'text' },
-      { name: 'technical_requirements', value: JSON.stringify((extraction.raw as any).technicalRequirements || []), type: 'json' },
-    ];
+      // Universal fields (kept)
+      { name: 'summary', value: extraction.summary || '', type: 'text' },
+      { name: 'sentiment', value: extraction.sentiment || 'neutral', type: 'text' },
+      { name: 'action_items', value: JSON.stringify(extraction.action_items || []), type: 'json' },
+      { name: 'next_steps', value: JSON.stringify(extraction.next_steps || []), type: 'json' },
+
+      // Call type and key info
+      { name: 'call_type', value: extraction.call_type || extraction.extraction_type || 'unknown', type: 'text' },
+
+      // Negotiation outcome if present (for carrier calls)
+      ...(extraction.negotiation_outcome ? [
+        { name: 'negotiation_status', value: extraction.negotiation_outcome.status, type: 'text' },
+        ...(extraction.negotiation_outcome.agreed_rate ? [
+          { name: 'agreed_rate', value: extraction.negotiation_outcome.agreed_rate.toString(), type: 'number' },
+          { name: 'rate_type', value: extraction.negotiation_outcome.rate_type || 'flat', type: 'text' },
+          { name: 'rate_includes_fuel', value: String(extraction.negotiation_outcome.rate_includes_fuel), type: 'boolean' },
+        ] : []),
+        ...(extraction.negotiation_outcome.broker_final_position ? [
+          { name: 'broker_final_position', value: extraction.negotiation_outcome.broker_final_position.toString(), type: 'number' },
+        ] : []),
+        ...(extraction.negotiation_outcome.carrier_final_position ? [
+          { name: 'carrier_final_position', value: extraction.negotiation_outcome.carrier_final_position.toString(), type: 'number' },
+        ] : []),
+        ...(extraction.negotiation_outcome.pending_reason ? [
+          { name: 'pending_reason', value: extraction.negotiation_outcome.pending_reason, type: 'text' },
+        ] : []),
+        ...(extraction.negotiation_outcome.rejection_reason ? [
+          { name: 'rejection_reason', value: extraction.negotiation_outcome.rejection_reason, type: 'text' },
+        ] : []),
+        ...(extraction.negotiation_outcome.callback_conditions ? [
+          { name: 'callback_conditions', value: extraction.negotiation_outcome.callback_conditions, type: 'text' },
+        ] : []),
+        ...(extraction.negotiation_outcome.accessorials_discussed ? [
+          { name: 'accessorials_discussed', value: JSON.stringify(extraction.negotiation_outcome.accessorials_discussed), type: 'json' },
+        ] : []),
+        ...(extraction.negotiation_outcome.contingencies ? [
+          { name: 'contingencies', value: JSON.stringify(extraction.negotiation_outcome.contingencies), type: 'json' },
+        ] : []),
+        { name: 'negotiation_confidence', value: JSON.stringify(extraction.negotiation_outcome.confidence), type: 'json' },
+        ...(extraction.negotiation_outcome.negotiation_summary ? [
+          { name: 'negotiation_summary', value: extraction.negotiation_outcome.negotiation_summary, type: 'text' },
+        ] : []),
+        ...(extraction.negotiation_outcome.rate_history ? [
+          { name: 'rate_history', value: JSON.stringify(extraction.negotiation_outcome.rate_history), type: 'json' },
+        ] : []),
+      ] : []),
+
+      // Should generate rate confirmation flag
+      ...(extraction.should_generate_rate_con !== undefined ? [
+        { name: 'should_generate_rate_con', value: String(extraction.should_generate_rate_con), type: 'boolean' },
+      ] : []),
+
+      // Rate analysis if available
+      ...(extraction.rate_analysis ? [
+        { name: 'rate_analysis', value: JSON.stringify(extraction.rate_analysis), type: 'json' },
+      ] : []),
+
+      // Lane information if present
+      ...(extraction.lane ? [
+        { name: 'lane_origin', value: extraction.lane.origin, type: 'text' },
+        { name: 'lane_destination', value: extraction.lane.destination, type: 'text' },
+      ] : []),
+
+      // Rate and equipment if discussed (fallback for non-negotiation extractions)
+      ...(extraction.rate_discussed && !extraction.negotiation_outcome ? [
+        { name: 'rate_discussed', value: extraction.rate_discussed.toString(), type: 'number' },
+      ] : []),
+      ...(extraction.equipment_discussed ? [
+        { name: 'equipment_discussed', value: extraction.equipment_discussed, type: 'text' },
+      ] : []),
+
+      // Carrier details if extracted
+      ...(extraction.carrier_details ? Object.entries(extraction.carrier_details).map(([key, value]) => ({
+        name: `carrier_${key}`,
+        value: typeof value === 'object' ? JSON.stringify(value) : String(value || ''),
+        type: typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'boolean' : 'text',
+      })) : []),
+
+      // Freight-specific data based on call type (for non-negotiation extractions)
+      ...(extraction.shipper_data ? Object.entries(extraction.shipper_data).map(([key, value]) => ({
+        name: `shipper_${key}`,
+        value: typeof value === 'object' ? JSON.stringify(value) : String(value || ''),
+        type: typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'boolean' : 'text',
+      })) : []),
+
+      ...(extraction.carrier_data && !extraction.negotiation_outcome ? Object.entries(extraction.carrier_data).map(([key, value]) => ({
+        name: `carrier_${key}`,
+        value: typeof value === 'object' ? JSON.stringify(value) : String(value || ''),
+        type: typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'boolean' : 'text',
+      })) : []),
+
+      ...(extraction.check_call_data ? Object.entries(extraction.check_call_data).map(([key, value]) => ({
+        name: `check_${key}`,
+        value: typeof value === 'object' ? JSON.stringify(value) : String(value || ''),
+        type: typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'boolean' : 'text',
+      })) : []),
+
+      // Validation warnings if present
+      ...(extraction.validation_warnings && extraction.validation_warnings.length > 0 ? [
+        { name: 'validation_warnings', value: JSON.stringify(extraction.validation_warnings), type: 'json' },
+      ] : []),
+    ].filter(field => field.value !== null && field.value !== undefined && field.value !== '');
 
     await supabase.from('call_fields').insert(
       coreFields.map((field) => ({
@@ -251,6 +400,153 @@ export async function POST(
     );
 
     console.log('[Process] ✅ Saved', coreFields.length, 'core fields');
+
+    // =====================================================
+    // STEP 4A: AUTO-VERIFY CARRIER IF MC/DOT EXTRACTED
+    // =====================================================
+
+    // Check if we have carrier info with MC or DOT number
+    const carrierMC = extraction.carrier_data?.mc_number || extraction.rate_data?.mc_number;
+    const carrierDOT = extraction.carrier_data?.dot_number || extraction.rate_data?.dot_number;
+    const carrierName = extraction.carrier_data?.carrier_name || extraction.rate_data?.carrier_name;
+
+    if (carrierMC || carrierDOT) {
+      console.log('[Process] 🔍 Carrier detected, initiating FMCSA verification...');
+
+      try {
+        const { verifyCarrier } = await import('@/lib/services/fmcsa-verification');
+
+        // Clean up the numbers
+        const mc = carrierMC?.replace(/^MC-?/i, '').replace(/\D/g, '');
+        const dot = carrierDOT?.replace(/^DOT-?/i, '').replace(/\D/g, '');
+
+        // Perform verification (async, non-blocking)
+        const verificationPromise = verifyCarrier(mc, dot, false).then(async (verification) => {
+          if (verification.verified) {
+            console.log('[Process] ✅ Carrier verified:', verification.riskLevel, 'risk');
+
+            // Store verification in database
+            const { data: userOrg } = await supabase
+              .from('user_organizations')
+              .select('organization_id')
+              .eq('user_id', call.user_id)
+              .single();
+
+            if (userOrg) {
+              // Check if carrier exists
+              let carrierId = null;
+
+              if (mc) {
+                const { data: existingCarrier } = await supabase
+                  .from('carriers')
+                  .select('id')
+                  .eq('organization_id', userOrg.organization_id)
+                  .eq('mc_number', `MC-${mc}`)
+                  .single();
+
+                carrierId = existingCarrier?.id;
+              }
+
+              if (!carrierId && dot) {
+                const { data: existingCarrier } = await supabase
+                  .from('carriers')
+                  .select('id')
+                  .eq('organization_id', userOrg.organization_id)
+                  .eq('dot_number', dot)
+                  .single();
+
+                carrierId = existingCarrier?.id;
+              }
+
+              // Create carrier if doesn't exist
+              if (!carrierId && (mc || dot)) {
+                const { data: newCarrier } = await supabase
+                  .from('carriers')
+                  .insert({
+                    organization_id: userOrg.organization_id,
+                    carrier_name: verification.data?.legalName || carrierName || 'Unknown Carrier',
+                    mc_number: mc ? `MC-${mc}` : null,
+                    dot_number: dot || null,
+                    legal_name: verification.data?.legalName,
+                    phone: verification.data?.phone,
+                    address: verification.data?.physicalAddress,
+                    city: verification.data?.physicalCity,
+                    state: verification.data?.physicalState,
+                    zip_code: verification.data?.physicalZip,
+                    verification_status:
+                      verification.riskLevel === 'LOW' ? 'VERIFIED_LOW_RISK' :
+                      verification.riskLevel === 'MEDIUM' ? 'VERIFIED_MEDIUM_RISK' :
+                      'VERIFIED_HIGH_RISK',
+                    verification_warnings: verification.warnings,
+                    last_verification_date: new Date().toISOString(),
+                    auto_created: true,
+                  })
+                  .select()
+                  .single();
+
+                carrierId = newCarrier?.id;
+              } else if (carrierId) {
+                // Update existing carrier with verification
+                await supabase
+                  .from('carriers')
+                  .update({
+                    verification_status:
+                      verification.riskLevel === 'LOW' ? 'VERIFIED_LOW_RISK' :
+                      verification.riskLevel === 'MEDIUM' ? 'VERIFIED_MEDIUM_RISK' :
+                      'VERIFIED_HIGH_RISK',
+                    verification_warnings: verification.warnings,
+                    last_verification_date: new Date().toISOString(),
+                  })
+                  .eq('id', carrierId);
+              }
+
+              // Store verification record
+              if (carrierId) {
+                await supabase
+                  .from('carrier_verifications')
+                  .insert({
+                    carrier_id: carrierId,
+                    mc_number: mc,
+                    dot_number: dot,
+                    legal_name: verification.data?.legalName,
+                    operating_status: verification.data?.operatingStatus,
+                    safety_rating: verification.data?.safetyRating,
+                    bipd_insurance_on_file: verification.data?.bipdInsuranceOnFile,
+                    cargo_insurance_on_file: verification.data?.cargoInsuranceOnFile,
+                    risk_level: verification.riskLevel,
+                    risk_score: verification.riskScore,
+                    warnings: verification.warnings,
+                    raw_response: verification.data,
+                  });
+
+                // Link carrier to call via carrier_interactions
+                await supabase
+                  .from('carrier_interactions')
+                  .insert({
+                    call_id: callId,
+                    carrier_id: carrierId,
+                    interaction_type: 'extracted',
+                    mc_number: mc ? `MC-${mc}` : null,
+                    dot_number: dot,
+                    carrier_name: verification.data?.legalName || carrierName,
+                    verification_status: verification.riskLevel,
+                  });
+              }
+            }
+          } else {
+            console.log('[Process] ⚠️ Carrier verification failed:', verification.warnings);
+          }
+        }).catch(error => {
+          console.error('[Process] ❌ Carrier verification error:', error);
+        });
+
+        // Don't wait for verification to complete - let it run in background
+        console.log('[Process] 🔄 Carrier verification running in background...');
+
+      } catch (error) {
+        console.error('[Process] ❌ Failed to initiate carrier verification:', error);
+      }
+    }
 
     // =====================================================
     // STEP 4B: EXTRACT TEMPLATE-SPECIFIC FIELDS (IF TEMPLATE SELECTED)
@@ -375,8 +671,8 @@ export async function POST(
         processing_message: 'All done! Your call is ready to review.',
         duration: durationSeconds,
         duration_minutes: durationMinutes,
-        customer_company: (extraction.raw as any).customerCompany || call.customer_company,
-        next_steps: extraction.nextSteps?.join('\n') || null,
+        customer_company: extraction.shipper_data?.shipper_company || extraction.carrier_data?.carrier_name || call.customer_company,
+        next_steps: extraction.next_steps?.join('\n') || null,
         sentiment_type: extraction.sentiment || null,
         processed_at: new Date().toISOString(),
       })
@@ -385,10 +681,10 @@ export async function POST(
     console.log('[Process] ✅ Call updated - COMPLETE');
 
     // =====================================================
-    // STEP 6: RECORD USAGE METRICS FOR BILLING
+    // STEP 6: RECORD USAGE FOR BILLING (SIMPLE USAGE TRACKING)
     // =====================================================
 
-    console.log('[Process] 💰 Recording usage metrics:');
+    console.log('[Process] 💰 Recording usage:');
     console.log('[Process] 💰 Duration seconds:', durationSeconds);
     console.log('[Process] 💰 Duration minutes to bill:', durationMinutes);
 
@@ -415,37 +711,30 @@ export async function POST(
         }
       }
 
-      // Record metrics - organization_id is required
-      if (organizationId) {
-        const { error: metricsError } = await supabase
-          .from('usage_metrics')
-          .insert({
-            organization_id: organizationId,
-            user_id: call.user_id,
-            metric_type: 'minutes_transcribed', // Use the allowed metric type
-            metric_value: durationMinutes,
-            metadata: {
-              call_id: callId,
-              duration_seconds: durationSeconds,
-              duration_minutes: durationMinutes,
-              customer_name: call.customer_name,
-              sales_rep: call.sales_rep,
-              processed_at: new Date().toISOString(),
-            },
-          });
+      // Use the simple usage tracking function (log_call_usage)
+      // This function handles everything: logging to usage_logs table and updating organization usage
+      const { error: usageError } = await supabase.rpc('log_call_usage', {
+        p_call_id: callId,
+        p_duration_minutes: durationMinutes
+      });
 
-        if (metricsError) {
-          console.error('[Process] ⚠️ Failed to record usage metrics:', metricsError);
-          console.error('[Process] Metrics error details:', metricsError);
-        } else {
-          console.log(`[Process] ✅ Recorded ${durationMinutes} minutes usage for organization ${organizationId}`);
-        }
+      if (usageError) {
+        console.error('[Process] ⚠️ Failed to record usage:', usageError);
+        console.error('[Process] Usage error details:', usageError);
       } else {
-        console.error('[Process] ❌ CRITICAL: No organization found for user, CANNOT record usage metrics!');
-        console.error('[Process] User ID:', call.user_id);
-        console.error('[Process] Call ID:', callId);
-        // This is a critical issue - usage won't be tracked!
+        console.log(`[Process] ✅ Recorded ${durationMinutes} minutes usage for call ${callId}`);
+
+        // Log the organization if we have it for debugging
+        if (organizationId) {
+          console.log(`[Process] ✅ Organization: ${organizationId}`);
+        }
       }
+
+      // Note: The log_call_usage function automatically:
+      // - Gets the organization from the call
+      // - Logs to usage_logs table
+      // - Updates organization's usage_minutes_current
+      // - Marks as overage if needed
     }
     console.log('[Process] ========================================');
 
@@ -454,9 +743,15 @@ export async function POST(
       user_id: call.user_id,
       notification_type: 'call_completed',
       title: 'Call processed successfully',
-      message: `Your call with ${(extraction.raw as any).customerCompany || call.customer_name || 'customer'} is ready to review.`,
+      message: `Your call with ${extraction.shipper_data?.shipper_company || extraction.carrier_data?.carrier_name || call.customer_name || 'customer'} is ready to review.`,
       link: `/calls/${callId}`,
     });
+
+    // Release processing lock on success
+    if (call.organization_id) {
+      await releaseProcessingLock(callId, supabase as any);
+      console.log('[Process] 🔓 Released processing lock');
+    }
 
     return NextResponse.json(
       {
@@ -471,10 +766,26 @@ export async function POST(
 
     const supabase = createAdminClient();
 
+    // Release processing lock on failure
+    try {
+      const { data: call } = await supabase
+        .from('calls')
+        .select('organization_id')
+        .eq('id', callId)
+        .single();
+
+      if (call?.organization_id) {
+        await releaseProcessingLock(callId, supabase as any);
+        console.log('[Process] 🔓 Released processing lock (on error)');
+      }
+    } catch (lockError) {
+      console.error('[Process] Failed to release lock:', lockError);
+    }
+
     // Check current status before marking as failed
     const { data: currentCall } = await supabase
       .from('calls')
-      .select('status')
+      .select('status, user_id')
       .eq('id', callId)
       .single();
 
@@ -486,8 +797,83 @@ export async function POST(
         .update({
           status: 'failed',
           assemblyai_error: error instanceof Error ? error.message : 'Unknown error',
+          processing_message: 'Processing failed. Please try again or contact support.',
         })
         .eq('id', callId);
+
+      // Send appropriate alert based on failure type
+      try {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const {
+          alertTranscriptionFailed,
+          alertExtractionFailed,
+          alertProcessingTimeout
+        } = await import('@/lib/monitoring/alert-service');
+
+        if (errorMessage.includes('AssemblyAI') || errorMessage.includes('transcript')) {
+          await alertTranscriptionFailed(
+            callId,
+            currentCall?.user_id || '',
+            error,
+            (await supabase.from('calls').select('audio_url').eq('id', callId).single()).data?.audio_url
+          );
+        } else if (errorMessage.includes('extraction') || errorMessage.includes('OpenAI')) {
+          await alertExtractionFailed(callId, currentCall?.user_id || '', error);
+        } else if (errorMessage.includes('timeout')) {
+          await alertProcessingTimeout(callId, currentCall?.user_id || '', 5);
+        }
+      } catch (alertError) {
+        console.error('[Process] Failed to send alert:', alertError);
+      }
+
+      // Send email notification about failure AND create in-app notification
+      if (currentCall?.user_id) {
+        // Get full call details for email
+        const { data: fullCall } = await supabase
+          .from('calls')
+          .select('*')
+          .eq('id', callId)
+          .single();
+
+        if (fullCall) {
+          // Import and send failure email
+          const { sendFailedProcessingEmail } = await import('@/lib/emails/failed-processing');
+
+          // Determine error type
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          let errorType: 'transcription' | 'extraction' | 'timeout' | 'unknown' = 'unknown';
+
+          if (errorMessage.includes('AssemblyAI') || errorMessage.includes('transcript')) {
+            errorType = 'transcription';
+          } else if (errorMessage.includes('extraction') || errorMessage.includes('OpenAI')) {
+            errorType = 'extraction';
+          } else if (errorMessage.includes('timeout')) {
+            errorType = 'timeout';
+          }
+
+          // Send the email
+          await sendFailedProcessingEmail({
+            callId,
+            userId: currentCall.user_id,
+            customerName: fullCall.customer_name,
+            customerPhone: fullCall.customer_phone,
+            salesRep: fullCall.sales_rep,
+            fileName: fullCall.file_name,
+            uploadedAt: fullCall.created_at,
+            errorMessage,
+            errorType,
+          });
+        }
+
+        // Also create in-app notification (keeping existing)
+        await supabase.from('notifications').insert({
+          user_id: currentCall.user_id,
+          notification_type: 'call_failed',
+          title: 'Call processing failed',
+          message: `Your call with ${fullCall?.customer_phone || 'unknown number'} couldn't be processed. Please document it manually.`,
+          link: `/calls/${callId}`,
+        });
+      }
     } else {
       console.log('[Process] ⚠️ Error occurred but transcription was already completed, not marking as failed');
     }

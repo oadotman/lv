@@ -1,6 +1,6 @@
 // =====================================================
-// OPENAI CLIENT UTILITY
-// Handles CRM data extraction from transcripts using GPT-4o
+// OPENAI CLIENT UTILITY - FREIGHT BROKER VERSION
+// Handles freight broker data extraction from call transcripts using GPT-4o
 // =====================================================
 
 import OpenAI from 'openai';
@@ -30,8 +30,25 @@ export const openaiClient = new Proxy({} as OpenAI, {
 });
 
 // =====================================================
-// TYPES
+// TYPES - FREIGHT BROKER SPECIFIC
 // =====================================================
+
+export type CallType = 'shipper_call' | 'carrier_call' | 'check_call' | 'unknown';
+
+export type EquipmentType =
+  | 'dry_van'
+  | 'reefer'
+  | 'flatbed'
+  | 'step_deck'
+  | 'rgn'
+  | 'power_only'
+  | 'box_truck'
+  | 'hotshot'
+  | 'tanker'
+  | 'lowboy'
+  | 'double_drop'
+  | 'conestoga'
+  | 'other';
 
 export interface CRMExtractionConfig {
   transcript: string;
@@ -42,34 +59,164 @@ export interface CRMExtractionConfig {
   typedNotes?: string;
 }
 
+// Shipper Call Fields
+export interface ShipperCallData {
+  // Origin Information
+  origin_city?: string;
+  origin_state?: string;
+  origin_zip?: string;
+  origin_facility?: string;
+
+  // Destination Information
+  destination_city?: string;
+  destination_state?: string;
+  destination_zip?: string;
+  destination_facility?: string;
+
+  // Load Details
+  commodity?: string;
+  weight_lbs?: number;
+  pallet_count?: number;
+  equipment_type?: EquipmentType;
+
+  // Dates and Times
+  pickup_date?: string;
+  pickup_time?: string;
+  pickup_appointment?: boolean;
+  delivery_date?: string;
+  delivery_time?: string;
+  delivery_appointment?: boolean;
+
+  // Rates and References
+  rate_to_shipper?: number;
+  rate_type?: 'all_in' | 'line_haul_plus_fuel' | 'per_mile';
+  fuel_surcharge?: number;
+  reference_number?: string;
+  po_number?: string;
+  bol_number?: string;
+
+  // Special Requirements
+  special_requirements?: string[];
+  hazmat?: boolean;
+  team_required?: boolean;
+  expedited?: boolean;
+
+  // Shipper Information
+  shipper_company?: string;
+  shipper_contact?: string;
+  shipper_phone?: string;
+  shipper_email?: string;
+}
+
+// Carrier Call Data
+export interface CarrierCallData {
+  // Carrier Information
+  carrier_name?: string;
+  mc_number?: string;
+  dot_number?: string;
+
+  // Driver Information
+  driver_name?: string;
+  driver_phone?: string;
+  truck_number?: string;
+  trailer_number?: string;
+
+  // Rate Information
+  rate_to_carrier?: number;
+  rate_type?: 'all_in' | 'line_haul_plus_fuel' | 'per_mile';
+  fuel_surcharge?: number;
+  detention_rate?: number;
+  layover_rate?: number;
+
+  // Dispatcher Information
+  primary_contact?: string;
+  dispatch_phone?: string;
+  dispatch_email?: string;
+
+  // Timing
+  eta_pickup?: string;
+  eta_delivery?: string;
+
+  // Insurance & Compliance
+  insurance_verified?: boolean;
+  authority_verified?: boolean;
+
+  // Additional
+  empty_location?: string;
+  next_available?: string;
+}
+
+// Check Call Data
+export interface CheckCallData {
+  // Current Status
+  current_location?: string;
+  current_city?: string;
+  current_state?: string;
+  miles_out?: number;
+
+  // ETA Updates
+  eta_update?: string;
+  revised_pickup_eta?: string;
+  revised_delivery_eta?: string;
+
+  // Issues & Updates
+  issues_reported?: string[];
+  delay_reason?: string;
+  breakdown?: boolean;
+  weather_delay?: boolean;
+  traffic_delay?: boolean;
+
+  // Timestamps
+  timestamp?: string;
+  last_update?: string;
+
+  // Driver Info
+  driver_name?: string;
+  truck_number?: string;
+}
+
+// Main Extraction Result - Now freight-focused
 export interface CRMExtractionResult {
-  // Core fields
+  // Call Classification
+  call_type: CallType;
+  call_summary: string;
+
+  // Extracted Data (only one will be populated based on call type)
+  shipper_data?: ShipperCallData;
+  carrier_data?: CarrierCallData;
+  check_call_data?: CheckCallData;
+
+  // Key Information (always extracted)
+  action_items: string[];
+  issues_flagged: string[];
+  rate_discussed?: number;
+  equipment_discussed?: EquipmentType;
+  lane?: {
+    origin: string;
+    destination: string;
+  };
+
+  // Metadata
+  confidence_score: number;
+  extraction_timestamp: string;
+
+  // Legacy fields for compatibility (will be removed)
   summary: string;
   keyPoints: string[];
   nextSteps: string[];
-
-  // Customer intelligence
   painPoints: string[];
   requirements: string[];
   budget?: string;
   timeline?: string;
   decisionMaker?: string;
-
-  // Opportunity data
   productInterest: string[];
   competitorsMentioned: string[];
   objections: string[];
   buyingSignals: string[];
-
-  // Call outcome
   callOutcome: 'qualified' | 'nurture' | 'not_interested' | 'follow_up_needed';
-  qualificationScore: number; // 0-100
-
-  // Additional context
+  qualificationScore: number;
   urgency: 'high' | 'medium' | 'low';
   sentiment: 'positive' | 'neutral' | 'negative';
-
-  // Raw structured data
   raw: {
     customerCompany?: string;
     industry?: string;
@@ -100,18 +247,18 @@ export interface CustomFieldExtraction {
 // =====================================================
 
 /**
- * Extract CRM-ready data from transcript using GPT-4o
+ * Extract freight broker data from transcript using GPT-4o
  */
 export async function extractCRMData(
   config: CRMExtractionConfig
 ): Promise<CRMExtractionResult> {
   try {
-    console.log('Starting CRM extraction with GPT-4o...');
+    console.log('Starting freight broker data extraction with GPT-4o...');
 
     // Format conversation for GPT
     const conversation = formatConversation(config.utterances, config.speakerMapping);
 
-    // Build extraction prompt
+    // Build freight-specific extraction prompt
     const prompt = buildExtractionPrompt(conversation, config);
 
     // Call GPT-4o with structured output
@@ -134,11 +281,39 @@ export async function extractCRMData(
     const responseContent = completion.choices[0]?.message?.content || '{}';
     const extracted = JSON.parse(responseContent) as CRMExtractionResult;
 
-    console.log('CRM extraction complete:', {
-      summary_length: extracted.summary?.length || 0,
-      pain_points: extracted.painPoints?.length || 0,
-      next_steps: extracted.nextSteps?.length || 0,
-      qualification_score: extracted.qualificationScore,
+    // Add extraction timestamp
+    extracted.extraction_timestamp = new Date().toISOString();
+
+    // Map freight data to legacy fields for compatibility
+    extracted.summary = extracted.call_summary || '';
+    extracted.keyPoints = extracted.action_items || [];
+    extracted.nextSteps = extracted.action_items || [];
+    extracted.painPoints = extracted.issues_flagged || [];
+    extracted.requirements = [];
+    extracted.productInterest = [];
+    extracted.competitorsMentioned = [];
+    extracted.objections = [];
+    extracted.buyingSignals = [];
+    extracted.callOutcome = 'follow_up_needed';
+    extracted.qualificationScore = extracted.confidence_score ? extracted.confidence_score * 100 : 50;
+    extracted.urgency = 'medium';
+    extracted.sentiment = 'neutral';
+    extracted.raw = {};
+
+    // Set budget/timeline from rates if available
+    if (extracted.rate_discussed) {
+      extracted.budget = `$${extracted.rate_discussed}`;
+    }
+    if (extracted.shipper_data?.pickup_date) {
+      extracted.timeline = extracted.shipper_data.pickup_date;
+    }
+
+    console.log('Freight extraction complete:', {
+      call_type: extracted.call_type,
+      confidence: extracted.confidence_score,
+      has_shipper_data: !!extracted.shipper_data,
+      has_carrier_data: !!extracted.carrier_data,
+      has_check_data: !!extracted.check_call_data,
     });
 
     return extracted;
@@ -146,6 +321,21 @@ export async function extractCRMData(
     console.error('OpenAI extraction error:', error);
     throw error;
   }
+}
+
+/**
+ * Wrapper function for compatibility - extracts freight data with OpenAI
+ */
+export async function extractFreightDataWithOpenAI(
+  transcript: string,
+  utterances: AssemblyAIUtterance[],
+  speakerMapping: Record<string, string>
+) {
+  return extractCRMData({
+    transcript,
+    utterances,
+    speakerMapping
+  });
 }
 
 /**
@@ -206,7 +396,13 @@ function formatConversation(
   return utterances
     .map((u) => {
       const role = speakerMapping[u.speaker] || u.speaker;
-      const roleLabel = role === 'rep' ? 'Sales Rep' : role === 'prospect' ? 'Prospect' : role;
+      // Map common roles to freight broker terminology
+      const roleLabel = role === 'rep' ? 'Broker' :
+                       role === 'prospect' ? 'Customer' :
+                       role === 'customer' ? 'Shipper' :
+                       role === 'carrier' ? 'Carrier' :
+                       role === 'driver' ? 'Driver' :
+                       role;
       return `${roleLabel}: ${u.text}`;
     })
     .join('\n\n');
@@ -222,7 +418,7 @@ function buildExtractionPrompt(
   const contextInfo = [];
 
   if (config.customerName) {
-    contextInfo.push(`Customer Name: ${config.customerName}`);
+    contextInfo.push(`Customer/Company Name: ${config.customerName}`);
   }
 
   if (config.callType) {
@@ -243,45 +439,139 @@ IMPORTANT: The conversation transcript is the PRIMARY source of truth. Use the t
 `;
   }
 
-  return `${context}Analyze this sales call transcript and extract structured CRM data.
+  return `${context}Analyze this freight broker call transcript and extract structured data.
 
 CONVERSATION:
 ${conversation}
 ${notesSection}
-Extract and return a JSON object with the following structure:
+First, identify the call type based on the conversation:
+- shipper_call: Booking loads, discussing freight from shippers/customers
+- carrier_call: Booking trucks, discussing capacity with carriers/drivers
+- check_call: Status updates, location checks, ETA updates
+
+Then extract and return a JSON object with the following structure:
 {
-  "summary": "2-3 sentence executive summary of the call",
-  "keyPoints": ["array", "of", "key", "discussion", "points"],
-  "nextSteps": ["array", "of", "action", "items"],
-  "painPoints": ["customer", "pain", "points", "discussed"],
-  "requirements": ["customer", "requirements", "or", "needs"],
-  "budget": "budget mentioned or null",
-  "timeline": "timeline mentioned or null",
-  "decisionMaker": "decision maker name or null",
-  "productInterest": ["products", "or", "features", "discussed"],
-  "competitorsMentioned": ["competitors", "mentioned"],
-  "objections": ["objections", "raised"],
-  "buyingSignals": ["positive", "buying", "signals"],
-  "callOutcome": "qualified|nurture|not_interested|follow_up_needed",
-  "qualificationScore": 0-100,
-  "urgency": "high|medium|low",
-  "sentiment": "positive|neutral|negative",
-  "raw": {
-    "customerCompany": "company name or null",
-    "industry": "industry or null",
-    "companySize": "company size or null",
-    "currentSolution": "current solution or null",
-    "decisionProcess": "decision process or null",
-    "technicalRequirements": ["technical", "requirements"]
-  }
+  "call_type": "shipper_call|carrier_call|check_call|unknown",
+  "call_summary": "2-3 sentence summary focusing on the load/shipment details and outcome",
+
+  "shipper_data": {
+    "origin_city": "city or null",
+    "origin_state": "state abbreviation or null",
+    "origin_zip": "zip code or null",
+    "origin_facility": "facility/company name or null",
+    "destination_city": "city or null",
+    "destination_state": "state abbreviation or null",
+    "destination_zip": "zip code or null",
+    "destination_facility": "facility/company name or null",
+    "commodity": "what's being shipped or null",
+    "weight_lbs": weight in pounds or null,
+    "pallet_count": number of pallets or null,
+    "equipment_type": "dry_van|reefer|flatbed|step_deck|rgn|power_only|box_truck|hotshot|tanker|lowboy|double_drop|conestoga|other or null",
+    "pickup_date": "YYYY-MM-DD format or null",
+    "pickup_time": "time or window (e.g., '08:00' or '8AM-12PM') or null",
+    "pickup_appointment": true/false or null,
+    "delivery_date": "YYYY-MM-DD format or null",
+    "delivery_time": "time or window or null",
+    "delivery_appointment": true/false or null,
+    "rate_to_shipper": dollar amount or null,
+    "rate_type": "all_in|line_haul_plus_fuel|per_mile or null",
+    "fuel_surcharge": dollar amount or null,
+    "reference_number": "reference/load number or null",
+    "po_number": "PO number or null",
+    "bol_number": "BOL number or null",
+    "special_requirements": ["requirements", "like", "tarps", "straps", "team"],
+    "hazmat": true/false or null,
+    "team_required": true/false or null,
+    "expedited": true/false or null,
+    "shipper_company": "company name or null",
+    "shipper_contact": "contact name or null",
+    "shipper_phone": "phone number or null",
+    "shipper_email": "email or null"
+  },
+
+  "carrier_data": {
+    "carrier_name": "carrier company name or null",
+    "mc_number": "MC number (digits only) or null",
+    "dot_number": "DOT number (digits only) or null",
+    "driver_name": "driver name or null",
+    "driver_phone": "phone number or null",
+    "truck_number": "truck/unit number or null",
+    "trailer_number": "trailer number or null",
+    "rate_to_carrier": dollar amount or null,
+    "rate_type": "all_in|line_haul_plus_fuel|per_mile or null",
+    "fuel_surcharge": dollar amount or null,
+    "detention_rate": hourly rate or null,
+    "layover_rate": daily rate or null,
+    "primary_contact": "dispatcher name or null",
+    "dispatch_phone": "phone number or null",
+    "dispatch_email": "email or null",
+    "eta_pickup": "estimated time of arrival at pickup or null",
+    "eta_delivery": "estimated time of arrival at delivery or null",
+    "insurance_verified": true/false or null,
+    "authority_verified": true/false or null,
+    "empty_location": "current/last empty location or null",
+    "next_available": "when truck available or null"
+  },
+
+  "check_call_data": {
+    "current_location": "specific location or null",
+    "current_city": "city or null",
+    "current_state": "state or null",
+    "miles_out": number of miles from destination or null,
+    "eta_update": "new ETA or null",
+    "revised_pickup_eta": "updated pickup ETA or null",
+    "revised_delivery_eta": "updated delivery ETA or null",
+    "issues_reported": ["list", "of", "issues"],
+    "delay_reason": "reason for delay or null",
+    "breakdown": true/false or null,
+    "weather_delay": true/false or null,
+    "traffic_delay": true/false or null,
+    "timestamp": "ISO timestamp of check call",
+    "last_update": "time of last update or null",
+    "driver_name": "driver name or null",
+    "truck_number": "truck number or null"
+  },
+
+  "action_items": ["follow-ups", "tasks", "things to do"],
+  "issues_flagged": ["problems", "concerns", "red flags"],
+  "rate_discussed": highest rate mentioned or null,
+  "equipment_discussed": "primary equipment type or null",
+  "lane": {
+    "origin": "origin city, state or null",
+    "destination": "destination city, state or null"
+  },
+
+  "confidence_score": 0.0-1.0,
+  "extraction_timestamp": "ISO timestamp",
+
+  "summary": "same as call_summary for compatibility",
+  "keyPoints": ["same as action_items for compatibility"],
+  "nextSteps": ["same as action_items for compatibility"],
+  "painPoints": ["same as issues_flagged for compatibility"],
+  "requirements": [],
+  "budget": "same as rate_discussed formatted as string or null",
+  "timeline": "pickup date if available or null",
+  "decisionMaker": null,
+  "productInterest": [],
+  "competitorsMentioned": [],
+  "objections": [],
+  "buyingSignals": [],
+  "callOutcome": "follow_up_needed",
+  "qualificationScore": 50,
+  "urgency": "medium",
+  "sentiment": "neutral",
+  "raw": {}
 }
 
 IMPORTANT:
-- Be thorough but concise
-- Only include information explicitly mentioned in the conversation
-- Use null for missing information, not empty strings
-- Qualification score should reflect: pain points, budget, timeline, authority, fit
-- Buying signals include: urgency, positive language, next steps commitment`;
+- Only populate the relevant data section based on call_type
+- Extract location data carefully (cities, states, zip codes)
+- Convert rates to numbers when possible
+- Use standard state abbreviations (TX, CA, FL, etc.)
+- Equipment types must match the enum values exactly
+- Dates should be in YYYY-MM-DD format
+- Only include information explicitly mentioned
+- Use null for missing information`;
 }
 
 /**
@@ -304,7 +594,7 @@ function buildTemplateExtractionPrompt(
     })
     .join('\n');
 
-  return `Extract the following custom CRM fields from this sales call transcript.
+  return `Extract the following custom fields from this freight broker call transcript.
 
 CONVERSATION:
 ${conversation}
@@ -337,31 +627,42 @@ RULES:
 // SYSTEM PROMPTS
 // =====================================================
 
-const SYSTEM_PROMPT = `You are an expert sales call analyzer and CRM data extraction specialist. Your role is to analyze sales call transcripts and extract structured, actionable CRM data.
+const SYSTEM_PROMPT = `You are an expert freight broker call analyzer and data extraction specialist. Your role is to analyze freight broker call transcripts and extract structured load and shipment data.
 
 You have deep expertise in:
-- Sales qualification (BANT, MEDDIC, etc.)
-- Identifying customer pain points and requirements
-- Recognizing buying signals and objections
-- Assessing deal urgency and fit
-- Understanding B2B sales processes
+- Freight brokerage operations and terminology
+- Load booking and carrier dispatch processes
+- Transportation modes (FTL, LTL, dry van, reefer, flatbed, etc.)
+- Rate negotiations and freight pricing
+- DOT/MC numbers and carrier compliance
+- Pickup/delivery logistics and check calls
+- Common freight lanes and shipping patterns
+
+Key freight terms you understand:
+- Equipment types: dry van, reefer, flatbed, step deck, RGN, power only, etc.
+- Load terms: FTL (full truckload), LTL (less than truckload), partial, expedited
+- Rate types: all-in rate, linehaul plus fuel, RPM (rate per mile), spot rate
+- Accessorials: detention, layover, TONU (truck ordered not used), lumper fees
+- Documentation: BOL (bill of lading), POD (proof of delivery), rate confirmation
 
 Your extractions should be:
-1. ACCURATE: Only extract information explicitly stated or strongly implied
-2. STRUCTURED: Follow the exact JSON schema provided
-3. ACTIONABLE: Focus on data that helps sales reps close deals
-4. CONSISTENT: Use consistent formatting and terminology
+1. ACCURATE: Only extract information explicitly stated in the conversation
+2. COMPLETE: Capture all load details, locations, dates, rates, and requirements
+3. STRUCTURED: Follow the exact JSON schema provided
+4. PRACTICAL: Focus on data needed for load booking and dispatching
 
 Always respond with valid JSON matching the requested schema.`;
 
-const TEMPLATE_SYSTEM_PROMPT = `You are a CRM data extraction specialist. Your role is to extract specific custom fields from sales call transcripts.
+const TEMPLATE_SYSTEM_PROMPT = `You are a freight broker data extraction specialist. Your role is to extract specific custom fields from freight broker call transcripts.
 
 You must:
-1. Extract each requested field accurately
+1. Extract each requested field accurately from freight conversations
 2. Match dropdown/select options exactly as provided
 3. Assign confidence scores honestly (1.0 = explicit, 0.5 = implied, 0.0 = not found)
 4. Return null for missing information, never guess
 5. Follow the exact JSON schema provided
+
+You understand freight terminology including equipment types, load requirements, rates, lanes, and carrier information.
 
 Always respond with valid JSON matching the requested schema.`;
 
@@ -465,58 +766,120 @@ export function formatForCRM(
 function formatPlainText(extraction: CRMExtractionResult): string {
   let output = '';
 
-  output += `CALL SUMMARY\n${extraction.summary}\n\n`;
+  // Call header
+  output += `CALL TYPE: ${extraction.call_type?.toUpperCase() || 'UNKNOWN'}\n`;
+  output += `SUMMARY\n${extraction.call_summary}\n\n`;
 
-  if (extraction.keyPoints.length > 0) {
-    output += `KEY POINTS\n${extraction.keyPoints.map((p) => `• ${p}`).join('\n')}\n\n`;
+  // Lane information
+  if (extraction.lane && (extraction.lane.origin || extraction.lane.destination)) {
+    output += `LANE\n`;
+    if (extraction.lane.origin) output += `Origin: ${extraction.lane.origin}\n`;
+    if (extraction.lane.destination) output += `Destination: ${extraction.lane.destination}\n`;
+    output += '\n';
   }
 
-  if (extraction.painPoints.length > 0) {
-    output += `PAIN POINTS\n${extraction.painPoints.map((p) => `• ${p}`).join('\n')}\n\n`;
+  // Rate information
+  if (extraction.rate_discussed) {
+    output += `RATE: $${extraction.rate_discussed}\n`;
+  }
+  if (extraction.equipment_discussed) {
+    output += `EQUIPMENT: ${extraction.equipment_discussed}\n`;
+  }
+  if (extraction.rate_discussed || extraction.equipment_discussed) {
+    output += '\n';
   }
 
-  if (extraction.requirements.length > 0) {
-    output += `REQUIREMENTS\n${extraction.requirements.map((r) => `• ${r}`).join('\n')}\n\n`;
+  // Shipper data (if available)
+  if (extraction.shipper_data && extraction.call_type === 'shipper_call') {
+    const sd = extraction.shipper_data;
+    output += `LOAD DETAILS\n`;
+    if (sd.commodity) output += `Commodity: ${sd.commodity}\n`;
+    if (sd.weight_lbs) output += `Weight: ${sd.weight_lbs} lbs\n`;
+    if (sd.pickup_date) output += `Pickup: ${sd.pickup_date} ${sd.pickup_time || ''}\n`;
+    if (sd.delivery_date) output += `Delivery: ${sd.delivery_date} ${sd.delivery_time || ''}\n`;
+    if (sd.reference_number) output += `Reference: ${sd.reference_number}\n`;
+    output += '\n';
   }
 
-  if (extraction.productInterest.length > 0) {
-    output += `PRODUCT INTEREST\n${extraction.productInterest.map((p) => `• ${p}`).join('\n')}\n\n`;
+  // Carrier data (if available)
+  if (extraction.carrier_data && extraction.call_type === 'carrier_call') {
+    const cd = extraction.carrier_data;
+    output += `CARRIER DETAILS\n`;
+    if (cd.carrier_name) output += `Carrier: ${cd.carrier_name}\n`;
+    if (cd.mc_number) output += `MC#: ${cd.mc_number}\n`;
+    if (cd.driver_name) output += `Driver: ${cd.driver_name}\n`;
+    if (cd.truck_number) output += `Truck: ${cd.truck_number}\n`;
+    output += '\n';
   }
 
-  if (extraction.objections.length > 0) {
-    output += `OBJECTIONS\n${extraction.objections.map((o) => `• ${o}`).join('\n')}\n\n`;
+  // Check call data (if available)
+  if (extraction.check_call_data && extraction.call_type === 'check_call') {
+    const cc = extraction.check_call_data;
+    output += `CHECK CALL STATUS\n`;
+    if (cc.current_location) output += `Location: ${cc.current_location}\n`;
+    if (cc.miles_out) output += `Miles out: ${cc.miles_out}\n`;
+    if (cc.eta_update) output += `ETA: ${cc.eta_update}\n`;
+    if (cc.issues_reported && cc.issues_reported.length > 0) {
+      output += `Issues: ${cc.issues_reported.join(', ')}\n`;
+    }
+    output += '\n';
   }
 
-  if (extraction.nextSteps.length > 0) {
-    output += `NEXT STEPS\n${extraction.nextSteps.map((s) => `• ${s}`).join('\n')}\n\n`;
+  // Action items
+  if (extraction.action_items && extraction.action_items.length > 0) {
+    output += `ACTION ITEMS\n${extraction.action_items.map((a) => `• ${a}`).join('\n')}\n\n`;
   }
 
-  output += `QUALIFICATION\n`;
-  output += `Score: ${extraction.qualificationScore}/100\n`;
-  output += `Outcome: ${extraction.callOutcome}\n`;
-  output += `Urgency: ${extraction.urgency}\n`;
-  output += `Sentiment: ${extraction.sentiment}\n`;
+  // Issues
+  if (extraction.issues_flagged && extraction.issues_flagged.length > 0) {
+    output += `ISSUES FLAGGED\n${extraction.issues_flagged.map((i) => `• ${i}`).join('\n')}\n\n`;
+  }
 
   return output;
 }
 
 function formatHubSpot(extraction: CRMExtractionResult): string {
   const fields: Record<string, string> = {
-    'Call Summary': extraction.summary,
-    'Call Outcome': extraction.callOutcome,
-    'Deal Stage': getHubSpotStage(extraction.callOutcome),
-    'Lead Score': extraction.qualificationScore.toString(),
-    'Priority': extraction.urgency,
-    'Pain Points': extraction.painPoints.join('; '),
-    'Requirements': extraction.requirements.join('; '),
-    'Next Steps': extraction.nextSteps.join('; '),
+    'Call Type': extraction.call_type || 'unknown',
+    'Call Summary': extraction.call_summary || extraction.summary,
+    'Load Status': extraction.call_type === 'shipper_call' ? 'New Load' :
+                   extraction.call_type === 'carrier_call' ? 'Carrier Booked' :
+                   extraction.call_type === 'check_call' ? 'In Transit' : 'Unknown',
   };
 
-  if (extraction.budget) fields['Budget'] = extraction.budget;
-  if (extraction.timeline) fields['Timeline'] = extraction.timeline;
-  if (extraction.decisionMaker) fields['Decision Maker'] = extraction.decisionMaker;
-  if (extraction.raw.customerCompany) fields['Company'] = extraction.raw.customerCompany;
-  if (extraction.raw.industry) fields['Industry'] = extraction.raw.industry;
+  // Add lane information
+  if (extraction.lane) {
+    if (extraction.lane.origin) fields['Origin'] = extraction.lane.origin;
+    if (extraction.lane.destination) fields['Destination'] = extraction.lane.destination;
+  }
+
+  // Add rate and equipment
+  if (extraction.rate_discussed) fields['Rate'] = `$${extraction.rate_discussed}`;
+  if (extraction.equipment_discussed) fields['Equipment Type'] = extraction.equipment_discussed;
+
+  // Add shipper-specific fields
+  if (extraction.shipper_data && extraction.call_type === 'shipper_call') {
+    const sd = extraction.shipper_data;
+    if (sd.commodity) fields['Commodity'] = sd.commodity;
+    if (sd.weight_lbs) fields['Weight'] = `${sd.weight_lbs} lbs`;
+    if (sd.pickup_date) fields['Pickup Date'] = sd.pickup_date;
+    if (sd.delivery_date) fields['Delivery Date'] = sd.delivery_date;
+    if (sd.reference_number) fields['Reference Number'] = sd.reference_number;
+    if (sd.shipper_company) fields['Shipper'] = sd.shipper_company;
+  }
+
+  // Add carrier-specific fields
+  if (extraction.carrier_data && extraction.call_type === 'carrier_call') {
+    const cd = extraction.carrier_data;
+    if (cd.carrier_name) fields['Carrier Name'] = cd.carrier_name;
+    if (cd.mc_number) fields['MC Number'] = cd.mc_number;
+    if (cd.driver_name) fields['Driver'] = cd.driver_name;
+  }
+
+  // Add action items
+  if (extraction.action_items && extraction.action_items.length > 0) {
+    fields['Next Steps'] = extraction.action_items.join('; ');
+  }
 
   return Object.entries(fields)
     .map(([key, value]) => `${key}: ${value}`)
@@ -525,18 +888,52 @@ function formatHubSpot(extraction: CRMExtractionResult): string {
 
 function formatSalesforce(extraction: CRMExtractionResult): string {
   const fields: Record<string, string> = {
-    Subject: `Call Summary - ${extraction.callOutcome}`,
-    Description: extraction.summary,
-    Status: getSalesforceStatus(extraction.callOutcome),
-    Priority: extraction.urgency === 'high' ? 'High' : extraction.urgency === 'low' ? 'Low' : 'Medium',
-    'Lead Score': extraction.qualificationScore.toString(),
-    'Pain Points': extraction.painPoints.join('; '),
-    'Next Steps': extraction.nextSteps.join('; '),
+    Subject: `${extraction.call_type || 'Call'} - ${extraction.lane?.origin || 'Unknown'} to ${extraction.lane?.destination || 'Unknown'}`,
+    Description: extraction.call_summary || extraction.summary,
+    Type: extraction.call_type === 'shipper_call' ? 'Load Booking' :
+          extraction.call_type === 'carrier_call' ? 'Carrier Booking' :
+          extraction.call_type === 'check_call' ? 'Status Update' : 'Call',
+    Status: 'Completed',
   };
 
-  if (extraction.budget) fields['Budget'] = extraction.budget;
-  if (extraction.timeline) fields['Close Date Estimate'] = extraction.timeline;
-  if (extraction.raw.customerCompany) fields['Company'] = extraction.raw.customerCompany;
+  // Add lane and load details
+  if (extraction.lane) {
+    if (extraction.lane.origin && extraction.lane.destination) {
+      fields['Lane'] = `${extraction.lane.origin} → ${extraction.lane.destination}`;
+    }
+  }
+
+  // Add rate information
+  if (extraction.rate_discussed) {
+    fields['Amount'] = extraction.rate_discussed.toString();
+  }
+
+  // Add equipment type
+  if (extraction.equipment_discussed) {
+    fields['Equipment'] = extraction.equipment_discussed;
+  }
+
+  // Add shipper-specific fields
+  if (extraction.shipper_data && extraction.call_type === 'shipper_call') {
+    const sd = extraction.shipper_data;
+    if (sd.commodity) fields['Product'] = sd.commodity;
+    if (sd.pickup_date) fields['Pickup Date'] = sd.pickup_date;
+    if (sd.delivery_date) fields['Delivery Date'] = sd.delivery_date;
+    if (sd.reference_number) fields['Reference'] = sd.reference_number;
+    if (sd.shipper_company) fields['Account Name'] = sd.shipper_company;
+  }
+
+  // Add carrier-specific fields
+  if (extraction.carrier_data && extraction.call_type === 'carrier_call') {
+    const cd = extraction.carrier_data;
+    if (cd.carrier_name) fields['Carrier'] = cd.carrier_name;
+    if (cd.mc_number) fields['MC Number'] = cd.mc_number;
+  }
+
+  // Add next steps
+  if (extraction.action_items && extraction.action_items.length > 0) {
+    fields['Next Steps'] = extraction.action_items.join('; ');
+  }
 
   return Object.entries(fields)
     .map(([key, value]) => `${key}: ${value}`)
@@ -546,46 +943,71 @@ function formatSalesforce(extraction: CRMExtractionResult): string {
 function getHubSpotStage(outcome: string): string {
   switch (outcome) {
     case 'qualified':
-      return 'Qualified Lead';
+      return 'Load Booked';
     case 'nurture':
-      return 'Nurture';
+      return 'Quote Sent';
     case 'not_interested':
-      return 'Closed Lost';
+      return 'No Match';
     case 'follow_up_needed':
-      return 'Appointment Scheduled';
+      return 'Negotiating';
     default:
-      return 'New';
+      return 'New Load';
   }
 }
 
 function getSalesforceStatus(outcome: string): string {
   switch (outcome) {
     case 'qualified':
-      return 'Qualified';
+      return 'Booked';
     case 'nurture':
-      return 'Working';
+      return 'Quoted';
     case 'not_interested':
-      return 'Closed - Not Converted';
+      return 'Cancelled';
     case 'follow_up_needed':
-      return 'Open';
+      return 'In Progress';
     default:
       return 'New';
   }
 }
 
 function formatPipedrive(extraction: CRMExtractionResult): string {
+  const loadTitle = extraction.lane ?
+    `${extraction.lane.origin || 'Unknown'} to ${extraction.lane.destination || 'Unknown'}` :
+    'Load';
+
   const fields: Record<string, string> = {
-    'Deal Title': `${extraction.raw.customerCompany || 'Unknown'} - ${extraction.callOutcome}`,
-    'Value': extraction.budget || '0',
-    'Stage': getPipedriveStage(extraction.callOutcome),
-    'Probability': extraction.qualificationScore.toString() + '%',
-    'Organization': extraction.raw.customerCompany || 'Unknown',
-    'Expected Close Date': extraction.timeline || 'TBD',
-    'Next Activity': extraction.nextSteps.join('; '),
-    'Notes': extraction.summary,
+    'Deal Title': loadTitle,
+    'Value': extraction.rate_discussed ? extraction.rate_discussed.toString() : '0',
+    'Stage': extraction.call_type === 'shipper_call' ? 'Load Posted' :
+             extraction.call_type === 'carrier_call' ? 'Carrier Assigned' :
+             extraction.call_type === 'check_call' ? 'In Transit' : 'New',
+    'Type': extraction.call_type || 'Unknown',
   };
 
-  if (extraction.decisionMaker) fields['Person'] = extraction.decisionMaker;
+  // Add equipment and commodity
+  if (extraction.equipment_discussed) fields['Product'] = extraction.equipment_discussed;
+
+  // Add dates
+  if (extraction.shipper_data?.pickup_date) {
+    fields['Expected Close Date'] = extraction.shipper_data.pickup_date;
+  }
+
+  // Add shipper info
+  if (extraction.shipper_data?.shipper_company) {
+    fields['Organization'] = extraction.shipper_data.shipper_company;
+  }
+
+  // Add carrier info
+  if (extraction.carrier_data?.carrier_name) {
+    fields['Carrier'] = extraction.carrier_data.carrier_name;
+  }
+
+  // Add next steps
+  if (extraction.action_items && extraction.action_items.length > 0) {
+    fields['Next Activity'] = extraction.action_items[0];
+  }
+
+  fields['Notes'] = extraction.call_summary || extraction.summary;
 
   return Object.entries(fields)
     .map(([key, value]) => `${key}: ${value}`)
@@ -593,20 +1015,57 @@ function formatPipedrive(extraction: CRMExtractionResult): string {
 }
 
 function formatZoho(extraction: CRMExtractionResult): string {
+  const loadName = extraction.lane ?
+    `${extraction.lane.origin || 'Unknown'} → ${extraction.lane.destination || 'Unknown'}` :
+    'Load';
+
   const fields: Record<string, string> = {
-    'Deal Name': `${extraction.raw.customerCompany || 'Unknown'} - Opportunity`,
-    'Amount': extraction.budget || '0',
-    'Stage': getZohoStage(extraction.callOutcome),
-    'Closing Date': extraction.timeline || '3 months',
-    'Account Name': extraction.raw.customerCompany || 'Unknown',
-    'Type': 'New Business',
-    'Lead Source': 'Phone Inquiry',
-    'Description': extraction.summary,
-    'Next Steps': extraction.nextSteps.join('; '),
-    'Competitors': extraction.competitorsMentioned.join('; '),
+    'Deal Name': loadName,
+    'Amount': extraction.rate_discussed ? extraction.rate_discussed.toString() : '0',
+    'Stage': extraction.call_type === 'shipper_call' ? 'Load Received' :
+             extraction.call_type === 'carrier_call' ? 'Carrier Booked' :
+             extraction.call_type === 'check_call' ? 'In Transit' : 'New',
+    'Type': 'Freight Load',
+    'Lead Source': 'Phone Call',
+    'Description': extraction.call_summary || extraction.summary,
   };
 
-  if (extraction.decisionMaker) fields['Contact Name'] = extraction.decisionMaker;
+  // Add dates
+  if (extraction.shipper_data?.pickup_date) {
+    fields['Pickup Date'] = extraction.shipper_data.pickup_date;
+  }
+  if (extraction.shipper_data?.delivery_date) {
+    fields['Delivery Date'] = extraction.shipper_data.delivery_date;
+  }
+
+  // Add shipper info
+  if (extraction.shipper_data?.shipper_company) {
+    fields['Account Name'] = extraction.shipper_data.shipper_company;
+  }
+  if (extraction.shipper_data?.shipper_contact) {
+    fields['Contact Name'] = extraction.shipper_data.shipper_contact;
+  }
+
+  // Add commodity and equipment
+  if (extraction.shipper_data?.commodity) {
+    fields['Product'] = extraction.shipper_data.commodity;
+  }
+  if (extraction.equipment_discussed) {
+    fields['Equipment'] = extraction.equipment_discussed;
+  }
+
+  // Add carrier info
+  if (extraction.carrier_data?.carrier_name) {
+    fields['Carrier'] = extraction.carrier_data.carrier_name;
+    if (extraction.carrier_data.mc_number) {
+      fields['MC Number'] = extraction.carrier_data.mc_number;
+    }
+  }
+
+  // Add next steps
+  if (extraction.action_items && extraction.action_items.length > 0) {
+    fields['Next Steps'] = extraction.action_items.join('; ');
+  }
 
   return Object.entries(fields)
     .map(([key, value]) => `${key}: ${value}`)
@@ -614,20 +1073,55 @@ function formatZoho(extraction: CRMExtractionResult): string {
 }
 
 function formatFreshsales(extraction: CRMExtractionResult): string {
+  const loadName = extraction.lane ?
+    `Load: ${extraction.lane.origin || 'Unknown'} → ${extraction.lane.destination || 'Unknown'}` :
+    'Freight Load';
+
   const fields: Record<string, string> = {
-    'Deal Name': `${extraction.raw.customerCompany || 'Unknown'} - ${extraction.callOutcome}`,
-    'Deal Value': extraction.budget || '0',
-    'Deal Stage': getFreshsalesStage(extraction.callOutcome),
-    'Expected Close Date': extraction.timeline || 'TBD',
-    'Account': extraction.raw.customerCompany || 'Unknown',
-    'Deal Reason': extraction.painPoints.length > 0 ? 'Product Features' : 'Other',
-    'Next Steps': extraction.nextSteps.join('; '),
-    'Notes': extraction.summary,
-    'Tags': extraction.urgency,
+    'Deal Name': loadName,
+    'Deal Value': extraction.rate_discussed ? extraction.rate_discussed.toString() : '0',
+    'Deal Stage': extraction.call_type === 'shipper_call' ? 'Quote' :
+                  extraction.call_type === 'carrier_call' ? 'Dispatched' :
+                  extraction.call_type === 'check_call' ? 'In Transit' : 'New',
+    'Deal Type': 'Freight Shipment',
+    'Notes': extraction.call_summary || extraction.summary,
   };
 
-  if (extraction.decisionMaker) fields['Primary Contact'] = extraction.decisionMaker;
-  if (extraction.raw.industry) fields['Product'] = extraction.raw.industry;
+  // Add dates
+  if (extraction.shipper_data?.pickup_date) {
+    fields['Expected Close Date'] = extraction.shipper_data.pickup_date;
+  }
+
+  // Add shipper/carrier info
+  if (extraction.shipper_data?.shipper_company) {
+    fields['Account'] = extraction.shipper_data.shipper_company;
+    if (extraction.shipper_data.shipper_contact) {
+      fields['Primary Contact'] = extraction.shipper_data.shipper_contact;
+    }
+  } else if (extraction.carrier_data?.carrier_name) {
+    fields['Carrier'] = extraction.carrier_data.carrier_name;
+    if (extraction.carrier_data.primary_contact) {
+      fields['Dispatcher'] = extraction.carrier_data.primary_contact;
+    }
+  }
+
+  // Add commodity and equipment
+  if (extraction.shipper_data?.commodity) {
+    fields['Product'] = extraction.shipper_data.commodity;
+  }
+  if (extraction.equipment_discussed) {
+    fields['Equipment Type'] = extraction.equipment_discussed;
+  }
+
+  // Add next steps
+  if (extraction.action_items && extraction.action_items.length > 0) {
+    fields['Next Steps'] = extraction.action_items.join('; ');
+  }
+
+  // Add issues if any
+  if (extraction.issues_flagged && extraction.issues_flagged.length > 0) {
+    fields['Tags'] = extraction.issues_flagged.join(', ');
+  }
 
   return Object.entries(fields)
     .map(([key, value]) => `${key}: ${value}`)
@@ -635,65 +1129,109 @@ function formatFreshsales(extraction: CRMExtractionResult): string {
 }
 
 function formatMonday(extraction: CRMExtractionResult): string {
+  const itemName = extraction.lane ?
+    `${extraction.lane.origin || 'Unknown'} → ${extraction.lane.destination || 'Unknown'}` :
+    'Freight Load';
+
   const fields: Record<string, string> = {
-    'Item Name': `${extraction.raw.customerCompany || 'Unknown'} - Deal`,
-    'Status': getMondayStatus(extraction.callOutcome),
-    'Priority': extraction.urgency === 'high' ? 'Critical' : extraction.urgency === 'low' ? 'Low' : 'Medium',
-    'Deal Value': extraction.budget || '0',
-    'Company': extraction.raw.customerCompany || 'Unknown',
-    'Timeline': extraction.timeline || 'TBD',
-    'Next Action': extraction.nextSteps[0] || 'Follow up',
-    'Notes': `${extraction.summary}\n\nPain Points: ${extraction.painPoints.join(', ')}`,
+    'Item Name': itemName,
+    'Status': extraction.call_type === 'shipper_call' ? 'Load Posted' :
+              extraction.call_type === 'carrier_call' ? 'Dispatched' :
+              extraction.call_type === 'check_call' ? 'In Transit' : 'New',
+    'Priority': extraction.shipper_data?.expedited ? 'Critical' :
+                extraction.issues_flagged?.length > 0 ? 'High' : 'Medium',
+    'Deal Value': extraction.rate_discussed ? extraction.rate_discussed.toString() : '0',
   };
 
-  if (extraction.decisionMaker) fields['Contact'] = extraction.decisionMaker;
+  // Add dates
+  if (extraction.shipper_data?.pickup_date) {
+    fields['Pickup Date'] = extraction.shipper_data.pickup_date;
+  }
+  if (extraction.shipper_data?.delivery_date) {
+    fields['Delivery Date'] = extraction.shipper_data.delivery_date;
+  }
+
+  // Add companies
+  if (extraction.shipper_data?.shipper_company) {
+    fields['Company'] = extraction.shipper_data.shipper_company;
+  }
+  if (extraction.carrier_data?.carrier_name) {
+    fields['Carrier'] = extraction.carrier_data.carrier_name;
+  }
+
+  // Add contacts
+  if (extraction.shipper_data?.shipper_contact) {
+    fields['Contact'] = extraction.shipper_data.shipper_contact;
+  } else if (extraction.carrier_data?.driver_name) {
+    fields['Driver'] = extraction.carrier_data.driver_name;
+  }
+
+  // Add equipment and commodity
+  if (extraction.equipment_discussed) {
+    fields['Equipment'] = extraction.equipment_discussed;
+  }
+  if (extraction.shipper_data?.commodity) {
+    fields['Commodity'] = extraction.shipper_data.commodity;
+  }
+
+  // Add next action
+  if (extraction.action_items && extraction.action_items.length > 0) {
+    fields['Next Action'] = extraction.action_items[0];
+  }
+
+  // Add notes with issues if any
+  let notes = extraction.call_summary || extraction.summary;
+  if (extraction.issues_flagged && extraction.issues_flagged.length > 0) {
+    notes += `\n\nIssues: ${extraction.issues_flagged.join(', ')}`;
+  }
+  fields['Notes'] = notes;
 
   return Object.entries(fields)
     .map(([key, value]) => `${key}: ${value}`)
     .join('\n');
 }
 
-// Helper functions for CRM stage mapping
+// Helper functions for CRM stage mapping (freight broker focused)
 function getPipedriveStage(outcome: string): string {
   switch (outcome) {
     case 'qualified':
-      return 'Proposal Made';
+      return 'Load Booked';
     case 'nurture':
-      return 'Contact Made';
+      return 'Quoted';
     case 'not_interested':
-      return 'Lost';
+      return 'No Match';
     case 'follow_up_needed':
-      return 'Demo Scheduled';
+      return 'Negotiating';
     default:
-      return 'Lead In';
+      return 'New Load';
   }
 }
 
 function getZohoStage(outcome: string): string {
   switch (outcome) {
     case 'qualified':
-      return 'Value Proposition';
+      return 'Dispatched';
     case 'nurture':
-      return 'Needs Analysis';
+      return 'Quote Sent';
     case 'not_interested':
-      return 'Closed Lost';
+      return 'Cancelled';
     case 'follow_up_needed':
-      return 'Qualification';
+      return 'Following Up';
     default:
-      return 'Qualification';
+      return 'New Load';
   }
 }
 
 function getFreshsalesStage(outcome: string): string {
   switch (outcome) {
     case 'qualified':
-      return 'Demo';
+      return 'Booked';
     case 'nurture':
-      return 'Qualification';
+      return 'Quoted';
     case 'not_interested':
       return 'Lost';
     case 'follow_up_needed':
-      return 'New';
+      return 'Negotiating';
     default:
       return 'New';
   }
@@ -702,14 +1240,14 @@ function getFreshsalesStage(outcome: string): string {
 function getMondayStatus(outcome: string): string {
   switch (outcome) {
     case 'qualified':
-      return 'Qualified';
+      return 'Booked';
     case 'nurture':
-      return 'Lead';
+      return 'Quoted';
     case 'not_interested':
-      return 'Lost';
+      return 'Cancelled';
     case 'follow_up_needed':
-      return 'Proposal';
+      return 'In Progress';
     default:
-      return 'Lead';
+      return 'New';
   }
 }

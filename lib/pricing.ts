@@ -1,6 +1,6 @@
 // =====================================================
-// PRICING MODEL CONSTANTS
-// Must stay in sync with database/008_team_management.sql
+// LOADVOICE PRICING MODEL
+// Freight broker focused pricing tiers
 // =====================================================
 
 export type PlanType = 'free' | 'solo' | 'starter' | 'professional' | 'enterprise' | 'custom';
@@ -10,117 +10,118 @@ export interface PlanDetails {
   name: string;
   price: number;           // Monthly price in dollars
   priceAnnual: number;     // Annual price in dollars (with 17% discount)
-  priceDisplay: string;    // Display string like "$49/mo"
+  priceDisplay: string;    // Display string like "$99/mo"
   maxMembers: number;
-  maxMinutes: number;
+  maxMinutes: number;      // Call minutes per month
   perUserCost: number;     // Cost per user in dollars
   features: string[];
   isPopular?: boolean;
   cta: string;            // Call to action button text
 }
 
-// Overage pricing
-export const OVERAGE_RATE = 0.02; // $0.02 per minute over limit
+// Simple flat overage pricing - $0.20 per minute for everyone
+export const OVERAGE_RATE = 0.20; // $0.20 per minute over limit (flat rate)
 export const ANNUAL_DISCOUNT = 0.17; // 17% discount (2 months free)
 
-// Plan configurations
+// Simple LoadVoice Plan configurations
 export const PLANS: Record<PlanType, PlanDetails> = {
   free: {
     id: 'free',
-    name: 'Free',
+    name: 'Free Trial',
     price: 0,
     priceAnnual: 0,
     priceDisplay: '$0',
     maxMembers: 1,
-    maxMinutes: 30,
+    maxMinutes: 60,
     perUserCost: 0,
     features: [
-      '30 minutes/month',
+      '60 minutes free every month',
       '1 user',
-      'Basic transcription',
-      'CRM output formats',
+      'Carrier vetting (FMCSA)',
+      'One-click rate confirmations',
       'Email support',
     ],
-    cta: 'Get Started',
+    cta: 'Start Free Trial',
   },
   solo: {
     id: 'solo',
     name: 'Solo',
-    price: 49,
-    priceAnnual: 488, // $49 * 12 * 0.83
-    priceDisplay: '$49/mo',
+    price: 99,
+    priceAnnual: 986, // $99 * 12 * 0.83
+    priceDisplay: '$99/mo',
     maxMembers: 1,
-    maxMinutes: 1500,
-    perUserCost: 49,
+    maxMinutes: 500,
+    perUserCost: 99,
     features: [
-      '1,500 minutes/month',
+      '500 minutes/month',
       '1 user',
-      'Advanced transcription',
-      'Speaker diarization',
-      'All CRM formats',
-      'Custom templates',
-      'Priority email support',
-      'Overage billing at $0.02/min',
+      'All core features',
+      'Email & chat support',
+      'Overage: $0.20/min',
     ],
-    cta: 'Get Started',
+    cta: 'Start Now',
   },
   starter: {
     id: 'starter',
-    name: 'Starter',
-    price: 149,
-    priceAnnual: 1484, // $149 * 12 * 0.83
-    priceDisplay: '$149/mo',
-    maxMembers: 5,
-    maxMinutes: 6000,
-    perUserCost: 29.8,
+    name: 'Team',
+    price: 199,
+    priceAnnual: 1982, // $199 * 12 * 0.83
+    priceDisplay: '$199/mo',
+    maxMembers: 3,
+    maxMinutes: 1500,
+    perUserCost: 66.3,
     features: [
-      '6,000 minutes/month',
-      '5 named users',
-      'Team collaboration',
-      'Shared templates',
-      'Usage analytics',
+      '1,500 minutes/month',
+      '3 users',
+      'Everything in Solo',
+      'Team features',
       'Priority support',
-      'Overage billing at $0.02/min',
+      'Overage: $0.20/min',
     ],
     isPopular: true,
-    cta: 'Get Started',
+    cta: 'Get Team',
   },
   professional: {
     id: 'professional',
-    name: 'Professional',
-    price: 299,
-    priceAnnual: 2978, // $299 * 12 * 0.83
-    priceDisplay: '$299/mo',
+    name: 'Growing',
+    price: 349,
+    priceAnnual: 3476, // $349 * 12 * 0.83
+    priceDisplay: '$349/mo',
     maxMembers: 10,
-    maxMinutes: 15000,
-    perUserCost: 29.9,
+    maxMinutes: 4000,
+    perUserCost: 34.9,
     features: [
-      '15,000 minutes/month',
-      '10 named users',
-      'Advanced team features',
+      '4,000 minutes/month',
+      '10 users',
+      'Everything in Team',
+      'Advanced features',
+      'API access',
       'Dedicated support',
-      'Onboarding assistance',
-      'Overage billing at $0.02/min',
+      'Overage: $0.20/min',
     ],
-    cta: 'Get Started',
+    cta: 'Get Growing',
   },
   enterprise: {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 499,
-    priceAnnual: 4968, // $499 * 12 * 0.83
-    priceDisplay: '$499/mo',
+    price: 999,
+    priceAnnual: 9940, // $999 * 12 * 0.83
+    priceDisplay: '$999/mo',
     maxMembers: 20,
-    maxMinutes: 35000,
-    perUserCost: 24.95,
+    maxMinutes: 15000,
+    perUserCost: 49.95,
     features: [
-      '35,000 minutes/month',
-      '20 named users',
-      'Advanced analytics',
-      'Dedicated account manager',
-      'Overage billing at $0.02/min',
+      '15,000 minutes/month',
+      '20 users',
+      'Everything in Growing',
+      'Custom workflows',
+      'Dedicated success manager',
+      'Custom integrations',
+      'White-label options',
+      'API access',
+      'Overage: $0.20/min',
     ],
-    cta: 'Get Started',
+    cta: 'Contact Sales',
   },
   custom: {
     id: 'custom',
@@ -137,9 +138,10 @@ export const PLANS: Record<PlanType, PlanDetails> = {
       'Custom contracts',
       'SLA guarantees',
       'Dedicated infrastructure',
-      'Custom integrations',
-      'White-label',
+      'Custom AI training',
+      'White-label solution',
       '24/7 phone support',
+      'On-premise deployment',
     ],
     cta: 'Contact Sales',
   },

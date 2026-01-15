@@ -208,7 +208,7 @@ export default function InviteSignupPage() {
   // Loading state while checking invitation
   if (checkingInvite) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-sky-50">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600 text-lg">Validating invitation...</p>
@@ -258,17 +258,17 @@ export default function InviteSignupPage() {
 
   // Signup form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-sky-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-sky-600 flex items-center justify-center">
               <Users className="h-6 w-6 text-white" />
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Join Your Team</CardTitle>
           <CardDescription>
-            <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl">
+            <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-sky-50 border-2 border-blue-300 rounded-xl">
               <div className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">You're joining</div>
               <div className="font-bold text-xl text-blue-900">{invitation?.organization?.name}</div>
               <div className="text-sm mt-2 text-blue-700">

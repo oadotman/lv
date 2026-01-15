@@ -20,7 +20,7 @@ export async function sendReferralInvitation({
   referralLink,
   personalMessage,
 }: SendReferralInvitationParams) {
-  const defaultMessage = `I've been using SynQall for call recording and AI-powered transcription, and I think you'd find it really valuable for your business.
+  const defaultMessage = `I've been using LoadVoice for call recording and AI-powered transcription, and I think you'd find it really valuable for your business.
 
 Sign up using my referral link to get started with 30 free minutes!`;
 
@@ -45,8 +45,8 @@ Sign up using my referral link to get started with 30 free minutes!`;
         <div class="container">
           <div class="header">
             <div class="gift-icon">🎁</div>
-            <h1>You've Been Invited to SynQall!</h1>
-            <p>${referrerName} thinks you'll love SynQall</p>
+            <h1>You've Been Invited to LoadVoice!</h1>
+            <p>${referrerName} thinks you'll love LoadVoice</p>
           </div>
 
           <div class="content">
@@ -56,7 +56,7 @@ Sign up using my referral link to get started with 30 free minutes!`;
                 ${personalMessage.replace(/\n/g, '<br>')}
               </div>
             ` : `
-              <p><strong>${referrerName}</strong> has invited you to try SynQall!</p>
+              <p><strong>${referrerName}</strong> has invited you to try LoadVoice!</p>
               <p>${defaultMessage.replace(/\n/g, '<br>')}</p>
             `}
 
@@ -97,14 +97,14 @@ Sign up using my referral link to get started with 30 free minutes!`;
           </div>
 
           <div class="footer">
-            <p>This invitation was sent by ${referrerName} via SynQall</p>
+            <p>This invitation was sent by ${referrerName} via LoadVoice</p>
             <p>
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}" style="color: #667eea;">Visit SynQall</a> |
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}" style="color: #667eea;">Visit LoadVoice</a> |
               <a href="${process.env.NEXT_PUBLIC_APP_URL}/privacy" style="color: #667eea;">Privacy Policy</a> |
               <a href="${process.env.NEXT_PUBLIC_APP_URL}/terms" style="color: #667eea;">Terms of Service</a>
             </p>
             <p style="font-size: 12px; color: #9ca3af;">
-              © ${new Date().getFullYear()} SynQall. All rights reserved.
+              © ${new Date().getFullYear()} LoadVoice. All rights reserved.
             </p>
           </div>
         </div>
@@ -113,9 +113,9 @@ Sign up using my referral link to get started with 30 free minutes!`;
   `;
 
   const textContent = `
-You've Been Invited to SynQall!
+You've Been Invited to LoadVoice!
 
-${referrerName} thinks you'll love SynQall.
+${referrerName} thinks you'll love LoadVoice.
 
 ${personalMessage || defaultMessage}
 
@@ -134,7 +134,7 @@ How It Works:
 3. Start uploading and transcribing calls immediately
 4. Upgrade anytime to unlock more features
 
-This invitation was sent by ${referrerName} via SynQall
+This invitation was sent by ${referrerName} via LoadVoice
   `.trim();
 
   try {

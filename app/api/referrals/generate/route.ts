@@ -122,15 +122,15 @@ export async function GET(req: NextRequest) {
       tiers: tiers || [],
       shareLinks: {
         twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          `Join me on SynQall and get 30 free minutes when you sign up!`
+          `Join me on LoadVoice and get 30 free minutes when you sign up!`
         )}&url=${encodeURIComponent(referralLink)}`,
         linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
           referralLink
         )}`,
         email: `mailto:?subject=${encodeURIComponent(
-          'Join me on SynQall'
+          'Join me on LoadVoice'
         )}&body=${encodeURIComponent(
-          `I've been using SynQall for call recording and transcription. Join using my referral link and get 30 free minutes when you sign up!\n\n${referralLink}`
+          `I've been using LoadVoice for call recording and transcription. Join using my referral link and get 30 free minutes when you sign up!\n\n${referralLink}`
         )}`,
       },
     });
@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, productType = 'synqall' } = body;
+    const { email, productType = 'loadvoice' } = body;
 
     if (!email) {
       return NextResponse.json(

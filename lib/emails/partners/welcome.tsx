@@ -40,15 +40,15 @@ export function PartnerWelcomeEmail({
   return (
     <Html>
       <Head />
-      <Preview>Welcome to the SynQall Partner Program - Start earning 25-30% commissions</Preview>
+      <Preview>Welcome to the Loadvoice Partner Program - Start earning 25-30% commissions</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>🎉 Welcome to the SynQall Partner Program!</Heading>
+          <Heading style={h1}>🎉 Welcome to the Loadvoice Partner Program!</Heading>
 
           <Text style={text}>Hey {partnerName},</Text>
 
           <Text style={text}>
-            Great news - you've been approved as a SynQall partner! You're now part of an exclusive
+            Great news - you've been approved as a Loadvoice partner! You're now part of an exclusive
             group helping sales teams save 15-20 hours per week on CRM data entry.
           </Text>
 
@@ -149,8 +149,8 @@ export function PartnerWelcomeEmail({
           <Text style={text}>
             <strong>Need Help?</strong><br />
             I'm Tommy, your partner manager. Have questions? Just reply to this email or reach out at{' '}
-            <Link href="mailto:partners@synqall.com" style={link}>
-              partners@synqall.com
+            <Link href="mailto:partners@loadvoice.com" style={link}>
+              partners@loadvoice.com
             </Link>
           </Text>
 
@@ -168,19 +168,19 @@ export function PartnerWelcomeEmail({
             Best regards,<br />
             Tommy Adeliyi<br />
             Partner Success Manager<br />
-            SynQall
+            Loadvoice
           </Text>
 
           <Hr style={hr} />
 
           <Text style={footerSmall}>
-            SynQall Partner Program • Earn 25-30% Recurring Commissions<br />
-            <Link href="https://synqall.com/partners" style={link}>
-              synqall.com/partners
+            Loadvoice Partner Program • Earn 25-30% Recurring Commissions<br />
+            <Link href="https://loadvoice.com/partners" style={link}>
+              loadvoice.com/partners
             </Link>{' '}
             •{' '}
-            <Link href="mailto:partners@synqall.com" style={link}>
-              partners@synqall.com
+            <Link href="mailto:partners@loadvoice.com" style={link}>
+              partners@loadvoice.com
             </Link>
           </Text>
         </Container>

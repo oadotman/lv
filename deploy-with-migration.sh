@@ -10,8 +10,8 @@ set -e  # Exit on any error
 echo "🚀 Starting deployment with database migration..."
 
 # Configuration
-DEPLOY_DIR="/var/www/synqall"
-APP_NAME="synqall"
+DEPLOY_DIR="/var/www/loadvoice"
+APP_NAME="loadvoice"
 MIGRATION_FILE="database/migrations/004_fix_transcripts_schema.sql"
 
 # Colors for output
@@ -145,12 +145,12 @@ echo ""
 echo -e "${GREEN}═══════════════════════════════════════${NC}"
 echo -e "${GREEN}🎉 Deployment successful!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════${NC}"
-echo -e "${GREEN}🌐 Application: https://synqall.com${NC}"
+echo -e "${GREEN}🌐 Application: https://loadvoice.com${NC}"
 echo -e "${GREEN}✅ Database migration: Applied${NC}"
 echo -e "${GREEN}✅ HTTP parser fix: Deployed${NC}"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo -e "1. Test call upload: Upload a test call"
 echo -e "2. Monitor progress: Should reach 100% completion"
-echo -e "3. Watch logs: pm2 logs synqall --lines 100"
+echo -e "3. Watch logs: pm2 logs loadvoice --lines 100"
 echo ""

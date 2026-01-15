@@ -117,7 +117,7 @@ export default function ReferralsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -136,7 +136,7 @@ export default function ReferralsPage() {
         </div>
         <Button
           onClick={() => setShowInviteModal(true)}
-          className="bg-violet-600 hover:bg-violet-700"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           <Mail className="w-4 h-4 mr-2" />
           Invite Friends
@@ -145,11 +145,11 @@ export default function ReferralsPage() {
 
       {/* Current Tier & Progress */}
       {stats && (
-        <Card className="p-6 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20 border-violet-200 dark:border-violet-800">
+        <Card className="p-6 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/20 dark:to-sky-950/20 border-blue-200 dark:border-blue-800">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 rounded-full bg-violet-600 text-white">
+                <div className="p-3 rounded-full bg-blue-600 text-white">
                   <Award className="w-6 h-6" />
                 </div>
                 <div>
@@ -190,7 +190,7 @@ export default function ReferralsPage() {
               <div className="space-y-1">
                 {stats.availableMinutes > 0 && (
                   <div className="flex items-center justify-end gap-2">
-                    <Clock className="w-4 h-4 text-violet-600" />
+                    <Clock className="w-4 h-4 text-blue-600" />
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {stats.availableMinutes} minutes
                     </span>
@@ -218,7 +218,7 @@ export default function ReferralsPage() {
             onClick={() => setShowInviteModal(true)}
             variant="default"
             size="sm"
-            className="bg-violet-600 hover:bg-violet-700"
+            className="bg-blue-600 hover:bg-blue-700"
           >
             <Mail className="w-4 h-4 mr-2" />
             Send Invitations
@@ -325,7 +325,7 @@ export default function ReferralsPage() {
                   {stats.totalRewarded}
                 </p>
               </div>
-              <Gift className="w-8 h-8 text-violet-400" />
+              <Gift className="w-8 h-8 text-blue-400" />
             </div>
           </Card>
         </div>
@@ -353,7 +353,7 @@ export default function ReferralsPage() {
                     key={tier.tier_level}
                     className={`p-4 rounded-lg border-2 transition-colors ${
                       isCurrentTier
-                        ? "border-violet-500 bg-violet-50 dark:bg-violet-950/20"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
                         : isAchieved
                         ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20"
                         : "border-gray-200 dark:border-gray-700"
@@ -398,7 +398,7 @@ export default function ReferralsPage() {
                         <div className="space-y-1">
                           {tier.reward_minutes > 0 && (
                             <div className="flex items-center justify-end gap-2">
-                              <Clock className="w-4 h-4 text-violet-600" />
+                              <Clock className="w-4 h-4 text-blue-600" />
                               <span className="font-semibold">
                                 {tier.reward_minutes} mins
                               </span>
@@ -427,7 +427,7 @@ export default function ReferralsPage() {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 font-semibold">
                     1
                   </div>
                 </div>
@@ -443,7 +443,7 @@ export default function ReferralsPage() {
 
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 font-semibold">
                     2
                   </div>
                 </div>
@@ -459,7 +459,7 @@ export default function ReferralsPage() {
 
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 font-semibold">
                     3
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export default function ReferralsPage() {
 
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 font-semibold">
                     4
                   </div>
                 </div>

@@ -53,7 +53,9 @@ export async function ensureUserOrganization(userId: string) {
       slug: `${orgName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now()}`,
       plan_type: 'free',
       max_members: 1,
+      max_minutes: 60,
       max_minutes_monthly: 60,
+      usage_minutes_limit: 60,
       used_minutes: 0,
       created_by: userId
     })

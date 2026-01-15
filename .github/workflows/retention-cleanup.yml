@@ -1,0 +1,26 @@
+name: Retention Cleanup
+
+on:
+  schedule:
+    # Runs daily at 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run Retention Cleanup
+        run: |
+          curl -X POST https://your-domain.com/api/cron/retention-cleanup \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail \
+            --max-time 300
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "Retention cleanup failed. Check logs for details."
+          # Add notification logic here (Slack, Discord, email, etc.)

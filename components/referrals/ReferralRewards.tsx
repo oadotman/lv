@@ -127,7 +127,7 @@ export function ReferralRewards() {
     return (
       <Card className="p-8">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       </Card>
     );
@@ -137,7 +137,7 @@ export function ReferralRewards() {
     <div className="space-y-6">
       {/* Summary Cards */}
       {summary && summary.totalAvailableMinutes + summary.totalAvailableCredits > 0 && (
-        <Card className="p-6 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20 border-violet-200 dark:border-violet-800">
+        <Card className="p-6 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/20 dark:to-sky-950/20 border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -146,7 +146,7 @@ export function ReferralRewards() {
               <div className="flex gap-6">
                 {summary.totalAvailableMinutes > 0 && (
                   <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-violet-600" />
+                    <Clock className="w-5 h-5 text-blue-600" />
                     <div>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {summary.totalAvailableMinutes}
@@ -175,7 +175,7 @@ export function ReferralRewards() {
             <Button
               onClick={() => claimReward()}
               disabled={claiming !== null}
-              className="bg-violet-600 hover:bg-violet-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               {claiming === "all" ? (
                 <div className="flex items-center gap-2">
@@ -202,8 +202,8 @@ export function ReferralRewards() {
               <Card key={reward.id} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-full bg-violet-100 dark:bg-violet-900/50">
-                      <Gift className="w-5 h-5 text-violet-600" />
+                    <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50">
+                      <Gift className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -250,7 +250,7 @@ export function ReferralRewards() {
                     disabled={claiming !== null}
                   >
                     {claiming === reward.id ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-600"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                     ) : (
                       "Claim"
                     )}

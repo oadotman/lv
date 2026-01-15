@@ -1,0 +1,23 @@
+
+> loadvoice@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.20
+  - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./lib/monitoring/alert-service.ts:121:30
+Type error: Argument of type '{ color: string; title: string; text: string; }' is not assignable to parameter of type '{ color: string; title: string; text: string; fields: { title: string; value: string; short: boolean; }[]; footer: string; ts: number; }'.
+  Type '{ color: string; title: string; text: string; }' is missing the following properties from type '{ color: string; title: string; text: string; fields: { title: string; value: string; short: boolean; }[]; footer: string; ts: number; }': fields, footer, ts
+
+[0m [90m 119 |[39m   [90m// Add error details if present[39m[0m
+[0m [90m 120 |[39m   [36mif[39m (config[33m.[39merrorDetails) {[0m
+[0m[31m[1m>[22m[39m[90m 121 |[39m     payload[33m.[39mattachments[33m.[39mpush({[0m
+[0m [90m     |[39m                              [31m[1m^[22m[39m[0m
+[0m [90m 122 |[39m       color[33m:[39m [32m'#808080'[39m[33m,[39m[0m
+[0m [90m 123 |[39m       title[33m:[39m [32m'Error Details'[39m[33m,[39m[0m
+[0m [90m 124 |[39m       text[33m:[39m [32m'```'[39m [33m+[39m [33mJSON[39m[33m.[39mstringify(config[33m.[39merrorDetails[33m,[39m [36mnull[39m[33m,[39m [35m2[39m)[33m.[39msubstring([35m0[39m[33m,[39m [35m500[39m) [33m+[39m [32m'```'[39m[33m,[39m[0m

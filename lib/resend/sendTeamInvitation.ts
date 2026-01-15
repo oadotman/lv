@@ -45,7 +45,7 @@ export async function sendTeamInvitation(params: SendInvitationParams): Promise<
   try {
     const data = await sendEmail({
       to: params.email,
-      subject: `You're invited to join ${params.organizationName} on SynQall`,
+      subject: `You're invited to join ${params.organizationName} on LoadVoice`,
       html,
       text,
     });

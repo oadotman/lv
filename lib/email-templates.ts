@@ -315,7 +315,7 @@ export function generateSubjectLine(
   subject = subject.replace('{mainTopic}', callData.mainTopic || 'our discussion');
   subject = subject.replace('{mainPainPoint}', callData.mainPainPoint || 'your needs');
   subject = subject.replace('{productName}', callData.productName || 'our solution');
-  subject = subject.replace('{ourCompany}', 'SynQall');
+  subject = subject.replace('{ourCompany}', 'LoadVoice');
 
   return subject;
 }

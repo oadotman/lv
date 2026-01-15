@@ -74,7 +74,7 @@ export default function Error({ error, reset }: ErrorProps) {
           <p className="text-sm text-gray-500">
             If this problem persists, please contact{' '}
             <a
-              href="mailto:support@synqall.com"
+              href="mailto:support@loadvoice.com"
               className="text-blue-600 hover:underline"
             >
               support

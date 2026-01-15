@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    console.log('🔵 Signup API: Request body received:', JSON.stringify(body, null, 2));
     console.log('🔵 Signup API: Request body parsed', {
       email: body.email,
       fullName: body.fullName,
@@ -63,23 +64,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Sanitize inputs
-    const cleanEmail = sanitizeEmail(email);
+    // Sanitize inputs with error handling
+    let cleanEmail: string;
+    try {
+      cleanEmail = sanitizeEmail(email);
+    } catch (emailError: any) {
+      console.log('🔴 Signup API: Email validation failed:', emailError.message);
+      return NextResponse.json(
+        { error: emailError.message || 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
     const cleanFullName = sanitizeInput(fullName);
+
+    // Validate that fullName is not empty after sanitization
+    if (!cleanFullName || cleanFullName.length < 2) {
+      return NextResponse.json(
+        { error: 'Please enter a valid full name (at least 2 characters)' },
+        { status: 400 }
+      );
+    }
+
     const cleanOrgName = organizationName
       ? sanitizeInput(organizationName)
       : `${cleanFullName}'s Organization`;
 
     // Validate password strength
-    if (password.length < 6) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
+        { error: 'Password must be at least 8 characters' },
         { status: 400 }
       );
     }
 
     // Step 1: Create user with Supabase Auth
     console.log('🔵 Signup API: Creating user in Supabase Auth');
+    console.log('🔵 Signup API: User data:', {
+      email: cleanEmail,
+      fullName: cleanFullName,
+      hasPassword: !!password,
+      passwordLength: password?.length
+    });
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: cleanEmail,
       password: password,
@@ -90,7 +117,37 @@ export async function POST(req: NextRequest) {
     });
 
     if (authError) {
-      console.error('🔴 Signup API: Auth error:', authError);
+      console.error('🔴 Signup API: Auth error details:', {
+        message: authError.message,
+        status: authError.status,
+        code: authError.code,
+        name: authError.name,
+        fullError: JSON.stringify(authError, null, 2)
+      });
+
+      // Check for specific error types
+      if (authError.message?.includes('already registered') || authError.message?.includes('already exists')) {
+        return NextResponse.json(
+          { error: 'An account with this email already exists. Please sign in or use a different email.' },
+          { status: 400 }
+        );
+      }
+
+      if (authError.message?.includes('password')) {
+        return NextResponse.json(
+          { error: 'Password issue: ' + authError.message },
+          { status: 400 }
+        );
+      }
+
+      // Generic database error
+      if (authError.message?.includes('Database')) {
+        return NextResponse.json(
+          { error: 'Database error creating new user' },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         { error: authError.message || 'Failed to create user account' },
         { status: 400 }
@@ -130,7 +187,7 @@ export async function POST(req: NextRequest) {
             referred_user_id: userId,
             status: 'signed_up',
             signup_at: new Date().toISOString(),
-            product_type: 'synqall',
+            product_type: 'loadvoice',
           }, {
             onConflict: 'referred_email,product_type'
           })
@@ -249,7 +306,7 @@ export async function POST(req: NextRequest) {
         slug: orgSlug,
         plan_type: 'free',
         max_members: 1,
-        max_minutes_monthly: 30,
+        max_minutes_monthly: 60, // Free tier gets 60 minutes
         billing_email: cleanEmail,
         subscription_status: 'active'
       };

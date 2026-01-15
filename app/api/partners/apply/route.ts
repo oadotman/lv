@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       crms_used: body.crms_used || [],
       how_heard: body.how_heard?.trim() || null,
       why_partner: body.why_partner.trim(),
-      has_used_synqall: body.has_used_synqall === 'yes',
+      has_used_loadvoice: body.has_used_loadvoice === 'yes',
       terms_accepted: true,
       status: 'pending',
       submitted_at: new Date().toISOString(),

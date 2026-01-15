@@ -17,6 +17,11 @@ import {
   Users,
   Sparkles,
   Gift,
+  Package,
+  Truck,
+  Building,
+  Building2,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -31,10 +36,15 @@ import { useAuth } from "@/lib/AuthContext";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: Upload, label: "New Extraction", href: "/calls/new", highlight: true },
+  { icon: Package, label: "Loads", href: "/loads" },
+  { icon: Truck, label: "Carriers", href: "/carriers" },
+  { icon: Building2, label: "Shippers", href: "/shippers" },
   { icon: Phone, label: "Calls", href: "/calls" },
-  { icon: FileText, label: "Templates", href: "/templates" },
-  { icon: BarChart3, label: "Analytics", href: "/analytics" },
+  { icon: FileText, label: "Rate Cons", href: "/rate-confirmations" },
+  { icon: BarChart3, label: "Reports", href: "/reports" },
   { icon: Gift, label: "Referrals", href: "/referrals" },
+  { icon: Building, label: "Company", href: "/settings/company" },
   { icon: Users, label: "Team", href: "/settings/team" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
@@ -62,7 +72,7 @@ export function Sidebar() {
           <div className={styles.logoIcon}>
             <Phone className="w-5 h-5 text-white" />
           </div>
-          <span className={styles.logoText}>SynQall</span>
+          <span className={styles.logoText}>LoadVoice</span>
         </Link>
       </div>
 
@@ -103,7 +113,7 @@ export function Sidebar() {
             onClick={() => setIsMobileOpen(false)}
             className={cn(
               styles.bottomLink,
-              "bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 mb-2"
+              "bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 mb-2"
             )}
             style={{ color: 'white' }}
           >

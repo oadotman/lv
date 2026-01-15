@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, requireAuth } from '@/lib/supabase/server';
-import { calculateUsageAndOverage } from '@/lib/overage';
+import { getUsageStatus } from '@/lib/simple-usage';
 import { uploadRateLimiter } from '@/lib/rateLimit';
 import { generateSecureFileName } from '@/lib/security/file-validation';
 
@@ -73,40 +73,39 @@ export async function POST(req: NextRequest) {
     const organizationId = userOrg?.organization_id || null;
 
     if (organizationId) {
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('max_minutes_monthly, plan_type, current_period_start, current_period_end')
-        .eq('id', organizationId)
-        .single();
+      // Get simple usage status
+      const usage = await getUsageStatus(organizationId, supabase as any);
 
-      if (org) {
-        const now = new Date();
-        const periodStart = org.current_period_start || new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const periodEnd = org.current_period_end || new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-
-        const usage = await calculateUsageAndOverage(organizationId, periodStart, periodEnd);
-
-        if (!usage.canUpload) {
-          console.log('Usage limit exceeded (including overages):', {
-            organizationId,
-            minutesUsed: usage.minutesUsed,
-            baseLimit: usage.baseMinutes,
-          });
-
-          return NextResponse.json(
-            {
-              error: 'Monthly transcription limit exceeded',
-              details: {
-                used: Math.round(usage.minutesUsed),
-                baseLimit: usage.baseMinutes,
-                totalLimit: usage.totalAvailableMinutes,
-                planType: org.plan_type,
-              },
-            },
-            { status: 402 }
-          );
-        }
+      // With simple system, we allow uploads even in overage (pay as you go)
+      // Just log if they're in overage
+      if (usage.status === 'overage') {
+        console.log('User generating presigned URL in overage:', {
+          organizationId,
+          minutesUsed: usage.minutesUsed,
+          minutesLimit: usage.minutesLimit,
+          overageMinutes: usage.overageMinutes,
+          overageCharge: usage.overageCharge,
+        });
       }
+
+      // Optional: Enforce a hard limit if desired
+      /*
+      const MAX_OVERAGE_MINUTES = 1000;
+      if (usage.overageMinutes > MAX_OVERAGE_MINUTES) {
+        return NextResponse.json(
+          {
+            error: 'Maximum overage limit exceeded',
+            details: {
+              used: usage.minutesUsed,
+              limit: usage.minutesLimit,
+              overageMinutes: usage.overageMinutes,
+              message: 'Please upgrade your plan to continue.',
+            },
+          },
+          { status: 402 }
+        );
+      }
+      */
     }
 
     // Parse request body

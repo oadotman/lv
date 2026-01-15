@@ -1,339 +1,484 @@
-// =====================================================
-// CALL PROCESSING QUEUE WITH RETRY LOGIC
-// Manages call processing with retries and failure recovery
-// =====================================================
+/**
+ * Call Processing Pipeline - The Core AI Engine
+ * Handles transcription (AssemblyAI) and extraction (OpenAI)
+ * With retry logic and error handling
+ */
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { transcribeWithAssemblyAI } from '@/lib/assemblyai';
+import { extractFreightDataWithOpenAI } from '@/lib/openai';
+import { generateSignedRecordingUrl } from '@/lib/twilio/security';
 
-interface ProcessingJob {
+export interface ProcessCallOptions {
   callId: string;
-  attempt: number;
-  maxAttempts: number;
-  lastError?: string;
-  nextRetryAt?: Date;
+  organizationId: string;
+  recordingUrl?: string;
+  recordingSid?: string;
+  retryCount?: number;
 }
 
-// In-memory queue (in production, use Redis/Bull/BullMQ)
-const processingQueue = new Map<string, ProcessingJob>();
-const activeJobs = new Set<string>();
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 5000; // 5 seconds
 
-// Configuration
-const CONFIG = {
-  MAX_ATTEMPTS: 3,
-  MAX_CONCURRENT: 5, // Limit concurrent processing
-  RETRY_DELAYS: [
-    30 * 1000,    // 30 seconds after first failure
-    2 * 60 * 1000,  // 2 minutes after second failure
-    5 * 60 * 1000,  // 5 minutes after third failure
-  ],
-  PROCESS_TIMEOUT: 5 * 60 * 1000, // 5 minutes max per processing
-  CLEANUP_INTERVAL: 60 * 1000, // Check for stuck jobs every minute
-};
+/**
+ * Main entry point for call processing
+ * Called by status webhook when call completes
+ */
+export async function triggerCallProcessing(options: ProcessCallOptions) {
+  console.log('[Call Processor] Starting processing for call:', options.callId);
 
-// Singleton queue manager
-class CallProcessorQueue {
-  private static instance: CallProcessorQueue;
-  private cleanupTimer: NodeJS.Timeout | null = null;
+  const supabase = createAdminClient();
 
-  private constructor() {
-    // Start cleanup timer
-    this.startCleanupTimer();
-  }
-
-  public static getInstance(): CallProcessorQueue {
-    if (!CallProcessorQueue.instance) {
-      CallProcessorQueue.instance = new CallProcessorQueue();
-    }
-    return CallProcessorQueue.instance;
-  }
-
-  /**
-   * Add a call to the processing queue
-   */
-  public async enqueue(callId: string): Promise<void> {
-    console.log(`[Queue] Enqueueing call ${callId}`);
-
-    // Check if already in queue
-    if (processingQueue.has(callId) || activeJobs.has(callId)) {
-      console.log(`[Queue] Call ${callId} already in queue or processing`);
-      return;
-    }
-
-    // Create job
-    const job: ProcessingJob = {
-      callId,
-      attempt: 0,
-      maxAttempts: CONFIG.MAX_ATTEMPTS,
-    };
-
-    processingQueue.set(callId, job);
-
-    // Try to process immediately but don't block
-    setImmediate(() => {
-      this.processNext().catch(err => {
-        console.error('[Queue] Error processing next:', err);
-      });
-    });
-  }
-
-  /**
-   * Process next job in queue
-   */
-  private async processNext(): Promise<void> {
-    // Check concurrent limit
-    if (activeJobs.size >= CONFIG.MAX_CONCURRENT) {
-      console.log(`[Queue] Max concurrent jobs (${CONFIG.MAX_CONCURRENT}) reached`);
-      return;
-    }
-
-    // Find next job to process
-    const now = new Date();
-    let nextJob: ProcessingJob | null = null;
-
-    for (const [callId, job] of processingQueue.entries()) {
-      // Skip if retry time hasn't come
-      if (job.nextRetryAt && job.nextRetryAt > now) {
-        continue;
-      }
-
-      nextJob = job;
-      break;
-    }
-
-    if (!nextJob) {
-      return; // No jobs ready to process
-    }
-
-    // Move to active
-    processingQueue.delete(nextJob.callId);
-    activeJobs.add(nextJob.callId);
-
-    // Process the job
-    try {
-      await this.processCall(nextJob);
-    } finally {
-      activeJobs.delete(nextJob.callId);
-
-      // Try to process next job
-      setTimeout(() => this.processNext(), 100);
-    }
-  }
-
-  /**
-   * Process a single call with timeout
-   */
-  private async processCall(job: ProcessingJob): Promise<void> {
-    job.attempt++;
-    console.log(`[Queue] Processing call ${job.callId} (attempt ${job.attempt}/${job.maxAttempts})`);
-
-    const supabase = createAdminClient();
-
-    try {
-      // First, check if call is already completed
-      const { data: existingCall } = await supabase
-        .from('calls')
-        .select('status')
-        .eq('id', job.callId)
-        .single();
-
-      if (existingCall?.status === 'completed') {
-        console.log(`[Queue] Call ${job.callId} already completed, skipping`);
-        return;
-      }
-
-      // Update status to processing
-      await supabase
-        .from('calls')
-        .update({
-          status: 'processing',
-          processing_progress: 0,
-          processing_message: `Processing (attempt ${job.attempt})...`,
-          processing_attempts: job.attempt,
-        })
-        .eq('id', job.callId);
-
-      // Call the processing endpoint with timeout
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), CONFIG.PROCESS_TIMEOUT);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/calls/${job.callId}/process`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-internal-processing': 'true',
-          },
-          signal: controller.signal,
-        }
-      );
-
-      clearTimeout(timeout);
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Processing failed: ${response.status} - ${error}`);
-      }
-
-      console.log(`[Queue] ✅ Successfully processed call ${job.callId}`);
-
-    } catch (error: any) {
-      console.error(`[Queue] ❌ Error processing call ${job.callId}:`, error);
-
-      // Check if call was actually completed despite the error
-      const { data: checkCall } = await supabase
-        .from('calls')
-        .select('status')
-        .eq('id', job.callId)
-        .single();
-
-      if (checkCall?.status === 'completed') {
-        console.log(`[Queue] Call ${job.callId} completed despite error, not retrying`);
-        return;
-      }
-
-      // Check if should retry
-      if (job.attempt < job.maxAttempts) {
-        // Calculate next retry time with exponential backoff
-        const delayMs = CONFIG.RETRY_DELAYS[job.attempt - 1] || CONFIG.RETRY_DELAYS[CONFIG.RETRY_DELAYS.length - 1];
-        job.nextRetryAt = new Date(Date.now() + delayMs);
-        job.lastError = error.message;
-
-        console.log(`[Queue] Will retry call ${job.callId} at ${job.nextRetryAt.toISOString()}`);
-
-        // Put back in queue
-        processingQueue.set(job.callId, job);
-
-        // Update database with retry info
-        await supabase
-          .from('calls')
-          .update({
-            status: 'processing',
-            processing_message: `Retry scheduled (attempt ${job.attempt}/${job.maxAttempts})`,
-            processing_error: error.message,
-          })
-          .eq('id', job.callId);
-
-      } else {
-        // Max attempts reached, mark as failed
-        console.error(`[Queue] Call ${job.callId} failed after ${job.maxAttempts} attempts`);
-
-        await supabase
-          .from('calls')
-          .update({
-            status: 'failed',
-            processing_message: `Failed after ${job.maxAttempts} attempts`,
-            processing_error: error.message,
-            assemblyai_error: `Processing failed: ${error.message}`,
-          })
-          .eq('id', job.callId);
-
-        // Send notification
-        const { data: call } = await supabase
-          .from('calls')
-          .select('user_id, customer_name')
-          .eq('id', job.callId)
-          .single();
-
-        if (call) {
-          await supabase.from('notifications').insert({
-            user_id: call.user_id,
-            notification_type: 'call_failed',
-            title: 'Call processing failed',
-            message: `Processing failed for call with ${call.customer_name || 'customer'} after multiple attempts.`,
-            link: `/calls/${job.callId}`,
-          });
-        }
-      }
-    }
-  }
-
-  /**
-   * Start cleanup timer to recover stuck jobs
-   */
-  private startCleanupTimer(): void {
-    this.cleanupTimer = setInterval(async () => {
-      await this.recoverStuckJobs();
-    }, CONFIG.CLEANUP_INTERVAL);
-  }
-
-  /**
-   * Recover jobs that are stuck in processing
-   */
-  private async recoverStuckJobs(): Promise<void> {
-    const supabase = createAdminClient();
-
-    // Find calls stuck in processing for more than 10 minutes
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-
-    const { data: stuckCalls } = await supabase
+  try {
+    // Update call status to processing
+    await supabase
       .from('calls')
-      .select('id')
-      .eq('status', 'processing')
-      .lt('updated_at', tenMinutesAgo.toISOString())
-      .limit(10);
+      .update({
+        transcription_status: 'processing',
+        extraction_status: 'processing',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', options.callId);
 
-    if (stuckCalls && stuckCalls.length > 0) {
-      console.log(`[Queue] Found ${stuckCalls.length} stuck calls, recovering...`);
-
-      for (const call of stuckCalls) {
-        // Check if not already in queue
-        if (!processingQueue.has(call.id) && !activeJobs.has(call.id)) {
-          console.log(`[Queue] Recovering stuck call ${call.id}`);
-          await this.enqueue(call.id);
-        }
-      }
+    // Check organization's usage limits
+    const canProcess = await checkUsageLimits(options.organizationId);
+    if (!canProcess) {
+      throw new Error('Usage limits exceeded');
     }
 
-    // Process any pending jobs
-    await this.processNext();
-  }
+    // Step 1: Download and secure the recording
+    let secureRecordingUrl = options.recordingUrl;
+    if (options.recordingUrl && options.recordingSid) {
+      // Generate a signed URL for secure access
+      secureRecordingUrl = generateSignedRecordingUrl(options.recordingUrl, 120); // 2 hours
+    }
 
-  /**
-   * Get queue status
-   */
-  public getStatus(): {
-    queued: number;
-    active: number;
-    details: Array<{ callId: string; attempt: number; nextRetryAt?: Date }>;
-  } {
-    const details: Array<{ callId: string; attempt: number; nextRetryAt?: Date }> = [];
+    if (!secureRecordingUrl) {
+      throw new Error('No recording URL available');
+    }
 
-    for (const [callId, job] of processingQueue.entries()) {
-      details.push({
-        callId,
-        attempt: job.attempt,
-        nextRetryAt: job.nextRetryAt,
+    // Step 2: Transcribe with AssemblyAI
+    const transcription = await processTranscription(
+      options.callId,
+      secureRecordingUrl,
+      options.organizationId
+    );
+
+    if (!transcription) {
+      throw new Error('Transcription failed');
+    }
+
+    // Step 3: Extract freight data with OpenAI
+    const extractedData = await processExtraction(
+      options.callId,
+      transcription,
+      options.organizationId
+    );
+
+    // Step 4: Update call as completed
+    await supabase
+      .from('calls')
+      .update({
+        transcription_status: 'completed',
+        extraction_status: extractedData ? 'completed' : 'failed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', options.callId);
+
+    // Step 5: Send success notification
+    await sendNotification(options.organizationId, {
+      type: 'processing_complete',
+      title: 'Call Processing Complete',
+      message: 'Your call has been transcribed and analyzed successfully',
+      callId: options.callId
+    });
+
+    console.log('[Call Processor] Successfully processed call:', options.callId);
+    return { success: true, callId: options.callId };
+
+  } catch (error) {
+    console.error('[Call Processor] Error processing call:', error);
+
+    // Handle retries
+    const retryCount = options.retryCount || 0;
+    if (retryCount < MAX_RETRIES) {
+      console.log(`[Call Processor] Retrying (${retryCount + 1}/${MAX_RETRIES})...`);
+
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+
+      // Retry with incremented count
+      return triggerCallProcessing({
+        ...options,
+        retryCount: retryCount + 1
       });
     }
 
-    return {
-      queued: processingQueue.size,
-      active: activeJobs.size,
-      details,
-    };
-  }
+    // Max retries exceeded, mark as failed
+    await supabase
+      .from('calls')
+      .update({
+        transcription_status: 'failed',
+        extraction_status: 'failed',
+        updated_at: new Date().toISOString(),
+        metadata: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          failedAt: new Date().toISOString()
+        }
+      })
+      .eq('id', options.callId);
 
-  /**
-   * Clean up resources
-   */
-  public destroy(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-      this.cleanupTimer = null;
+    // Send failure notification
+    await sendNotification(options.organizationId, {
+      type: 'processing_failed',
+      title: 'Call Processing Failed',
+      message: 'We couldn\'t process your call. Please try uploading it manually.',
+      callId: options.callId
+    });
+
+    throw error;
+  }
+}
+
+/**
+ * Process transcription with AssemblyAI
+ */
+async function processTranscription(
+  callId: string,
+  recordingUrl: string,
+  organizationId: string
+): Promise<string | null> {
+  console.log('[Call Processor] Starting transcription for call:', callId);
+
+  const supabase = createAdminClient();
+
+  try {
+    // Call AssemblyAI
+    const result = await transcribeWithAssemblyAI(recordingUrl);
+
+    if (!result || !result.text) {
+      throw new Error('No transcription text received');
     }
+
+    // Save transcription to database
+    const { error } = await supabase
+      .from('call_transcriptions')
+      .insert({
+        call_id: callId,
+        transcription_text: result.text,
+        transcription_provider: 'assemblyai',
+        provider_transcript_id: result.id,
+        confidence_score: (result as any).confidence,
+        word_timings: (result as any).words,
+        speakers: (result as any).utterances,
+        processing_time_ms: (result as any).processingTime,
+        created_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('[Call Processor] Error saving transcription:', error);
+      throw error;
+    }
+
+    // Update usage
+    const words = result.text.split(' ').length;
+    const minutes = Math.ceil(words / 150); // Approximate speaking rate
+
+    // Get current usage
+    const { data: currentUsage } = await supabase
+      .from('usage_limits')
+      .select('current_transcription_minutes')
+      .eq('organization_id', organizationId)
+      .single();
+
+    await supabase
+      .from('usage_limits')
+      .update({
+        current_transcription_minutes: (currentUsage?.current_transcription_minutes || 0) + minutes
+      })
+      .eq('organization_id', organizationId);
+
+    console.log('[Call Processor] Transcription complete for call:', callId);
+    return result.text;
+
+  } catch (error) {
+    console.error('[Call Processor] Transcription error:', error);
+    return null;
   }
 }
 
-// Export singleton instance
-export const callProcessor = CallProcessorQueue.getInstance();
+/**
+ * Process extraction with OpenAI
+ */
+async function processExtraction(
+  callId: string,
+  transcription: string,
+  organizationId: string
+): Promise<any> {
+  console.log('[Call Processor] Starting extraction for call:', callId);
 
-// Export function to enqueue calls
-export async function enqueueCallProcessing(callId: string): Promise<void> {
-  return callProcessor.enqueue(callId);
+  const supabase = createAdminClient();
+
+  try {
+    // Call OpenAI for extraction
+    const extractedData: any = await extractFreightDataWithOpenAI(transcription, [], {});
+
+    if (!extractedData) {
+      throw new Error('No data extracted');
+    }
+
+    // Save extracted data to database
+    const { error } = await supabase
+      .from('extracted_freight_data')
+      .insert({
+        call_id: callId,
+        organization_id: organizationId,
+
+        // Load information
+        load_number: extractedData.loadNumber || extractedData.load_number,
+        pickup_location: extractedData.pickup?.location,
+        pickup_city: extractedData.pickup?.city,
+        pickup_state: extractedData.pickup?.state,
+        pickup_zip: extractedData.pickup?.zip,
+        pickup_date: extractedData.pickup?.date,
+        pickup_time: extractedData.pickup?.time,
+
+        delivery_location: extractedData.delivery?.location,
+        delivery_city: extractedData.delivery?.city,
+        delivery_state: extractedData.delivery?.state,
+        delivery_zip: extractedData.delivery?.zip,
+        delivery_date: extractedData.delivery?.date,
+        delivery_time: extractedData.delivery?.time,
+
+        // Commodity
+        commodity: extractedData.commodity,
+        weight_pounds: extractedData.weight,
+        pallet_count: extractedData.pallets,
+        equipment_type: extractedData.equipmentType,
+        special_requirements: extractedData.specialRequirements,
+
+        // Financial
+        rate_amount: extractedData.rate,
+        payment_terms: extractedData.paymentTerms,
+
+        // Carrier info
+        carrier_name: extractedData.carrier?.name,
+        carrier_mc_number: extractedData.carrier?.mcNumber,
+        carrier_contact_name: extractedData.carrier?.contactName,
+        carrier_phone: extractedData.carrier?.phone,
+
+        // Shipper info
+        shipper_name: extractedData.shipper?.name,
+        shipper_contact: extractedData.shipper?.contact,
+        shipper_phone: extractedData.shipper?.phone,
+
+        // Metadata
+        extraction_confidence: extractedData.confidence || 0.85,
+        extracted_by: 'openai',
+        extraction_model: 'gpt-4-turbo-preview',
+        extraction_timestamp: new Date().toISOString(),
+
+        created_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('[Call Processor] Error saving extraction:', error);
+      throw error;
+    }
+
+    // Update usage
+    // Get current extraction count first
+    const { data: currentUsage } = await supabase
+      .from('usage_limits')
+      .select('current_extractions')
+      .eq('organization_id', organizationId)
+      .single();
+
+    await supabase
+      .from('usage_limits')
+      .update({
+        current_extractions: (currentUsage?.current_extractions || 0) + 1
+      })
+      .eq('organization_id', organizationId);
+
+    // Auto-create load if confidence is high
+    if (extractedData.confidence >= 0.8 && extractedData.loadNumber) {
+      await createLoadFromExtraction(callId, organizationId, extractedData);
+    }
+
+    console.log('[Call Processor] Extraction complete for call:', callId);
+    return extractedData;
+
+  } catch (error) {
+    console.error('[Call Processor] Extraction error:', error);
+    return null;
+  }
 }
 
-// Export function to get queue status
-export function getQueueStatus() {
-  return callProcessor.getStatus();
+/**
+ * Check if organization has usage remaining
+ */
+async function checkUsageLimits(organizationId: string): Promise<boolean> {
+  const supabase = createAdminClient();
+
+  const { data: limits } = await supabase
+    .from('usage_limits')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .single();
+
+  if (!limits) {
+    // No limits set, create defaults
+    await supabase
+      .from('usage_limits')
+      .insert({
+        organization_id: organizationId,
+        monthly_call_minutes: 60,
+        monthly_transcription_minutes: 60,
+        monthly_extractions: 100,
+        reset_date: new Date().toISOString()
+      });
+    return true;
+  }
+
+  // Check if within limits
+  const withinLimits =
+    limits.current_call_minutes < limits.monthly_call_minutes &&
+    limits.current_transcription_minutes < limits.monthly_transcription_minutes &&
+    limits.current_extractions < limits.monthly_extractions;
+
+  // Check if overage is enabled
+  if (!withinLimits && limits.overage_enabled) {
+    console.log('[Call Processor] Organization using overage for:', organizationId);
+    return true;
+  }
+
+  return withinLimits;
+}
+
+/**
+ * Auto-create a load from high-confidence extraction
+ */
+async function createLoadFromExtraction(
+  callId: string,
+  organizationId: string,
+  extractedData: any
+) {
+  const supabase = createAdminClient();
+
+  try {
+    // Get the extraction record ID
+    const { data: extraction } = await supabase
+      .from('extracted_freight_data')
+      .select('id')
+      .eq('call_id', callId)
+      .single();
+
+    if (!extraction) return;
+
+    // Check if load already exists
+    const { data: existingLoad } = await supabase
+      .from('loads')
+      .select('id')
+      .eq('load_number', extractedData.loadNumber)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (existingLoad) {
+      console.log('[Call Processor] Load already exists:', extractedData.loadNumber);
+      return;
+    }
+
+    // Create new load
+    const { error } = await supabase
+      .from('loads')
+      .insert({
+        organization_id: organizationId,
+        extracted_data_id: extraction.id,
+        load_number: extractedData.loadNumber,
+        status: 'quoted',
+
+        pickup_location: extractedData.pickup?.location,
+        pickup_city: extractedData.pickup?.city,
+        pickup_state: extractedData.pickup?.state,
+        pickup_date: extractedData.pickup?.date,
+
+        delivery_location: extractedData.delivery?.location,
+        delivery_city: extractedData.delivery?.city,
+        delivery_state: extractedData.delivery?.state,
+        delivery_date: extractedData.delivery?.date,
+
+        commodity: extractedData.commodity,
+        weight_pounds: extractedData.weight,
+        rate_amount: extractedData.rate,
+
+        created_at: new Date().toISOString(),
+        metadata: {
+          auto_created: true,
+          source_call_id: callId
+        }
+      });
+
+    if (!error) {
+      console.log('[Call Processor] Auto-created load:', extractedData.loadNumber);
+    }
+  } catch (error) {
+    console.error('[Call Processor] Error auto-creating load:', error);
+    // Don't fail the process if load creation fails
+  }
+}
+
+/**
+ * Send notification to organization
+ */
+async function sendNotification(
+  organizationId: string,
+  notification: {
+    type: string;
+    title: string;
+    message: string;
+    callId: string;
+  }
+) {
+  const supabase = createAdminClient();
+
+  try {
+    await supabase.from('notifications').insert({
+      organization_id: organizationId,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      data: { callId: notification.callId },
+      created_at: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[Call Processor] Error sending notification:', error);
+  }
+}
+
+/**
+ * Wrapper function to enqueue call processing
+ * This is for backward compatibility with existing code
+ */
+export async function enqueueCallProcessing(callId: string): Promise<void> {
+  const supabase = createAdminClient();
+
+  // Get the call and organization info
+  const { data: call } = await supabase
+    .from('calls')
+    .select('*, organization_id')
+    .eq('id', callId)
+    .single();
+
+  if (!call) {
+    throw new Error(`Call not found: ${callId}`);
+  }
+
+  // Trigger the processing
+  await triggerCallProcessing({
+    callId: call.id,
+    organizationId: call.organization_id,
+    recordingUrl: call.recording_url,
+    recordingSid: call.recording_sid
+  });
 }

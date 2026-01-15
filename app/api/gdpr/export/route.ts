@@ -37,11 +37,11 @@ export async function POST(req: NextRequest) {
     if (format === 'csv') {
       content = exportToCSV(exportData);
       contentType = 'text/csv';
-      filename = `synqall-data-export-${new Date().toISOString().split('T')[0]}.csv`;
+      filename = `loadvoice-data-export-${new Date().toISOString().split('T')[0]}.csv`;
     } else {
       content = exportToJSON(exportData);
       contentType = 'application/json';
-      filename = `synqall-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      filename = `loadvoice-data-export-${new Date().toISOString().split('T')[0]}.json`;
     }
 
     // Log the export

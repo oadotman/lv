@@ -1,4 +1,4 @@
-# 🗄️ SynQall - Database Setup
+# 🗄️ LoadVoice - Database Setup
 
 **Clean slate approach** - Fresh start with properly designed schema.
 

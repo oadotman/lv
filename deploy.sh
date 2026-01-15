@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =====================================================
-# AUTOMATED DEPLOYMENT SCRIPT FOR SYNQALL
+# AUTOMATED DEPLOYMENT SCRIPT FOR LOADVOICE
 # Pulls latest code, installs dependencies, builds, and restarts
 # =====================================================
 
@@ -10,8 +10,8 @@ set -e  # Exit on any error
 echo "🚀 Starting deployment..."
 
 # Configuration
-DEPLOY_DIR="/var/www/synqall"
-APP_NAME="synqall"
+DEPLOY_DIR="/var/www/loadvoice"
+APP_NAME="loadvoice"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -82,4 +82,4 @@ pm2 status
 pm2 logs "$APP_NAME" --lines 20 --nostream
 
 echo -e "${GREEN}🎉 Deployment successful!${NC}"
-echo -e "${GREEN}🌐 Application should be running at https://synqall.com${NC}"
+echo -e "${GREEN}🌐 Application should be running at https://loadvoice.com${NC}"

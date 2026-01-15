@@ -1,3 +1,34 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Security - LoadVoice | Enterprise-Grade Data Protection',
+  description: 'LoadVoice Security: SOC 2 compliant, 256-bit encryption, FMCSA compliance. Learn how we protect your freight data with enterprise-grade security measures.',
+  keywords: [
+    'LoadVoice security',
+    'freight data protection',
+    'SOC 2 compliance',
+    'enterprise security',
+    'data encryption',
+    'FMCSA compliance'
+  ],
+  alternates: {
+    canonical: 'https://loadvoice.com/security'
+  },
+  openGraph: {
+    title: 'Security - LoadVoice Enterprise Protection',
+    description: 'Industry-leading security for freight brokers. SOC 2 compliant with 256-bit encryption.',
+    url: 'https://loadvoice.com/security',
+    siteName: 'LoadVoice',
+    locale: 'en_US',
+    type: 'website',
+  },
+  robots: {
+    index: false,  // Legal pages don't need to be indexed for SEO
+    follow: true,
+    noarchive: true,
+  }
+};
+
 export default function DataSecurityPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 py-12 space-y-8">
@@ -6,7 +37,7 @@ export default function DataSecurityPage() {
         <h1 className="text-4xl font-bold text-gray-900">Data Security</h1>
         <p className="text-gray-600">Last updated: January 21, 2025</p>
         <p className="text-sm text-gray-500">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
 
@@ -16,7 +47,7 @@ export default function DataSecurityPage() {
         <section className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
           <h2 className="text-2xl font-bold text-blue-900 mb-4">Our Security Commitment</h2>
           <p className="text-gray-800 leading-relaxed mb-3">
-            At SynQall, data security is our top priority. We understand that you trust us with sensitive sales call
+            At Loadvoice, data security is our top priority. We understand that you trust us with sensitive sales call
             recordings and customer information. This page details the comprehensive technical and organizational security
             measures we have implemented to protect your data.
           </p>
@@ -30,9 +61,9 @@ export default function DataSecurityPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Security Framework</h2>
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
               <div className="text-2xl mb-2">🔒</div>
-              <h3 className="text-lg font-semibold text-purple-900 mb-2">Encryption</h3>
+              <h3 className="text-lg font-semibold text-sky-900 mb-2">Encryption</h3>
               <p className="text-sm text-gray-700">
                 All data encrypted in transit (TLS 1.3) and at rest (AES-256)
               </p>
@@ -168,12 +199,12 @@ export default function DataSecurityPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Infrastructure Security</h2>
 
           <div className="space-y-4">
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h3 className="text-xl font-semibold text-purple-900 mb-3">Cloud Infrastructure</h3>
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <h3 className="text-xl font-semibold text-sky-900 mb-3">Cloud Infrastructure</h3>
               <p className="text-gray-800 leading-relaxed mb-3">
-                SynQall is hosted on enterprise-grade cloud infrastructure:
+                Loadvoice is hosted on enterprise-grade cloud infrastructure:
               </p>
-              <div className="bg-white rounded border border-purple-200 p-3">
+              <div className="bg-white rounded border border-sky-200 p-3">
                 <p className="text-sm text-gray-800 mb-2"><strong>Hosting Providers:</strong></p>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li>
@@ -297,8 +328,8 @@ export default function DataSecurityPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Security Audits & Compliance</h2>
 
           <div className="space-y-4">
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h3 className="text-xl font-semibold text-purple-900 mb-3">Regular Security Audits</h3>
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <h3 className="text-xl font-semibold text-sky-900 mb-3">Regular Security Audits</h3>
               <ul className="space-y-2 text-gray-800 text-sm">
                 <li><strong>Penetration Testing:</strong> Annual third-party penetration tests</li>
                 <li><strong>Vulnerability Scanning:</strong> Weekly automated vulnerability scans</li>
@@ -442,7 +473,7 @@ export default function DataSecurityPage() {
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">How to Report</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm ml-4 mb-3">
-              <li>Email: <a href="mailto:security@synqall.com" className="text-blue-600 underline">security@synqall.com</a></li>
+              <li>Email: <a href="mailto:security@loadvoice.com" className="text-blue-600 underline">security@loadvoice.com</a></li>
               <li>Include detailed steps to reproduce the vulnerability</li>
               <li>Do NOT publicly disclose the vulnerability until we've addressed it</li>
               <li>Allow us 90 days to fix the issue before public disclosure</li>
@@ -466,9 +497,9 @@ export default function DataSecurityPage() {
           <div className="bg-white border border-blue-200 rounded-lg p-4">
             <p className="text-gray-800 font-semibold">Nikola Innovations Limited</p>
             <p className="text-gray-700">Security Team</p>
-            <p className="text-gray-700">Email: <a href="mailto:security@synqall.com" className="text-blue-600 underline">security@synqall.com</a></p>
-            <p className="text-gray-700">General Support: <a href="mailto:support@synqall.com" className="text-blue-600 underline">support@synqall.com</a></p>
-            <p className="text-gray-700">Website: <a href="https://synqall.com" className="text-blue-600 underline">https://synqall.com</a></p>
+            <p className="text-gray-700">Email: <a href="mailto:security@loadvoice.com" className="text-blue-600 underline">security@loadvoice.com</a></p>
+            <p className="text-gray-700">General Support: <a href="mailto:support@loadvoice.com" className="text-blue-600 underline">support@loadvoice.com</a></p>
+            <p className="text-gray-700">Website: <a href="https://loadvoice.com" className="text-blue-600 underline">https://loadvoice.com</a></p>
           </div>
         </section>
 
@@ -495,7 +526,7 @@ export default function DataSecurityPage() {
       {/* Footer */}
       <div className="border-t pt-6 mt-12">
         <p className="text-sm text-gray-500 text-center">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
     </div>

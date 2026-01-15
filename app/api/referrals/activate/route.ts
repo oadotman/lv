@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
           )
         `)
         .eq('referred_email', userEmail.toLowerCase())
-        .eq('product_type', 'synqall')
+        .eq('product_type', 'loadvoice')
         .in('status', ['signed_up', 'active'])
         .order('created_at', { ascending: false })
         .limit(1)

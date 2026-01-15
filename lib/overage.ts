@@ -1,272 +1,180 @@
-// =====================================================
-// OVERAGE MANAGEMENT SYSTEM
-// Handles minute overages at $0.02/minute
-// =====================================================
+import { createClient } from '@/lib/supabase/server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+export interface OverageStatus {
+  isOverLimit: boolean;
+  usage: number;
+  limit: number;
+  percentage: number;
+  overage: number;
+}
 
-/**
- * Overage Pricing Configuration
- *
- * When organizations exceed their monthly minute allocation:
- * - Cost: $0.02 per minute ($1.20 per hour)
- * - Billing: Charged at end of billing cycle via Paddle adjustment
- * - OR: Pre-purchase overage packs (recommended)
- *
- * Overage Packs (Pre-purchase options):
- * - 500 minutes: $10 (saves $0)
- * - 1,000 minutes: $18 (saves $2, 10% off)
- * - 2,500 minutes: $40 (saves $10, 20% off)
- * - 5,000 minutes: $75 (saves $25, 25% off)
- */
+export async function checkOverageStatus(organizationId: string): Promise<OverageStatus> {
+  const supabase = createClient();
 
-export const OVERAGE_CONFIG = {
-  pricePerMinute: 0.02, // $0.02 per minute
-  warningThresholds: [0.8, 0.9, 1.0], // Warn at 80%, 90%, 100%
-
-  // Pre-purchase overage packs
-  // IMPORTANT: Replace these placeholder IDs with actual Paddle Price IDs
-  // Create these products in your Paddle dashboard at: https://vendors.paddle.com/
-  packs: {
-    small: {
-      minutes: 500,
-      price: 10,
-      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_500 || 'pri_overage_500_REPLACE_ME'
-    },
-    medium: {
-      minutes: 1000,
-      price: 18,
-      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_1000 || 'pri_overage_1000_REPLACE_ME'
-    },
-    large: {
-      minutes: 2500,
-      price: 40,
-      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_2500 || 'pri_overage_2500_REPLACE_ME'
-    },
-    xlarge: {
-      minutes: 5000,
-      price: 75,
-      paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_OVERAGE_5000 || 'pri_overage_5000_REPLACE_ME'
-    },
-  },
-};
-
-/**
- * Calculate current usage and overage for an organization
- */
-export async function calculateUsageAndOverage(organizationId: string, periodStart: string, periodEnd: string) {
-  const supabase = createAdminClient();
-
-  // Get organization plan limits
-  const { data: org, error: orgError } = await supabase
-    .from('organizations')
-    .select('max_minutes_monthly, overage_minutes_purchased')
-    .eq('id', organizationId)
+  // Get the organization's current usage
+  const { data: usage } = await supabase
+    .from('usage_tracking')
+    .select('*')
+    .eq('organization_id', organizationId)
     .single();
 
-  if (orgError || !org) {
-    throw new Error('Organization not found');
-  }
-
-  // Calculate minutes used this period from usage_metrics table
-  // This is the source of truth for billing as it tracks actual transcribed minutes
-  const { data: usageMetrics } = await supabase
-    .from('usage_metrics')
-    .select('metric_value')
-    .eq('organization_id', organizationId)
-    .eq('metric_type', 'minutes_transcribed')
-    .gte('created_at', periodStart)
-    .lte('created_at', periodEnd);
-
-  const minutesUsed = (usageMetrics || []).reduce((sum, metric) => sum + (metric.metric_value || 0), 0);
-
-  // Calculate available minutes (base plan + purchased overages)
-  const baseMinutes = org.max_minutes_monthly;
-  const purchasedOverageMinutes = org.overage_minutes_purchased || 0;
-  const totalAvailableMinutes = baseMinutes + purchasedOverageMinutes;
-
-  // Calculate overage
-  const overageMinutes = Math.max(0, minutesUsed - totalAvailableMinutes);
-  const overageCost = overageMinutes * OVERAGE_CONFIG.pricePerMinute;
+  const currentUsage = usage?.call_minutes_used || 0;
+  const limit = usage?.call_minutes_limit || 1000;
 
   return {
-    minutesUsed,
-    baseMinutes,
-    purchasedOverageMinutes,
-    totalAvailableMinutes,
-    overageMinutes,
-    overageCost,
-    percentUsed: (minutesUsed / totalAvailableMinutes) * 100,
-    hasOverage: overageMinutes > 0,
-    canUpload: minutesUsed < totalAvailableMinutes, // Can still upload if within purchased overages
+    isOverLimit: currentUsage > limit,
+    usage: currentUsage,
+    limit,
+    percentage: (currentUsage / limit) * 100,
+    overage: Math.max(0, currentUsage - limit)
   };
 }
 
-/**
- * Check if organization should receive usage warning
- */
-export async function checkUsageWarning(organizationId: string): Promise<{
-  shouldWarn: boolean;
-  threshold: number;
-  usage: any;
-}> {
-  const supabase = createAdminClient();
+export async function processOveragePayment(
+  organizationId: string,
+  paymentIntentId: string,
+  amount: number
+): Promise<boolean> {
+  const supabase = createClient();
 
-  // Get current billing period
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('current_period_start, current_period_end')
-    .eq('id', organizationId)
-    .single();
+  // Record the overage payment
+  const { error } = await supabase
+    .from('overage_payments')
+    .insert({
+      organization_id: organizationId,
+      payment_intent_id: paymentIntentId,
+      amount,
+      status: 'completed',
+      created_at: new Date().toISOString()
+    });
 
-  if (!org || !org.current_period_start) {
-    return { shouldWarn: false, threshold: 0, usage: null };
+  if (error) {
+    console.error('Error recording overage payment:', error);
+    return false;
   }
 
-  const usage = await calculateUsageAndOverage(
-    organizationId,
-    org.current_period_start,
-    org.current_period_end || new Date().toISOString()
-  );
+  // Reset or increase the limit
+  await supabase
+    .from('usage_tracking')
+    .update({
+      call_minutes_limit: amount * 10, // Convert payment to minutes
+      updated_at: new Date().toISOString()
+    })
+    .eq('organization_id', organizationId);
 
-  // Check if usage crosses any warning threshold
-  const percentUsed = usage.percentUsed / 100;
-  let shouldWarn = false;
-  let crossedThreshold = 0;
-
-  for (const threshold of OVERAGE_CONFIG.warningThresholds) {
-    if (percentUsed >= threshold) {
-      shouldWarn = true;
-      crossedThreshold = threshold;
-    }
-  }
-
-  return { shouldWarn, threshold: crossedThreshold, usage };
+  return true;
 }
 
+export async function getOveragePrice(minutes: number): Promise<number> {
+  // $0.10 per minute overage
+  return minutes * 0.10;
+}
 /**
- * Purchase overage pack
- * This will be called after successful Paddle payment
+ * Credit overage pack purchase to organization
+ * This is called when a user purchases additional overage minutes
  */
 export async function creditOveragePack(
   organizationId: string,
-  packSize: 'small' | 'medium' | 'large' | 'xlarge',
+  packMinutes: number,
   transactionId: string
-) {
-  const supabase = createAdminClient();
-  const pack = OVERAGE_CONFIG.packs[packSize];
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createClient();
 
-  // Add minutes to organization's overage balance
-  const { data: org, error: fetchError } = await supabase
-    .from('organizations')
-    .select('overage_minutes_purchased')
-    .eq('id', organizationId)
-    .single();
+    // Update organization's overage credits
+    const { data: org, error: fetchError } = await supabase
+      .from('organizations')
+      .select('overage_credits')
+      .eq('id', organizationId)
+      .single();
 
-  if (fetchError) {
-    throw new Error('Failed to fetch organization');
-  }
-
-  const currentOverageMinutes = org.overage_minutes_purchased || 0;
-  const newOverageMinutes = currentOverageMinutes + pack.minutes;
-
-  const { error: updateError } = await supabase
-    .from('organizations')
-    .update({
-      overage_minutes_purchased: newOverageMinutes,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', organizationId);
-
-  if (updateError) {
-    throw new Error('Failed to credit overage pack');
-  }
-
-  // Log the purchase in usage_metrics
-  await supabase.from('usage_metrics').insert({
-    organization_id: organizationId,
-    metric_type: 'overage_pack_purchased',
-    metric_value: pack.minutes,
-    cost_cents: pack.price * 100,
-    metadata: {
-      pack_size: packSize,
-      paddle_transaction_id: transactionId,
-      minutes_added: pack.minutes,
-    },
-  });
-
-  // Create notification
-  const { data: owners } = await supabase
-    .from('user_organizations')
-    .select('user_id')
-    .eq('organization_id', organizationId)
-    .in('role', ['owner', 'admin']);
-
-  if (owners) {
-    for (const owner of owners) {
-      await supabase.from('notifications').insert({
-        user_id: owner.user_id,
-        notification_type: 'overage_pack_purchased',
-        title: 'Overage pack added',
-        message: `${pack.minutes} additional minutes added to your account. You now have extra capacity for this billing period.`,
-        link: '/settings',
-      });
+    if (fetchError) {
+      console.error('[Overage] Failed to fetch organization:', fetchError);
+      return { success: false, error: fetchError.message };
     }
-  }
 
-  return { success: true, minutesAdded: pack.minutes, newTotal: newOverageMinutes };
+    const currentCredits = org?.overage_credits || 0;
+    const newCredits = currentCredits + packMinutes;
+
+    const { error } = await supabase
+      .from('organizations')
+      .update({
+        overage_credits: newCredits,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', organizationId);
+
+    if (error) {
+      console.error('[Overage] Failed to credit pack:', error);
+      return { success: false, error: error.message };
+    }
+
+    // Log the transaction
+    await supabase.from('overage_transactions').insert({
+      organization_id: organizationId,
+      transaction_type: 'credit',
+      minutes: packMinutes,
+      transaction_id: transactionId,
+      description: `Purchased ${packMinutes} minute overage pack`,
+      created_at: new Date().toISOString()
+    });
+
+    console.log('[Overage] Credited pack:', {
+      organizationId,
+      minutes: packMinutes,
+      transactionId
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Overage] Error crediting pack:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 /**
- * Reset overage minutes at start of new billing period
- * Called from Paddle webhook when billing period renews
+ * Reset overage minutes at the start of new billing period
+ * This is called when subscription renews
  */
-export async function resetOverageMinutes(organizationId: string) {
-  const supabase = createAdminClient();
+export async function resetOverageMinutes(
+  organizationId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createClient();
 
-  const { error } = await supabase
-    .from('organizations')
-    .update({
-      overage_minutes_purchased: 0,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', organizationId);
+    // Reset overage tracking for new billing period
+    const { error } = await supabase
+      .from('organizations')
+      .update({
+        overage_minutes: 0,
+        overage_debt: 0,
+        has_unpaid_overage: false,
+        overage_debt_due_date: null,
+        can_upgrade: true,
+        billing_period_start: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', organizationId);
 
-  if (error) {
-    console.error('[Overage] Failed to reset overage minutes:', error);
-    throw new Error('Failed to reset overage minutes');
+    if (error) {
+      console.error('[Overage] Failed to reset minutes:', error);
+      return { success: false, error: error.message };
+    }
+
+    // Log the reset
+    await supabase.from('overage_transactions').insert({
+      organization_id: organizationId,
+      transaction_type: 'reset',
+      minutes: 0,
+      description: 'Billing period reset - overage minutes cleared',
+      created_at: new Date().toISOString()
+    });
+
+    console.log('[Overage] Reset minutes for org:', organizationId);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Overage] Error resetting minutes:', error);
+    return { success: false, error: error.message };
   }
-
-  console.log('[Overage] Reset overage minutes for organization:', organizationId);
-}
-
-/**
- * Calculate total overage charges for billing period
- * Used to generate Paddle adjustment at end of billing cycle
- */
-export async function calculateOverageCharges(organizationId: string, periodStart: string, periodEnd: string) {
-  const usage = await calculateUsageAndOverage(organizationId, periodStart, periodEnd);
-
-  if (!usage.hasOverage) {
-    return { hasCharges: false, amount: 0, minutes: 0 };
-  }
-
-  return {
-    hasCharges: true,
-    amount: usage.overageCost,
-    minutes: usage.overageMinutes,
-    description: `Overage charges: ${usage.overageMinutes} minutes @ $${OVERAGE_CONFIG.pricePerMinute}/min`,
-  };
-}
-
-/**
- * Get recommended overage pack based on current usage
- */
-export function recommendOveragePack(projectedOverageMinutes: number): keyof typeof OVERAGE_CONFIG.packs | null {
-  if (projectedOverageMinutes <= 0) return null;
-
-  if (projectedOverageMinutes <= 500) return 'small';
-  if (projectedOverageMinutes <= 1000) return 'medium';
-  if (projectedOverageMinutes <= 2500) return 'large';
-  return 'xlarge';
 }

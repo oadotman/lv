@@ -52,7 +52,7 @@ export function ModernProgress({
             }}
           >
             {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-sky-500 to-indigo-500" />
 
             {/* Shimmer Effect */}
             <motion.div
@@ -71,7 +71,7 @@ export function ModernProgress({
           {displayProgress > 0 && bubbles.map((bubble) => (
             <motion.div
               key={bubble.id}
-              className="absolute rounded-full bg-purple-400/20"
+              className="absolute rounded-full bg-sky-400/20"
               style={{
                 width: bubble.size,
                 height: bubble.size,
@@ -95,7 +95,7 @@ export function ModernProgress({
 
         {/* Glow Effect */}
         <motion.div
-          className="absolute -inset-1 bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 rounded-full opacity-30 blur-lg"
+          className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-sky-500 to-indigo-500 rounded-full opacity-30 blur-lg"
           animate={{
             opacity: status === 'processing' ? [0.2, 0.4, 0.2] : 0.1
           }}
@@ -116,7 +116,7 @@ export function ModernProgress({
               status === 'completed' ? 'bg-green-500' :
               status === 'error' ? 'bg-red-500' :
               status === 'queued' ? 'bg-yellow-500' :
-              'bg-purple-500'
+              'bg-sky-500'
             }`}
             animate={status === 'processing' ? {
               scale: [1, 1.5, 1],
@@ -143,7 +143,7 @@ export function ModernProgress({
 
         {/* Percentage */}
         <motion.span
-          className="text-sm font-semibold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent"
+          className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-sky-600 bg-clip-text text-transparent"
           key={displayProgress}
           initial={{ scale: 1.2 }}
           animate={{ scale: 1 }}

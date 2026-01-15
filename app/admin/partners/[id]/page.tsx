@@ -412,7 +412,7 @@ export default function AdminPartnerDetailsPage() {
       bronze: 'bg-orange-100 text-orange-800',
       silver: 'bg-gray-100 text-gray-800',
       gold: 'bg-yellow-100 text-yellow-800',
-      platinum: 'bg-purple-100 text-purple-800',
+      platinum: 'bg-sky-100 text-sky-800',
     };
 
     return (

@@ -250,7 +250,7 @@ export function EnhancedEmailModal({
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Mail className="w-5 h-5 text-violet-600" />
+            <Mail className="w-5 h-5 text-blue-600" />
             Enhanced Email Generator
             <Badge variant="secondary">10/10 Experience</Badge>
           </DialogTitle>
@@ -294,7 +294,7 @@ export function EnhancedEmailModal({
                       key={template.id}
                       className={cn(
                         "cursor-pointer transition-all hover:shadow-md",
-                        selectedTemplate?.id === template.id && "ring-2 ring-violet-600"
+                        selectedTemplate?.id === template.id && "ring-2 ring-blue-600"
                       )}
                       onClick={() => setSelectedTemplate(template)}
                     >
@@ -354,7 +354,7 @@ export function EnhancedEmailModal({
 
             {/* Selected Template Info */}
             {selectedTemplate && (
-              <Card className="bg-violet-50 border-violet-200">
+              <Card className="bg-blue-50 border-blue-200">
                 <CardContent className="p-3">
                   <div className="flex items-start justify-between">
                     <div>

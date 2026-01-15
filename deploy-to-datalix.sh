@@ -1,11 +1,11 @@
 #!/bin/bash
 # =====================================================
-# CALLIQ DEPLOYMENT SCRIPT FOR DATALIX DEBIAN
+# LOADVOICE DEPLOYMENT SCRIPT FOR DATALIX DEBIAN
 # =====================================================
 
 set -e
 
-echo "🚀 CallIQ Deployment Script for Datalix Debian"
+echo "🚀 LoadVoice Deployment Script for Datalix Debian"
 echo "================================================"
 
 # Colors
@@ -15,9 +15,9 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_USER="calliq"
-APP_DIR="/var/www/calliq"
-DOMAIN="synqall.com"
+APP_USER="loadvoice"
+APP_DIR="/var/www/loadvoice"
+DOMAIN="loadvoice.com"
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then

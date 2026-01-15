@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS referrals (
   referral_code TEXT NOT NULL,
   referred_email TEXT NOT NULL CHECK (referred_email = LOWER(referred_email)),
   referred_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  product_type TEXT DEFAULT 'synqall' CHECK (product_type IN ('calliq', 'synqall', 'other')),
+  product_type TEXT DEFAULT 'loadvoice' CHECK (product_type IN ('calliq', 'loadvoice', 'other')),
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'clicked', 'signed_up', 'active', 'rewarded', 'expired', 'cancelled')),
   signup_at TIMESTAMPTZ,
   activated_at TIMESTAMPTZ,

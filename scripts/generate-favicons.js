@@ -4,7 +4,7 @@ const path = require('path');
 
 async function generateFavicons() {
   try {
-    const logoPath = path.join(__dirname, '../public/logo.png');
+    const logoPath = path.join(__dirname, '../public/loadvoice-logo.svg');
     const publicDir = path.join(__dirname, '../public');
 
     // Check if logo exists

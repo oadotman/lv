@@ -1,3 +1,18 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Cookie Policy | LoadVoice',
+  description: 'Cookie policy for LoadVoice. Learn how we use cookies to improve the freight broker experience on our voice-powered CRM platform.',
+  alternates: {
+    canonical: 'https://loadvoice.com/cookies'
+  },
+  robots: {
+    index: false,  // Legal pages don't need to be indexed for SEO
+    follow: true,
+    noarchive: true,
+  }
+};
+
 export default function CookiePolicyPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 py-12 space-y-8">
@@ -6,7 +21,7 @@ export default function CookiePolicyPage() {
         <h1 className="text-4xl font-bold text-gray-900">Cookie Policy</h1>
         <p className="text-gray-600">Last updated: January 21, 2025</p>
         <p className="text-sm text-gray-500">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
 
@@ -20,7 +35,7 @@ export default function CookiePolicyPage() {
             a website. They help websites remember your preferences, improve performance, and provide analytics.
           </p>
           <p className="text-gray-700 leading-relaxed">
-            SynQall uses cookies and similar tracking technologies to enhance your experience and ensure the
+            Loadvoice uses cookies and similar tracking technologies to enhance your experience and ensure the
             Service functions properly. This Cookie Policy explains what cookies we use, why we use them, and how
             you can manage your cookie preferences.
           </p>
@@ -30,7 +45,7 @@ export default function CookiePolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Types of Cookies We Use</h2>
           <p className="text-gray-700 leading-relaxed mb-4">
-            We use the following categories of cookies on SynQall:
+            We use the following categories of cookies on Loadvoice:
           </p>
 
           {/* Essential Cookies */}
@@ -113,12 +128,12 @@ export default function CookiePolicyPage() {
           </div>
 
           {/* Performance Cookies */}
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-            <h3 className="text-xl font-semibold text-purple-900 mb-2">4. Performance and Monitoring Cookies</h3>
+          <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">
+            <h3 className="text-xl font-semibold text-sky-900 mb-2">4. Performance and Monitoring Cookies</h3>
             <p className="text-gray-800 leading-relaxed mb-3">
               These cookies help us monitor errors, track performance, and ensure the Service runs smoothly.
             </p>
-            <div className="bg-white rounded border border-purple-200 p-3">
+            <div className="bg-white rounded border border-sky-200 p-3">
               <p className="text-gray-800 font-semibold mb-2">Third-Party Services:</p>
               <ul className="space-y-2 text-gray-700 text-sm">
                 <li>
@@ -150,7 +165,7 @@ export default function CookiePolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Third-Party Cookies</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            Some cookies are set by third-party services we use to operate SynQall:
+            Some cookies are set by third-party services we use to operate Loadvoice:
           </p>
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse border border-gray-300 text-sm">
@@ -220,14 +235,14 @@ export default function CookiePolicyPage() {
         <section className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
           <h2 className="text-2xl font-bold text-yellow-900 mb-4">How to Manage Cookies</h2>
           <p className="text-gray-800 leading-relaxed mb-4">
-            You have several options for managing cookies on SynQall:
+            You have several options for managing cookies on Loadvoice:
           </p>
 
           <div className="space-y-4">
             <div className="bg-white rounded-lg border border-yellow-200 p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">1. Cookie Consent Banner</h3>
               <p className="text-gray-700 text-sm leading-relaxed mb-2">
-                When you first visit SynQall, you'll see a cookie consent banner where you can accept or decline
+                When you first visit Loadvoice, you'll see a cookie consent banner where you can accept or decline
                 optional cookies (analytics, performance). Essential cookies are always enabled.
               </p>
               <p className="text-gray-700 text-sm leading-relaxed">
@@ -293,7 +308,7 @@ export default function CookiePolicyPage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Cookie Duration</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            Cookies used by SynQall have different durations:
+            Cookies used by Loadvoice have different durations:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
             <li><strong>Session Cookies:</strong> Deleted automatically when you close your browser</li>
@@ -340,9 +355,9 @@ export default function CookiePolicyPage() {
           </p>
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <p className="text-gray-800 font-semibold">Nikola Innovations Limited</p>
-            <p className="text-gray-700">Email: <a href="mailto:privacy@synqall.com" className="text-blue-600 underline">privacy@synqall.com</a></p>
-            <p className="text-gray-700">General Support: <a href="mailto:support@synqall.com" className="text-blue-600 underline">support@synqall.com</a></p>
-            <p className="text-gray-700">Website: <a href="https://synqall.com" className="text-blue-600 underline">https://synqall.com</a></p>
+            <p className="text-gray-700">Email: <a href="mailto:privacy@loadvoice.com" className="text-blue-600 underline">privacy@loadvoice.com</a></p>
+            <p className="text-gray-700">General Support: <a href="mailto:support@loadvoice.com" className="text-blue-600 underline">support@loadvoice.com</a></p>
+            <p className="text-gray-700">Website: <a href="https://loadvoice.com" className="text-blue-600 underline">https://loadvoice.com</a></p>
           </div>
         </section>
       </div>
@@ -350,7 +365,7 @@ export default function CookiePolicyPage() {
       {/* Footer */}
       <div className="border-t pt-6 mt-12">
         <p className="text-sm text-gray-500 text-center">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
     </div>

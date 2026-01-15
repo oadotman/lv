@@ -166,7 +166,7 @@ export default function PartnerDashboardPage() {
       </div>
 
       {/* Referral Link Card */}
-      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
+      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-sky-50">
         <CardHeader>
           <CardTitle>Your Referral Link</CardTitle>
           <CardDescription>Share this link with your clients to earn commissions</CardDescription>
@@ -320,7 +320,7 @@ export default function PartnerDashboardPage() {
                   <span className="font-semibold">
                     {(data.partner.commission_rate * 100).toFixed(0)}%
                     {data.partner.tier === 'premium' && (
-                      <span className="ml-2 text-xs text-purple-600">(Premium)</span>
+                      <span className="ml-2 text-xs text-sky-600">(Premium)</span>
                     )}
                   </span>
                 </div>

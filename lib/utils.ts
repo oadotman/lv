@@ -26,3 +26,22 @@ export function formatDuration(seconds: number): string {
   }
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
+
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+}
+
+
+export function formatPhoneNumber(phone: string | null | undefined): string {
+  if (!phone) return '';
+  const cleaned = phone.replace(/D/g, '');
+  if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+  }
+  return phone;
+}

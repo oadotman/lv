@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Download, Eye, EyeOff, Copy, RefreshCw, Settings, User, CreditCard, Bell, AlertTriangle, Loader2, Mic } from "lucide-react";
+import { Download, Eye, EyeOff, Copy, RefreshCw, Settings, User, CreditCard, Bell, AlertTriangle, Loader2, Mic, Building, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import type { UserPreferences } from "@/lib/types/preferences";
@@ -134,13 +134,13 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
       case "solo":
         return "bg-blue-100 text-blue-700 border-blue-200";
       case "starter":
-        return "bg-violet-100 text-violet-700 border-violet-200";
+        return "bg-blue-100 text-blue-700 border-blue-200";
       case "professional":
-        return "bg-purple-100 text-purple-700 border-purple-200";
+        return "bg-sky-100 text-sky-700 border-sky-200";
       case "enterprise":
         return "bg-indigo-100 text-indigo-700 border-indigo-200";
       case "custom":
-        return "bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 border-violet-200";
+        return "bg-gradient-to-r from-blue-100 to-sky-100 text-blue-700 border-blue-200";
       default:
         return "bg-slate-100 text-slate-700 border-slate-200";
     }
@@ -175,21 +175,21 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
             <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 p-2 rounded-2xl shadow-lg">
               <TabsTrigger
                 value="account"
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/30 rounded-xl font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-600 data-[state=active]:to-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 rounded-xl font-semibold transition-all duration-300"
               >
                 <User className="w-4 h-4 mr-2" />
                 Account
               </TabsTrigger>
               <TabsTrigger
                 value="billing"
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/30 rounded-xl font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-600 data-[state=active]:to-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 rounded-xl font-semibold transition-all duration-300"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
                 Billing
               </TabsTrigger>
               <TabsTrigger
                 value="notifications"
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/30 rounded-xl font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-600 data-[state=active]:to-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 rounded-xl font-semibold transition-all duration-300"
               >
                 <Bell className="w-4 h-4 mr-2" />
                 Notifications
@@ -226,7 +226,7 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                       <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Full Name</label>
                       <Input
                         defaultValue={user.name}
-                        className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl py-3 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
+                        className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                       />
                     </div>
                   </div>
@@ -235,14 +235,14 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                       <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Organization</label>
                       <Input
                         defaultValue={user.company}
-                        className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl py-3 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
+                        className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Time Zone</label>
                       <Input
                         defaultValue={Intl.DateTimeFormat().resolvedOptions().timeZone}
-                        className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl py-3 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
+                        className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                       />
                     </div>
                   </div>
@@ -250,13 +250,44 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                     <Button
                       onClick={handleUpdateProfile}
                       disabled={isUpdating}
-                      className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/50 transition-all duration-300 rounded-xl border-0 font-semibold px-6 py-2"
+                      className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 rounded-xl border-0 font-semibold px-6 py-2"
                     >
                       {isUpdating ? "Updating..." : "Update Profile"}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Quick Navigation Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="border-0 shadow-xl rounded-2xl hover:shadow-2xl transition-shadow duration-300 cursor-pointer" onClick={() => router.push("/settings/company")}>
+                  <CardHeader className="p-6">
+                    <CardTitle className="flex items-center gap-3 text-lg">
+                      <div className="p-2 bg-gradient-to-br from-blue-500 to-sky-600 rounded-lg">
+                        <Building className="w-5 h-5 text-white" />
+                      </div>
+                      Company Profile
+                    </CardTitle>
+                    <CardDescription className="mt-2 text-sm">
+                      Manage company information, logo, and rate confirmation settings
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                <Card className="border-0 shadow-xl rounded-2xl hover:shadow-2xl transition-shadow duration-300 cursor-pointer" onClick={() => router.push("/settings/team")}>
+                  <CardHeader className="p-6">
+                    <CardTitle className="flex items-center gap-3 text-lg">
+                      <div className="p-2 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      Team Settings
+                    </CardTitle>
+                    <CardDescription className="mt-2 text-sm">
+                      Invite team members and manage organization permissions
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
             </TabsContent>
 
             {/* Billing Tab */}
@@ -281,7 +312,7 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                     <Button
                       onClick={() => router.push("/dashboard")}
                       variant="link"
-                      className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 p-0 h-auto font-medium"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-0 h-auto font-medium"
                     >
                       View usage in Dashboard →
                     </Button>
@@ -296,7 +327,7 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                             description: "Subscription management via Paddle is being set up.",
                           });
                         }}
-                        className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/50 transition-all duration-300 rounded-xl border-0 font-semibold"
+                        className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 rounded-xl border-0 font-semibold"
                       >
                         Manage Subscription
                       </Button>
@@ -305,7 +336,7 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                       <Button
                         onClick={() => router.push("/upgrade")}
                         variant="outline"
-                        className="border-2 border-violet-200 dark:border-violet-700 hover:border-violet-300 dark:hover:border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 rounded-xl font-semibold transition-all duration-200"
+                        className="border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 rounded-xl font-semibold transition-all duration-200"
                       >
                         Upgrade Plan
                       </Button>
@@ -337,7 +368,7 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                           {billing.billingHistory.map((transaction) => (
-                            <tr key={transaction.id} className="hover:bg-violet-50/30 dark:hover:bg-violet-900/10 transition-colors duration-200">
+                            <tr key={transaction.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors duration-200">
                               <td className="py-4 px-4 text-sm font-medium text-slate-900 dark:text-slate-100">
                                 {new Date(transaction.created_at).toLocaleDateString("en-US", {
                                   year: "numeric",
@@ -367,9 +398,9 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
             <TabsContent value="notifications" className="space-y-6">
               {/* Processing Preferences */}
               <Card className="border-0 shadow-xl rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950 dark:to-purple-950 border-b border-violet-100 dark:border-violet-900">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950 dark:to-sky-950 border-b border-blue-100 dark:border-blue-900">
                   <div className="flex items-center gap-2">
-                    <Mic className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    <Mic className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">Processing Preferences</CardTitle>
                   </div>
                   <CardDescription className="text-slate-600 dark:text-slate-400 font-medium">
@@ -379,7 +410,7 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                 <CardContent className="p-6 space-y-6 bg-white dark:bg-slate-800">
                   {isLoadingPreferences ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-violet-600" />
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                     </div>
                   ) : (
                     <div className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-700">
@@ -412,7 +443,7 @@ export function SettingsClient({ user, billing, organizationId, userId }: Settin
                 <CardContent className="p-6 space-y-6 bg-white dark:bg-slate-800">
                   {isLoadingPreferences ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-violet-600" />
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                     </div>
                   ) : (
                     <>

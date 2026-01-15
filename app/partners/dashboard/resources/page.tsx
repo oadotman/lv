@@ -172,12 +172,12 @@ export default function ResourcesPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Marketing Resources</h1>
         <p className="text-gray-600 mt-1">
-          Everything you need to promote SynQall to your clients
+          Everything you need to promote LoadVoice to your clients
         </p>
       </div>
 
       {/* Quick Links Card */}
-      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
+      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-sky-50">
         <CardHeader>
           <CardTitle>Your Referral Information</CardTitle>
         </CardHeader>
@@ -304,7 +304,7 @@ export default function ResourcesPage() {
                     asChild
                   >
                     <a
-                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out SynQall - AI-powered CRM automation!')}&url=${encodeURIComponent(data.referral_link)}`}
+                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out LoadVoice - AI-powered CRM automation!')}&url=${encodeURIComponent(data.referral_link)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -346,7 +346,7 @@ export default function ResourcesPage() {
                     asChild
                   >
                     <a
-                      href={`mailto:?subject=${encodeURIComponent('Check out SynQall')}&body=${encodeURIComponent(`I've been using SynQall for call recording and transcription. Check it out: ${data.referral_link}`)}`}
+                      href={`mailto:?subject=${encodeURIComponent('Check out LoadVoice')}&body=${encodeURIComponent(`I've been using LoadVoice for call recording and transcription. Check it out: ${data.referral_link}`)}`}
                     >
                       <Mail className="h-4 w-4 mr-2" />
                       Email
@@ -470,7 +470,7 @@ export default function ResourcesPage() {
             <CardHeader>
               <CardTitle>Key Talking Points</CardTitle>
               <CardDescription>
-                Use these points when discussing SynQall with clients
+                Use these points when discussing LoadVoice with clients
               </CardDescription>
             </CardHeader>
             <CardContent>

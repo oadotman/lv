@@ -24,10 +24,10 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-sky-600 flex items-center justify-center">
                 <Phone className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-gray-900 text-lg">SynQall</span>
+              <span className="font-bold text-gray-900 text-lg">LoadVoice</span>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
               AI-powered CRM automation from sales call recordings. Transcribe, extract, and sync data effortlessly.
@@ -49,18 +49,23 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/templates" className="text-gray-600 hover:text-blue-600 transition">
-                  Templates
+                <Link href="/features" className="text-gray-600 hover:text-blue-600 transition">
+                  Features
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="text-gray-600 hover:text-blue-600 transition">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="text-gray-600 hover:text-blue-600 transition">
+                  Blog
                 </Link>
               </li>
               <li>
                 <Link href="/analytics" className="text-gray-600 hover:text-blue-600 transition">
                   Analytics
-                </Link>
-              </li>
-              <li>
-                <Link href="/settings?tab=billing" className="text-gray-600 hover:text-blue-600 transition">
-                  Pricing
                 </Link>
               </li>
             </ul>
@@ -76,7 +81,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:support@synqall.com" className="text-gray-600 hover:text-blue-600 transition">
+                <a href="mailto:support@loadvoice.com" className="text-gray-600 hover:text-blue-600 transition">
                   Contact Support
                 </a>
               </li>
@@ -142,16 +147,16 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-gray-600 text-center md:text-left">
-            <p>© 2025 SynQall. All rights reserved.</p>
+            <p>© 2025 LoadVoice. All rights reserved.</p>
             <p className="text-xs text-gray-500 mt-1">
-              SynQall is owned and operated by Nikola Innovations Limited.
+              LoadVoice is owned and operated by Nikola Innovations Limited.
             </p>
           </div>
 
           {/* Social Links (Placeholder) */}
           <div className="flex items-center gap-4">
             <a
-              href="https://twitter.com/synqall"
+              href="https://twitter.com/loadvoice"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-blue-600 transition"
@@ -162,7 +167,7 @@ export function Footer() {
               </svg>
             </a>
             <a
-              href="https://linkedin.com/company/synqall"
+              href="https://linkedin.com/company/loadvoice"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-blue-600 transition"

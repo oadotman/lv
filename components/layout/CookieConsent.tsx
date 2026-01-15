@@ -113,7 +113,7 @@ export function CookieConsent() {
             <div className="flex flex-col md:flex-row gap-6">
               {/* Icon */}
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center">
                   <Cookie className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -145,7 +145,7 @@ export function CookieConsent() {
               <div className="flex flex-col gap-2 md:flex-shrink-0 md:justify-center">
                 <Button
                   onClick={acceptAll}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
+                  className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-semibold"
                 >
                   Accept All
                 </Button>
@@ -297,7 +297,7 @@ export function CookieConsent() {
             </Button>
             <Button
               onClick={saveCustom}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white order-1 sm:order-2"
+              className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white order-1 sm:order-2"
             >
               Save Preferences
             </Button>

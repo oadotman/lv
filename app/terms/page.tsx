@@ -1,3 +1,33 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service - LoadVoice | Legal Agreement',
+  description: 'Read the LoadVoice Terms of Service. Understand your rights and responsibilities when using our freight broker CRM platform. Last updated January 2025.',
+  keywords: [
+    'LoadVoice terms of service',
+    'freight CRM terms',
+    'legal agreement',
+    'user agreement',
+    'service terms'
+  ],
+  alternates: {
+    canonical: 'https://loadvoice.com/terms'
+  },
+  openGraph: {
+    title: 'Terms of Service - LoadVoice',
+    description: 'Legal terms and conditions for using LoadVoice freight broker CRM platform.',
+    url: 'https://loadvoice.com/terms',
+    siteName: 'LoadVoice',
+    locale: 'en_US',
+    type: 'website',
+  },
+  robots: {
+    index: false,  // Legal pages don't need to be indexed for SEO
+    follow: true,
+    noarchive: true,
+  }
+};
+
 export default function TermsOfServicePage() {
   return (
     <div className="max-w-4xl mx-auto p-6 py-12 space-y-8">
@@ -6,7 +36,7 @@ export default function TermsOfServicePage() {
         <h1 className="text-4xl font-bold text-gray-900">Terms of Service</h1>
         <p className="text-gray-600">Last updated: January 21, 2025</p>
         <p className="text-sm text-gray-500">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
 
@@ -16,11 +46,11 @@ export default function TermsOfServicePage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Agreement to Terms</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            By accessing and using SynQall ("Service"), you agree to be bound by these Terms of Service ("Terms").
+            By accessing and using Loadvoice ("Service"), you agree to be bound by these Terms of Service ("Terms").
             If you do not agree to these Terms, you may not access or use the Service.
           </p>
           <p className="text-gray-700 leading-relaxed">
-            SynQall is owned and operated by Nikola Innovations Limited ("Company", "we", "us", or "our").
+            Loadvoice is owned and operated by Nikola Innovations Limited ("Company", "we", "us", or "our").
             The Service provides AI-powered transcription and CRM data extraction from sales call recordings.
           </p>
         </section>
@@ -29,7 +59,7 @@ export default function TermsOfServicePage() {
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Description of Service</h2>
           <p className="text-gray-700 leading-relaxed mb-3">
-            SynQall provides the following features:
+            Loadvoice provides the following features:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
             <li>Audio transcription of sales call recordings using AssemblyAI</li>
@@ -70,7 +100,7 @@ export default function TermsOfServicePage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <h3 className="text-lg font-semibold text-blue-900 mb-2">Available Plans:</h3>
             <ul className="space-y-2 text-gray-800">
-              <li><strong>Free:</strong> 1 user, 30 minutes/month, $0/month</li>
+              <li><strong>Free:</strong> 1 user, 60 minutes/month, $0/month</li>
               <li><strong>Solo:</strong> 1 user, 1,500 minutes/month, $49/month</li>
               <li><strong>Team 5:</strong> 5 users, 6,000 minutes/month, $149/month</li>
               <li><strong>Team 10:</strong> 10 users, 15,000 minutes/month, $299/month</li>
@@ -119,7 +149,7 @@ export default function TermsOfServicePage() {
             To request a refund:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-800 ml-4 mb-3">
-            <li>Contact our support team at <a href="mailto:support@synqall.com" className="text-blue-600 underline">support@synqall.com</a></li>
+            <li>Contact our support team at <a href="mailto:support@loadvoice.com" className="text-blue-600 underline">support@loadvoice.com</a></li>
             <li>Include your account email and subscription details</li>
             <li>Refund requests must be made within 30 days of the original purchase date</li>
           </ul>
@@ -290,8 +320,8 @@ export default function TermsOfServicePage() {
           </p>
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <p className="text-gray-800 font-semibold">Nikola Innovations Limited</p>
-            <p className="text-gray-700">Email: <a href="mailto:support@synqall.com" className="text-blue-600 underline">support@synqall.com</a></p>
-            <p className="text-gray-700">Website: <a href="https://synqall.com" className="text-blue-600 underline">https://synqall.com</a></p>
+            <p className="text-gray-700">Email: <a href="mailto:support@loadvoice.com" className="text-blue-600 underline">support@loadvoice.com</a></p>
+            <p className="text-gray-700">Website: <a href="https://loadvoice.com" className="text-blue-600 underline">https://loadvoice.com</a></p>
           </div>
         </section>
       </div>
@@ -299,7 +329,7 @@ export default function TermsOfServicePage() {
       {/* Footer */}
       <div className="border-t pt-6 mt-12">
         <p className="text-sm text-gray-500 text-center">
-          © 2025 SynQall. All rights reserved. SynQall is owned and operated by Nikola Innovations Limited.
+          © 2025 Loadvoice. All rights reserved. Loadvoice is owned and operated by Nikola Innovations Limited.
         </p>
       </div>
     </div>

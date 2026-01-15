@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       .from('referrals')
       .select('*')
       .eq('referred_user_id', user.id)
-      .eq('product_type', 'synqall')
+      .eq('product_type', 'loadvoice')
       .in('status', ['signed_up', 'active'])
       .limit(1);
 

@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Checking admin access...</p>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
       title: 'Partner Program',
       description: 'Manage partners, applications, and commissions',
       icon: Users,
-      color: 'bg-purple-500',
+      color: 'bg-sky-500',
       items: [
         {
           label: 'Partner Overview',
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="h-8 w-8 text-purple-600" />
+            <Shield className="h-8 w-8 text-sky-600" />
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           </div>
           <p className="text-gray-600">Welcome back, {userEmail}</p>
@@ -253,7 +253,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-600">Active Partners</p>
                   <p className="text-2xl font-bold">{stats.totalPartners}</p>
                 </div>
-                <Users className="h-8 w-8 text-purple-600" />
+                <Users className="h-8 w-8 text-sky-600" />
               </div>
             </CardContent>
           </Card>

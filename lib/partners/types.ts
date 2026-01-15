@@ -41,7 +41,7 @@ export interface PartnerApplication {
   crms_used?: string[];
   how_heard?: string;
   why_partner?: string;
-  has_used_synqall?: boolean;
+  has_used_loadvoice?: boolean;
   terms_accepted: boolean;
   status: 'pending' | 'approved' | 'rejected' | 'more_info_needed';
   submitted_at: string;

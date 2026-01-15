@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { healthRateLimiter } from '@/lib/rateLimit';
+import { features, config } from '@/lib/config/feature-flags';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,8 +43,16 @@ export async function GET(req: NextRequest) {
       database: { status: 'unknown' as 'ok' | 'error', latency: 0 },
       storage: { status: 'unknown' as 'ok' | 'error', latency: 0 },
     },
+    services: {
+      twilio: features.twilio ? 'configured' : 'not_configured',
+      paddle: features.paddle ? 'configured' : 'not_configured',
+      resend: features.resend ? 'configured' : 'not_configured',
+      redis: features.redis ? 'configured' : 'not_configured',
+      sentry: features.sentry ? 'configured' : 'not_configured',
+    },
     uptime: process.uptime(),
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+    environment: config.isProduction ? 'production' : 'development',
   };
 
   try {

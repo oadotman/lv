@@ -49,6 +49,8 @@ import { AudioTrimModal } from "@/components/modals/AudioTrimModal";
 import { EnhancedEmailModal } from "@/components/modals/EnhancedEmailModal";
 import { generateCallPDF, downloadPDF } from "@/lib/pdf-export";
 import { formatCRMOutput } from "@/lib/output-formatters";
+import { GenerateRateConButton } from "@/components/calls/GenerateRateConButton";
+import { CarrierVerificationCard } from "@/components/carriers/CarrierVerificationCard";
 
 // =====================================================
 // TYPESCRIPT INTERFACES
@@ -972,7 +974,7 @@ export default function CallDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="flex items-center justify-center p-8 lg:p-16">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-violet-600 mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
             <p className="text-slate-600 font-medium">Loading call details...</p>
           </div>
         </div>
@@ -993,7 +995,7 @@ export default function CallDetailPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Call Not Found</h2>
             <p className="text-gray-600 mb-6">{error || "This call does not exist or you do not have access to it."}</p>
             <Link href="/calls">
-              <Button className="bg-purple-600 hover:bg-purple-700">
+              <Button className="bg-sky-600 hover:bg-sky-700">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Calls
               </Button>
@@ -1017,32 +1019,52 @@ export default function CallDetailPage() {
   const createSpeakerMapping = () => {
     const mapping: Record<string, string> = {};
 
-    // First, try to map by role
-    const salesReps = participants.filter(p => p.role === "sales_rep");
-    const customers = participants.filter(p => p.role === "customer");
+    // First, try to map by role (using type assertions for extended roles)
+    const brokers = participants.filter(p => (p.role as string) === "broker" || p.role === "sales_rep"); // backward compatibility
+    const shippers = participants.filter(p => (p.role as string) === "shipper" || p.role === "customer"); // backward compatibility
+    const carriers = participants.filter(p => (p.role as string) === "carrier");
+    const drivers = participants.filter(p => (p.role as string) === "driver");
 
     // Common speaker labels from AssemblyAI
     const speakerLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
-    // Map first speaker (usually A) to sales rep if available
-    if (salesReps.length > 0) {
-      mapping['A'] = salesReps[0].name || 'Sales Rep';
-      mapping['Speaker A'] = salesReps[0].name || 'Sales Rep';
+    // Map first speaker (usually A) to broker if available
+    if (brokers.length > 0) {
+      mapping['A'] = brokers[0].name || 'Broker';
+      mapping['Speaker A'] = brokers[0].name || 'Broker';
     }
 
-    // Map subsequent speakers to customers
-    let customerIndex = 0;
-    for (let i = 1; i < speakerLabels.length && customerIndex < customers.length; i++) {
-      const label = speakerLabels[i];
-      mapping[label] = customers[customerIndex].name || `Customer ${customerIndex + 1}`;
-      mapping[`Speaker ${label}`] = customers[customerIndex].name || `Customer ${customerIndex + 1}`;
-      customerIndex++;
+    // Map subsequent speakers to shippers, carriers, drivers
+    let speakerIndex = 1;
+
+    // Map shippers
+    for (let i = 0; i < shippers.length && speakerIndex < speakerLabels.length; i++) {
+      const label = speakerLabels[speakerIndex];
+      mapping[label] = shippers[i].name || `Shipper ${i + 1}`;
+      mapping[`Speaker ${label}`] = shippers[i].name || `Shipper ${i + 1}`;
+      speakerIndex++;
+    }
+
+    // Map carriers
+    for (let i = 0; i < carriers.length && speakerIndex < speakerLabels.length; i++) {
+      const label = speakerLabels[speakerIndex];
+      mapping[label] = carriers[i].name || `Carrier ${i + 1}`;
+      mapping[`Speaker ${label}`] = carriers[i].name || `Carrier ${i + 1}`;
+      speakerIndex++;
+    }
+
+    // Map drivers
+    for (let i = 0; i < drivers.length && speakerIndex < speakerLabels.length; i++) {
+      const label = speakerLabels[speakerIndex];
+      mapping[label] = drivers[i].name || `Driver ${i + 1}`;
+      mapping[`Speaker ${label}`] = drivers[i].name || `Driver ${i + 1}`;
+      speakerIndex++;
     }
 
     // Map any remaining participants
     let otherIndex = 0;
     const others = participants.filter(p => p.role === "other");
-    for (let i = customers.length + 1; i < speakerLabels.length && otherIndex < others.length; i++) {
+    for (let i = shippers.length + 1; i < speakerLabels.length && otherIndex < others.length; i++) {
       const label = speakerLabels[i];
       mapping[label] = others[otherIndex].name || `Participant ${i}`;
       mapping[`Speaker ${label}`] = others[otherIndex].name || `Participant ${i}`;
@@ -1157,7 +1179,7 @@ export default function CallDetailPage() {
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <Link
             href="/calls"
-            className="inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700 mb-4 transition-colors group"
+            className="inline-flex items-center text-sm font-medium text-sky-600 hover:text-sky-700 mb-4 transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Calls
@@ -1208,7 +1230,7 @@ export default function CallDetailPage() {
                       ? "bg-green-100 text-green-800"
                       : call.status === "failed"
                       ? "bg-red-100 text-red-800"
-                      : "bg-violet-100 text-violet-800"
+                      : "bg-blue-100 text-blue-800"
                   )}
                 >
                   {call.status === "completed" ? "✓ Completed" :
@@ -1224,7 +1246,7 @@ export default function CallDetailPage() {
 
             {/* Modern Animated Progress Indicator */}
             {(call.status === "processing" || call.status === "transcribing" || call.status === "extracting") && (
-              <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 border border-violet-200 rounded-lg p-6 mt-4 shadow-lg">
+              <div className="bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mt-4 shadow-lg">
                 <ModernProgress
                   progress={call.processing_progress || 0}
                   message={call.processing_message || (
@@ -1241,7 +1263,7 @@ export default function CallDetailPage() {
 
                 {/* Additional Info */}
                 <div className="mt-4 flex items-center justify-between">
-                  <p className="text-xs text-violet-600">
+                  <p className="text-xs text-blue-600">
                     {call.status === "transcribing"
                       ? "This usually takes 3-6 minutes depending on call length"
                       : call.status === "extracting"
@@ -1254,7 +1276,7 @@ export default function CallDetailPage() {
                     {[1, 2, 3].map((i) => (
                       <motion.div
                         key={i}
-                        className="w-2 h-2 bg-purple-400 rounded-full"
+                        className="w-2 h-2 bg-sky-400 rounded-full"
                         animate={{ opacity: [0.3, 1, 0.3] }}
                         transition={{
                           duration: 1.5,
@@ -1274,7 +1296,7 @@ export default function CallDetailPage() {
                 <Button
                   onClick={() => setShowTrimModal(true)}
                   variant="outline"
-                  className="border-violet-600 text-violet-600 hover:bg-violet-50"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
                 >
                   <Scissors className="w-4 h-4 mr-2" />
                   Trim Audio
@@ -1282,7 +1304,7 @@ export default function CallDetailPage() {
                 <Button
                   onClick={handleStartTranscription}
                   disabled={isStartingTranscription}
-                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                  className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700"
                 >
                   {isStartingTranscription ? (
                     <>
@@ -1301,17 +1323,55 @@ export default function CallDetailPage() {
           </div>
         </div>
 
+        {/* Carrier Verification Card - Show if carrier info is extracted */}
+        {callDetail && call.status === 'completed' && (() => {
+          // Extract carrier info from fields
+          const mcField = callDetail.fields.find(f =>
+            f.field_name.toLowerCase().includes('mc_number') ||
+            f.field_name.toLowerCase().includes('mc number')
+          );
+          const dotField = callDetail.fields.find(f =>
+            f.field_name.toLowerCase().includes('dot_number') ||
+            f.field_name.toLowerCase().includes('dot number')
+          );
+          const carrierNameField = callDetail.fields.find(f =>
+            f.field_name.toLowerCase().includes('carrier_name') ||
+            f.field_name.toLowerCase().includes('carrier name') ||
+            f.field_name.toLowerCase() === 'carrier'
+          );
+
+          // Also check for carrier participant
+          const carrierParticipant = participants.find(p => (p.role as string) === 'carrier');
+
+          const mcNumber = mcField?.field_value;
+          const dotNumber = dotField?.field_value;
+          const carrierName = carrierNameField?.field_value || carrierParticipant?.company;
+
+          // Only show if we have MC or DOT number
+          if (mcNumber || dotNumber) {
+            return (
+              <CarrierVerificationCard
+                mcNumber={mcNumber}
+                dotNumber={dotNumber}
+                carrierName={carrierName}
+                className="mb-6"
+              />
+            );
+          }
+          return null;
+        })()}
+
         {/* Participants Section - Only show if participants exist */}
         {participants.length > 0 && (
           <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50 border-b border-gray-200">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-sky-50 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-xl font-bold text-gray-900">
-                  <Users className="w-5 h-5 text-violet-600" />
+                  <Users className="w-5 h-5 text-blue-600" />
                   Call Participants ({participants.length})
                 </CardTitle>
                 {participantAnalytics.length > 0 && (
-                  <Badge className="bg-violet-100 text-violet-700">
+                  <Badge className="bg-blue-100 text-blue-700">
                     {Math.round(participantAnalytics.reduce((sum, p) => sum + p.talkTime, 0) / 60)} min total talk time
                   </Badge>
                 )}
@@ -1334,15 +1394,24 @@ export default function CallDetailPage() {
                       <Badge
                         className={cn(
                           "absolute top-2 right-2 text-xs",
-                          participant.role === "sales_rep"
-                            ? "bg-purple-100 text-purple-700"
-                            : participant.role === "customer"
+                          (participant.role as string) === "broker" || participant.role === "sales_rep"
+                            ? "bg-sky-100 text-sky-700"
+                            : (participant.role as string) === "shipper" || participant.role === "customer"
                             ? "bg-blue-100 text-blue-700"
+                            : (participant.role as string) === "carrier"
+                            ? "bg-green-100 text-green-700"
+                            : (participant.role as string) === "driver"
+                            ? "bg-orange-100 text-orange-700"
                             : "bg-gray-100 text-gray-700"
                         )}
                       >
-                        {participant.role === "sales_rep" ? "Sales Rep" :
-                         participant.role === "customer" ? "Customer" : "Other"}
+                        {(participant.role as string) === "broker" ? "Broker" :
+                         participant.role === "sales_rep" ? "Broker" : // backward compatibility
+                         (participant.role as string) === "shipper" ? "Shipper" :
+                         participant.role === "customer" ? "Shipper" : // backward compatibility
+                         (participant.role as string) === "carrier" ? "Carrier" :
+                         (participant.role as string) === "driver" ? "Driver" :
+                         "Other"}
                       </Badge>
 
                       {/* Participant Info */}
@@ -1423,7 +1492,7 @@ export default function CallDetailPage() {
               {participantAnalytics.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-violet-600" />
+                    <MessageSquare className="w-4 h-4 text-blue-600" />
                     Conversation Analytics
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1465,7 +1534,7 @@ export default function CallDetailPage() {
             <div className="mb-4 h-20 bg-gray-100 rounded-lg relative overflow-hidden border border-gray-200">
               {/* Progress overlay */}
               <div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500/30 to-purple-600/30 transition-all duration-100"
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-sky-500/30 to-sky-600/30 transition-all duration-100"
                 style={{ width: `${(currentTime / duration) * 100}%` }}
               />
               {/* Waveform bars simulation */}
@@ -1478,7 +1547,7 @@ export default function CallDetailPage() {
                       key={i}
                       className={cn(
                         "flex-1 rounded-full transition-colors",
-                        isPast ? "bg-purple-600" : "bg-gray-300"
+                        isPast ? "bg-sky-600" : "bg-gray-300"
                       )}
                       style={{ height: `${height}%` }}
                     />
@@ -1495,7 +1564,7 @@ export default function CallDetailPage() {
                 disabled={!audioLoaded}
                 className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
                   audioLoaded
-                    ? 'bg-purple-600 hover:bg-purple-700 hover:scale-105'
+                    ? 'bg-sky-600 hover:bg-sky-700 hover:scale-105'
                     : 'bg-gray-300 cursor-not-allowed'
                 }`}
               >
@@ -1511,7 +1580,7 @@ export default function CallDetailPage() {
                 <div className="flex items-center justify-between mb-2">
                   {audioLoaded ? (
                     <span className={`text-sm font-mono font-semibold transition-all duration-300 ${
-                      isPlaying ? 'text-purple-600 animate-pulse' : 'text-gray-900'
+                      isPlaying ? 'text-sky-600 animate-pulse' : 'text-gray-900'
                     }`}>
                       <span className="text-lg">{formatTime(currentTime)}</span>
                       <span className="text-gray-400 mx-1">/</span>
@@ -1525,7 +1594,7 @@ export default function CallDetailPage() {
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>{call.customer_name || "Customer"} Call</span>
                     <span>•</span>
-                    <span>{call.sales_rep || "Sales Rep"}</span>
+                    <span>{call.sales_rep || "Broker"}</span>
                   </div>
                 </div>
 
@@ -1542,11 +1611,11 @@ export default function CallDetailPage() {
                   }}
                 >
                   <div
-                    className="absolute inset-y-0 left-0 bg-purple-600 transition-all"
+                    className="absolute inset-y-0 left-0 bg-sky-600 transition-all"
                     style={{ width: `${(currentTime / duration) * 100}%` }}
                   />
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-purple-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-sky-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ left: `${(currentTime / duration) * 100}%`, transform: "translate(-50%, -50%)" }}
                   />
                 </div>
@@ -1600,9 +1669,10 @@ export default function CallDetailPage() {
                       speakerMapping[utterance.speaker] === p.name
                     );
 
-                    const isRep = participant?.role === 'sales_rep' ||
-                                  utterance.speaker.toLowerCase().includes('rep') ||
-                                  utterance.speaker === 'A';
+                    const isBroker = (participant?.role as string) === 'broker' ||
+                                    participant?.role === 'sales_rep' || // backward compatibility
+                                    utterance.speaker.toLowerCase().includes('broker') ||
+                                    utterance.speaker === 'A';
 
                     // Get initials for avatar
                     const getInitials = (name: string) => {
@@ -1620,9 +1690,11 @@ export default function CallDetailPage() {
                           <div
                             className={cn(
                               "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold",
-                              participant?.role === 'sales_rep' ? "bg-purple-600 text-white" :
-                              participant?.role === 'customer' ? "bg-blue-500 text-white" :
-                              isRep ? "bg-purple-600 text-white" : "bg-gray-300 text-gray-700"
+                              (participant?.role as string) === 'broker' || participant?.role === 'sales_rep' ? "bg-sky-600 text-white" :
+                              (participant?.role as string) === 'shipper' || participant?.role === 'customer' ? "bg-blue-500 text-white" :
+                              (participant?.role as string) === 'carrier' ? "bg-green-500 text-white" :
+                              (participant?.role as string) === 'driver' ? "bg-orange-500 text-white" :
+                              isBroker ? "bg-sky-600 text-white" : "bg-gray-300 text-gray-700"
                             )}
                           >
                             {speakerName && speakerName !== utterance.speaker
@@ -1645,7 +1717,7 @@ export default function CallDetailPage() {
                             )}
                             <button
                               onClick={() => jumpToTimestamp(utterance.start_time)}
-                              className="text-xs text-gray-500 hover:text-purple-600 font-medium transition-colors"
+                              className="text-xs text-gray-500 hover:text-sky-600 font-medium transition-colors"
                             >
                               [{formatTime(utterance.start_time)}]
                             </button>
@@ -1654,7 +1726,7 @@ export default function CallDetailPage() {
                             {/* Jump to Audio button (appears on hover) */}
                             <button
                               onClick={() => jumpToTimestamp(utterance.start_time)}
-                              className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+                              className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-xs text-sky-600 hover:text-sky-700 font-medium flex items-center gap-1"
                             >
                               <ExternalLink className="w-3 h-3" />
                               Jump to Audio
@@ -1665,8 +1737,8 @@ export default function CallDetailPage() {
                           <div
                             className={cn(
                               "p-4 rounded-lg border max-w-[90%]",
-                              isRep
-                                ? "bg-purple-50 border-purple-100"
+                              isBroker
+                                ? "bg-sky-50 border-sky-100"
                                 : "bg-gray-100 border-gray-200"
                             )}
                           >
@@ -1749,7 +1821,7 @@ export default function CallDetailPage() {
                     value={typedNotes}
                     onChange={(e) => handleNotesChange(e.target.value)}
                     placeholder="Enter your typed notes here... (e.g., customer mentioned budget of $50k, considering Q2 implementation, main competitor is XYZ Corp)"
-                    className="w-full min-h-[150px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-y text-gray-900 placeholder-gray-400"
+                    className="w-full min-h-[150px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-y text-gray-900 placeholder-gray-400"
                     maxLength={5000}
                   />
                   <div className="flex items-center justify-between">
@@ -1771,12 +1843,12 @@ export default function CallDetailPage() {
           <CardHeader className="bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-purple-600" />
+                <FileText className="w-5 h-5 text-sky-600" />
                 <CardTitle className="text-2xl font-bold text-gray-900">CRM Output</CardTitle>
               </div>
               <div className="flex items-center gap-4">
                 {callDetail?.call.template && (
-                  <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                  <Badge className="bg-sky-100 text-sky-800 border-sky-200">
                     Template: {callDetail.call.template.name}
                   </Badge>
                 )}
@@ -1813,7 +1885,7 @@ export default function CallDetailPage() {
                 <div className="mt-4">
                   <div className={`p-6 rounded-lg border ${
                     activeTab.startsWith('template_')
-                      ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'
+                      ? 'bg-gradient-to-br from-sky-50 to-indigo-50 border-sky-200'
                       : 'bg-gray-50 border-gray-200'
                   } min-h-[400px] max-h-[600px] overflow-y-auto`}>
                     <pre className="text-base text-gray-900 whitespace-pre-wrap font-mono leading-relaxed">
@@ -1823,7 +1895,7 @@ export default function CallDetailPage() {
                 </div>
 
             {/* Action Buttons Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
               <Button
                 onClick={() =>
                   handleCopy(
@@ -1831,7 +1903,7 @@ export default function CallDetailPage() {
                     activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
                   )
                 }
-                className="h-12 bg-purple-600 hover:bg-purple-700 text-white text-base font-semibold shadow-lg hover:shadow-xl transition-all group"
+                className="h-12 bg-sky-600 hover:bg-sky-700 text-white text-base font-semibold shadow-lg hover:shadow-xl transition-all group"
               >
                 <Copy className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
                 Copy to Clipboard
@@ -1854,6 +1926,15 @@ export default function CallDetailPage() {
                 <Download className="w-4 h-4 mr-2" />
                 Download as PDF
               </Button>
+
+              {/* Generate Rate Confirmation Button - Only show if call has extracted data */}
+              {callDetail && (callDetail.fields.length > 0 || call.status === 'completed') && (
+                <GenerateRateConButton
+                  callId={call.id}
+                  callFields={callDetail.fields}
+                  className="h-12"
+                />
+              )}
             </div>
           </CardContent>
         </Card>

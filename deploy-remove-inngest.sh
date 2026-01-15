@@ -9,7 +9,7 @@ echo "=================================================="
 echo "DEPLOYMENT: Removing Inngest and Updating App"
 echo "=================================================="
 
-cd /var/www/synqall
+cd /var/www/loadvoice
 
 echo ""
 echo "Step 1: Stopping PM2 processes..."
@@ -37,8 +37,8 @@ cp -r .next/static .next/standalone/.next/static
 cp -r public .next/standalone/
 
 echo ""
-echo "Step 7: Starting synqall application..."
-pm2 start synqall
+echo "Step 7: Starting loadvoice application..."
+pm2 start loadvoice
 
 echo ""
 echo "Step 8: Saving PM2 configuration..."
@@ -57,6 +57,6 @@ echo "Summary:"
 echo "- Inngest has been removed from PM2"
 echo "- Latest code deployed"
 echo "- Application rebuilt without Inngest"
-echo "- Only 'synqall' process should be running now"
+echo "- Only 'loadvoice' process should be running now"
 echo ""
-echo "Check logs with: pm2 logs synqall --lines 50"
+echo "Check logs with: pm2 logs loadvoice --lines 50"

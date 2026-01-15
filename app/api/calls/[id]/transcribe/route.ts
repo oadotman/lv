@@ -70,7 +70,7 @@ export async function POST(
         .eq('id', callId);
 
       // Call processing endpoint asynchronously (fire and forget)
-      const processUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/calls/${callId}/process`;
+      const processUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/calls/${callId}/process-async`;
 
       // Use fetch without awaiting to trigger background processing
       // Use Connection: close to avoid chunked encoding HTTP parser issues

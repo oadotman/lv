@@ -135,21 +135,80 @@ export async function submitTranscriptionJob(
       // Language
       language_code: 'en' as const,
 
-      // Boost CRM/sales terms for better accuracy
+      // Boost freight broker terms for better accuracy
       word_boost: config.wordBoost || [
-        'CRM',
-        'pipeline',
-        'discovery',
-        'HubSpot',
-        'Salesforce',
-        'quota',
-        'ROI',
-        'implementation',
-        'onboarding',
-        'integration',
-        'qualified',
-        'prospect',
-        'demo',
+        // Core freight broker terminology
+        'load',
+        'lane',
+        'rate',
+        'haul',
+        'deadhead',
+        'backhaul',
+        'linehaul',
+        'spot rate',
+        'contract rate',
+        'load board',
+        'freight',
+
+        // Equipment types
+        'dry van',
+        'reefer',
+        'flatbed',
+        'step deck',
+        'lowboy',
+        'conestoga',
+        'tanker',
+        'hopper',
+        'RGN',
+        'power only',
+        'hotshot',
+        'box truck',
+
+        // Locations and directions
+        'shipper',
+        'consignee',
+        'origin',
+        'destination',
+        'pickup',
+        'delivery',
+        'dock',
+        'warehouse',
+
+        // Documentation
+        'BOL',
+        'bill of lading',
+        'rate con',
+        'rate confirmation',
+        'POD',
+        'proof of delivery',
+        'setup packet',
+        'carrier packet',
+
+        // Industry terms
+        'MC number',
+        'DOT number',
+        'FMCSA',
+        'broker',
+        'carrier',
+        'dispatcher',
+        'driver',
+        'owner operator',
+        'detention',
+        'layover',
+        'lumper',
+        'TONU',
+        'accessorials',
+
+        // Common phrases
+        "what's your rate",
+        'when can you pick up',
+        'ETA',
+        'check call',
+        'all in',
+        'fuel surcharge',
+        'miles out',
+        'empty now',
+        'can you cover',
       ],
       boost_param: 'high' as const,
 
@@ -399,8 +458,18 @@ export async function deleteTranscript(transcriptId: string): Promise<void> {
 }
 
 /**
+ * Wrapper function for compatibility - transcribes audio with AssemblyAI
+ */
+export async function transcribeWithAssemblyAI(audioUrl: string) {
+  return submitTranscriptionJob({
+    audioUrl,
+    speakersExpected: 2
+  });
+}
+
+/**
  * Helper: Map AssemblyAI speakers to roles using intelligent detection
- * Analyzes language patterns to identify sales rep vs prospect
+ * Analyzes language patterns to identify: Broker, Shipper, Carrier/Dispatcher, Driver
  */
 export function mapSpeakersToRoles(
   utterances: AssemblyAIUtterance[]
@@ -408,76 +477,139 @@ export function mapSpeakersToRoles(
   const speakers = [...new Set(utterances.map((u) => u.speaker))];
   const mapping: Record<string, string> = {};
 
-  // If only one speaker, assume it's the rep
+  // If only one speaker, assume it's the broker (user)
   if (speakers.length === 1) {
-    mapping[speakers[0]] = 'rep';
+    mapping[speakers[0]] = 'Broker';
     return mapping;
   }
 
   // Analyze speaking patterns to identify roles
-  const speakerScores: Record<string, { repScore: number; wordCount: number }> = {};
+  const speakerScores: Record<string, {
+    brokerScore: number;
+    shipperScore: number;
+    carrierScore: number;
+    driverScore: number;
+    wordCount: number
+  }> = {};
 
-  // Sales rep indicators (phrases commonly used by sales reps)
-  const repIndicators = [
-    'how can i help',
-    'let me show you',
-    'our product',
-    'our solution',
-    'our team',
-    'our company',
-    'we offer',
-    'we provide',
-    'we can help',
-    'pricing',
-    'discount',
-    'proposal',
-    'demo',
-    'implementation',
-    'onboarding',
-    'support team',
-    'customer success',
-    'best practices',
-    'roi',
-    'value proposition',
-    'features',
-    'benefits',
-    'integration',
-    'schedule a call',
-    'follow up',
-    'next steps',
-    'thank you for your time',
-    'appreciate your time',
-    'any questions',
-    'let me explain',
-    'i can show you',
-    'walking you through'
+  // Broker indicators (the user/customer - typically asking about rates and availability)
+  const brokerIndicators = [
+    'what\'s your rate',
+    'i can offer',
+    'i have a load',
+    'we have a load',
+    'our customer',
+    'our shipper',
+    'rate confirmation',
+    'rate con',
+    'i\'ll send you',
+    'what equipment',
+    'when can you pick up',
+    'can you cover',
+    'are you empty',
+    'where are you now',
+    'check call',
+    'need you to',
+    'bol number',
+    'reference number',
+    'detention',
+    'layover',
+    'fuel surcharge',
+    'all in rate',
+    'linehaul',
+    'accessorials',
+    'setup packet',
+    'carrier packet',
+    'insurance certificate',
+    'w9',
+    'authority',
+    'let me check',
+    'i\'ll confirm',
+    'my customer',
+    'the shipper',
+    'the consignee',
+    'i\'ll book',
+    'let me book'
   ];
 
-  // Prospect indicators (phrases commonly used by prospects)
-  const prospectIndicators = [
-    'we need',
-    'our problem',
-    'our challenge',
-    'our current',
-    'we are looking',
-    'we want',
-    'our budget',
-    'our team uses',
-    'our process',
-    'how much',
-    'what is the cost',
-    'can you',
-    'does it',
-    'will it',
-    'how does',
-    'we currently',
-    'pain point',
-    'struggling with',
-    'issue with',
-    'concern about',
-    'worried about',
-    'timeline',
-    'by when'
+  // Shipper indicators (shipping company representatives)
+  const shipperIndicators = [
+    'i need to ship',
+    'we need to move',
+    'our facility',
+    'our warehouse',
+    'our dock',
+    'pickup appointment',
+    'delivery appointment',
+    'loading time',
+    'unloading',
+    'commodity',
+    'product',
+    'pallets',
+    'weight',
+    'our receiver',
+    'ship date',
+    'ready to load',
+    'needs to deliver',
+    'our plant',
+    'our distribution',
+    'bill to',
+    'purchase order',
+    'vendor',
+    'supplier'
+  ];
+
+  // Carrier/Dispatcher indicators (trucking company representatives)
+  const carrierDispatcherIndicators = [
+    'i\'m empty',
+    'i\'m available',
+    'my trucks',
+    'our trucks',
+    'my drivers',
+    'our drivers',
+    'my rate is',
+    'i charge',
+    'we charge',
+    'our rate',
+    'mc number is',
+    'my mc',
+    'our mc',
+    'dot number',
+    'my company',
+    'our fleet',
+    'we run',
+    'our lanes',
+    'our equipment',
+    'i can cover',
+    'we can cover',
+    'i\'ll dispatch',
+    'send driver'
+  ];
+
+  // Driver indicators (truck drivers, usually on check calls)
+  const driverIndicators = [
+    'i\'m at',
+    'miles out',
+    'eta',
+    'just loaded',
+    'just delivered',
+    'breakdown',
+    'traffic',
+    'weather delay',
+    'dot inspection',
+    'weigh station',
+    'truck stop',
+    'i\'m driving',
+    'my truck',
+    'fuel stop',
+    'rest break',
+    'hours of service',
+    'eld',
+    'i\'m rolling',
+    'i\'m empty now',
+    'heading to',
+    'on my way',
+    'should be there'
   ];
 
   // Analyze each speaker's utterances
@@ -486,60 +618,107 @@ export function mapSpeakersToRoles(
     const allText = speakerUtterances.map(u => u.text.toLowerCase()).join(' ');
     const wordCount = allText.split(' ').length;
 
-    let repScore = 0;
-    let prospectScore = 0;
+    let brokerScore = 0;
+    let shipperScore = 0;
+    let carrierScore = 0;
+    let driverScore = 0;
 
-    // Count rep indicators
-    repIndicators.forEach(phrase => {
+    // Count broker indicators
+    brokerIndicators.forEach(phrase => {
       if (allText.includes(phrase)) {
-        repScore += 2;
+        brokerScore += 2;
       }
     });
 
-    // Count prospect indicators
-    prospectIndicators.forEach(phrase => {
+    // Count shipper indicators
+    shipperIndicators.forEach(phrase => {
       if (allText.includes(phrase)) {
-        prospectScore += 2;
+        shipperScore += 2;
       }
     });
 
-    // Check who speaks first (often the rep initiates)
+    // Count carrier/dispatcher indicators
+    carrierDispatcherIndicators.forEach(phrase => {
+      if (allText.includes(phrase)) {
+        carrierScore += 2;
+      }
+    });
+
+    // Count driver indicators
+    driverIndicators.forEach(phrase => {
+      if (allText.includes(phrase)) {
+        driverScore += 3; // Higher weight for driver phrases as they're more specific
+      }
+    });
+
+    // Check who speaks first (often the broker initiates)
     if (utterances[0]?.speaker === speaker) {
-      repScore += 1;
+      brokerScore += 1;
     }
 
-    // Check who speaks more (sales reps often dominate conversation)
+    // Check who speaks more (brokers often dominate conversation)
     const speakerUtteranceRatio = speakerUtterances.length / utterances.length;
     if (speakerUtteranceRatio > 0.55) {
-      repScore += 1;
+      brokerScore += 1;
     }
 
     // Store scores
     speakerScores[speaker] = {
-      repScore: repScore - prospectScore, // Net score
+      brokerScore,
+      shipperScore,
+      carrierScore,
+      driverScore,
       wordCount
     };
   });
 
-  // Assign roles based on scores
-  const scoredSpeakers = Object.entries(speakerScores)
-    .sort((a, b) => b[1].repScore - a[1].repScore);
+  // Assign roles based on highest score for each speaker
+  Object.entries(speakerScores).forEach(([speaker, scores]) => {
+    const roleScores = [
+      { role: 'Broker', score: scores.brokerScore },
+      { role: 'Shipper', score: scores.shipperScore },
+      { role: 'Carrier', score: scores.carrierScore },
+      { role: 'Driver', score: scores.driverScore }
+    ];
 
-  if (speakers.length === 2) {
-    // Two speakers: highest rep score is the rep, other is prospect
-    mapping[scoredSpeakers[0][0]] = 'rep';
-    mapping[scoredSpeakers[1][0]] = 'prospect';
-  } else {
-    // Multiple speakers: highest rep score is the rep, second highest is primary prospect
-    scoredSpeakers.forEach((speaker, idx) => {
-      if (idx === 0) {
-        mapping[speaker[0]] = 'rep';
-      } else if (idx === 1) {
-        mapping[speaker[0]] = 'prospect';
-      } else {
-        mapping[speaker[0]] = `participant_${idx}`;
+    // Sort by score to find the most likely role
+    roleScores.sort((a, b) => b.score - a.score);
+
+    // Assign the highest scoring role
+    let assignedRole = roleScores[0].role;
+
+    // Special case: if carrier and driver scores are close, prefer Driver for check calls
+    if (roleScores[0].role === 'Carrier' && scores.driverScore > scores.carrierScore * 0.8) {
+      // Check if this looks more like a driver (shorter utterances, status updates)
+      const avgUtteranceLength = scores.wordCount / utterances.filter(u => u.speaker === speaker).length;
+      if (avgUtteranceLength < 20) {
+        assignedRole = 'Driver';
       }
-    });
+    }
+
+    // If scores are all very low, default based on position
+    if (roleScores[0].score < 3) {
+      const speakerIndex = speakers.indexOf(speaker);
+      if (speakerIndex === 0) {
+        assignedRole = 'Broker'; // First speaker often the broker
+      } else {
+        assignedRole = 'Customer'; // Generic fallback
+      }
+    }
+
+    mapping[speaker] = assignedRole;
+  });
+
+  // Ensure we have at least one broker (the user)
+  const hasBroker = Object.values(mapping).includes('Broker');
+  if (!hasBroker && speakers.length > 0) {
+    // Find the speaker who speaks most (likely the broker)
+    const speakerCounts = speakers.map(s => ({
+      speaker: s,
+      count: utterances.filter(u => u.speaker === s).length
+    })).sort((a, b) => b.count - a.count);
+
+    mapping[speakerCounts[0].speaker] = 'Broker';
   }
 
   // Log the detection for debugging

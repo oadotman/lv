@@ -126,7 +126,7 @@ export function ReferralHistory() {
         label: "Rewarded",
         variant: "default" as const,
         icon: Gift,
-        className: "bg-violet-600 hover:bg-violet-700",
+        className: "bg-blue-600 hover:bg-blue-700",
       },
       expired: {
         label: "Expired",
@@ -154,7 +154,7 @@ export function ReferralHistory() {
     return (
       <Card className="p-8">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       </Card>
     );
@@ -243,7 +243,7 @@ export function ReferralHistory() {
                           <div className="space-y-1">
                             {referral.reward_minutes && referral.reward_minutes > 0 && (
                               <div className="flex items-center gap-1 text-sm">
-                                <Clock className="w-3 h-3 text-violet-600" />
+                                <Clock className="w-3 h-3 text-blue-600" />
                                 <span>{referral.reward_minutes} mins</span>
                               </div>
                             )}

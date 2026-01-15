@@ -17,7 +17,7 @@ export const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder_k
 // Note: These will fail at runtime if not configured, which is intentional
 // to prevent sending emails from incorrect addresses
 export const SENDER_EMAIL = process.env.RESEND_FROM_EMAIL || '';
-export const SENDER_NAME = 'SynQall';
+export const SENDER_NAME = 'LoadVoice';
 export const REPLY_TO_EMAIL = process.env.RESEND_REPLY_TO || '';
 
 // Email delivery helper

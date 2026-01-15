@@ -1,11 +1,11 @@
 // =====================================================
 // USAGE API ROUTE
-// Returns current month's usage statistics with overage data
+// Returns current month's usage statistics with simple overage data
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, requireAuth } from '@/lib/supabase/server';
-import { calculateUsageAndOverage } from '@/lib/overage';
+import { getUsageStatus } from '@/lib/simple-usage';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     // Fetch organization details
     const { data: org } = await supabase
       .from('organizations')
-      .select('max_minutes_monthly, plan_type, current_period_start, current_period_end')
+      .select('subscription_plan, usage_reset_date, usage_minutes_current, usage_minutes_limit')
       .eq('id', organizationId)
       .single();
 
@@ -88,13 +88,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Calculate current billing period
-    const now = new Date();
-    const periodStart = org.current_period_start || new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const periodEnd = org.current_period_end || new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+    // Use simple usage calculation (now with monthly tracking!)
+    const usage = await getUsageStatus(organizationId, supabase as any);
 
-    // Use overage-aware usage calculation
-    const usage = await calculateUsageAndOverage(organizationId, periodStart, periodEnd);
+    // Calculate billing period for display (using the current month from our system)
+    const now = new Date();
+    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const periodEnd = nextMonth.toISOString();
 
     // Get call count for this period
     const { data: monthCalls } = await supabase
@@ -108,11 +109,11 @@ export async function GET(req: NextRequest) {
       (call) => call.status === 'completed'
     ).length;
 
-    // Determine warning level based on percentage used
+    // Determine warning level based on status
     let warningLevel: 'none' | 'low' | 'medium' | 'high' | 'exceeded' = 'none';
-    if (usage.percentUsed >= 100) {
+    if (usage.status === 'overage') {
       warningLevel = 'exceeded';
-    } else if (usage.percentUsed >= 90) {
+    } else if (usage.status === 'warning') {
       warningLevel = 'high';
     } else if (usage.percentUsed >= 80) {
       warningLevel = 'medium';
@@ -124,22 +125,22 @@ export async function GET(req: NextRequest) {
       success: true,
       usage: {
         minutesUsed: Math.round(usage.minutesUsed),
-        minutesLimit: usage.baseMinutes, // Legacy field for compatibility
+        minutesLimit: usage.minutesLimit,
         percentUsed: Math.round(usage.percentUsed),
         callsProcessed,
-        planType: org.plan_type,
+        planType: org.subscription_plan,
         warningLevel,
-        remainingMinutes: Math.max(0, usage.totalAvailableMinutes - usage.minutesUsed),
+        remainingMinutes: Math.max(0, usage.minutesLimit - usage.minutesUsed),
         billingPeriodStart: periodStart,
         billingPeriodEnd: periodEnd,
-        // Overage-specific fields
-        baseMinutes: usage.baseMinutes,
-        purchasedOverageMinutes: usage.purchasedOverageMinutes,
-        totalAvailableMinutes: usage.totalAvailableMinutes,
+        // Simple overage fields
+        baseMinutes: usage.minutesLimit,
+        purchasedOverageMinutes: 0, // Simple system doesn't have pre-purchased packs
+        totalAvailableMinutes: usage.minutesLimit,
         overageMinutes: usage.overageMinutes,
-        overageCost: usage.overageCost,
-        hasOverage: usage.hasOverage,
-        canUpload: usage.canUpload,
+        overageCost: usage.overageCharge,
+        hasOverage: usage.overageMinutes > 0,
+        canUpload: true, // Simple system allows uploads even in overage (pay as you go)
       },
     });
 

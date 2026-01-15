@@ -123,7 +123,7 @@ async function testPartnerApplication() {
       partner_type: 'sales_coach',
       why_partner: 'Testing the API endpoint to ensure proper functionality and error handling.',
       terms_accepted: true,
-      has_used_synqall: 'no'
+      has_used_loadvoice: 'no'
     };
 
     try {

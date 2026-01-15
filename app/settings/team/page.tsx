@@ -365,7 +365,7 @@ export default function TeamSettingsPage() {
   function getRoleBadgeColor(role: string) {
     switch (role) {
       case 'owner':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-sky-100 text-sky-800';
       case 'admin':
         return 'bg-blue-100 text-blue-800';
       default:
@@ -393,26 +393,26 @@ export default function TeamSettingsPage() {
         </div>
 
         {/* Upgrade Card */}
-        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-blue-50 to-purple-50 overflow-hidden relative">
+        <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-blue-50 to-sky-50 overflow-hidden relative">
           {/* Decorative background */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600 rounded-full blur-3xl"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-sky-600 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600 rounded-full blur-3xl"></div>
           </div>
 
           <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-purple-900 text-2xl">
-              <Crown className="w-6 h-6 text-purple-600" />
+            <CardTitle className="flex items-center gap-2 text-sky-900 text-2xl">
+              <Crown className="w-6 h-6 text-sky-600" />
               Unlock Team Collaboration
             </CardTitle>
-            <CardDescription className="text-purple-700 text-base">
+            <CardDescription className="text-sky-700 text-base">
               Add team members, assign roles, and collaborate on CRM automation with your sales team.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6 relative z-10">
             {/* Benefits Section */}
-            <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-purple-200">
+            <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-sky-200">
               <h3 className="font-semibold text-gray-900 mb-3">What you'll get with Team plans:</h3>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start gap-2">
@@ -436,24 +436,24 @@ export default function TeamSettingsPage() {
 
             {/* Pricing Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-white rounded-lg border border-purple-200 hover:border-purple-400 transition-all hover:shadow-md">
+              <div className="p-4 bg-white rounded-lg border border-sky-200 hover:border-sky-400 transition-all hover:shadow-md">
                 <p className="text-sm font-semibold text-gray-700 mb-1">Solo</p>
-                <p className="text-3xl font-bold text-purple-600">$49<span className="text-sm text-gray-500">/mo</span></p>
+                <p className="text-3xl font-bold text-sky-600">$49<span className="text-sm text-gray-500">/mo</span></p>
                 <p className="text-xs text-gray-600 mt-2 mb-3">1 user • 1,500 min/mo</p>
                 <p className="text-xs text-gray-500">Perfect for individual sales reps</p>
               </div>
 
-              <div className="p-4 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg shadow-xl transform hover:scale-105 transition-all relative">
+              <div className="p-4 bg-gradient-to-br from-sky-600 to-blue-600 rounded-lg shadow-xl transform hover:scale-105 transition-all relative">
                 <Badge className="mb-2 bg-yellow-400 text-yellow-900 hover:bg-yellow-400">⭐ Most Popular</Badge>
                 <p className="text-sm font-semibold text-white mb-1">Team 5</p>
-                <p className="text-3xl font-bold text-white">$149<span className="text-sm text-purple-200">/mo</span></p>
-                <p className="text-xs text-purple-100 mt-2 mb-3">5 users • 6,000 min/mo</p>
-                <p className="text-xs text-purple-100">Great for small sales teams</p>
+                <p className="text-3xl font-bold text-white">$149<span className="text-sm text-sky-200">/mo</span></p>
+                <p className="text-xs text-sky-100 mt-2 mb-3">5 users • 6,000 min/mo</p>
+                <p className="text-xs text-sky-100">Great for small sales teams</p>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-purple-200 hover:border-purple-400 transition-all hover:shadow-md">
+              <div className="p-4 bg-white rounded-lg border border-sky-200 hover:border-sky-400 transition-all hover:shadow-md">
                 <p className="text-sm font-semibold text-gray-700 mb-1">Team 10</p>
-                <p className="text-3xl font-bold text-purple-600">$299<span className="text-sm text-gray-500">/mo</span></p>
+                <p className="text-3xl font-bold text-sky-600">$299<span className="text-sm text-gray-500">/mo</span></p>
                 <p className="text-xs text-gray-600 mt-2 mb-3">10 users • 15,000 min/mo</p>
                 <p className="text-xs text-gray-500">Best for growing teams</p>
               </div>
@@ -462,7 +462,7 @@ export default function TeamSettingsPage() {
             {/* CTA Button */}
             <div className="space-y-2">
               <Button
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-6 text-lg shadow-lg"
+                className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-semibold py-6 text-lg shadow-lg"
                 onClick={() => router.push('/upgrade')}
               >
                 <Crown className="w-5 h-5 mr-2" />
@@ -510,7 +510,7 @@ export default function TeamSettingsPage() {
 
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
-                  <Mail className="w-5 h-5 text-purple-600" />
+                  <Mail className="w-5 h-5 text-sky-600" />
                   <h3 className="font-semibold text-gray-900">Manage Invitations</h3>
                 </div>
                 <p className="text-sm text-gray-600">
@@ -580,19 +580,19 @@ export default function TeamSettingsPage() {
 
       {/* Upgrade Prompt for Free & Solo Plans */}
       {(organization.plan_type === 'free' || organization.plan_type === 'solo') && canManageTeam && (
-        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-blue-50 to-purple-50 overflow-hidden relative">
+        <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-blue-50 to-sky-50 overflow-hidden relative">
           {/* Decorative background */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600 rounded-full blur-3xl"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-sky-600 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600 rounded-full blur-3xl"></div>
           </div>
 
           <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-purple-900 text-2xl">
-              <Crown className="w-6 h-6 text-purple-600" />
+            <CardTitle className="flex items-center gap-2 text-sky-900 text-2xl">
+              <Crown className="w-6 h-6 text-sky-600" />
               Unlock Team Collaboration
             </CardTitle>
-            <CardDescription className="text-purple-700 text-base">
+            <CardDescription className="text-sky-700 text-base">
               {organization.plan_type === 'free'
                 ? "You're on the Free plan (1 user, 30 min/month). Upgrade to work with your team and scale your CRM automation."
                 : "You're on the Solo plan (1 user, 1,500 min/month). Upgrade to a Team plan to collaborate with colleagues."}
@@ -601,7 +601,7 @@ export default function TeamSettingsPage() {
 
           <CardContent className="space-y-6 relative z-10">
             {/* Benefits Section */}
-            <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-purple-200">
+            <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-sky-200">
               <h3 className="font-semibold text-gray-900 mb-3">What you'll get with Team plans:</h3>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start gap-2">
@@ -625,24 +625,24 @@ export default function TeamSettingsPage() {
 
             {/* Pricing Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-white rounded-lg border border-purple-200 hover:border-purple-400 transition-all hover:shadow-md">
+              <div className="p-4 bg-white rounded-lg border border-sky-200 hover:border-sky-400 transition-all hover:shadow-md">
                 <p className="text-sm font-semibold text-gray-700 mb-1">Solo</p>
-                <p className="text-3xl font-bold text-purple-600">$49<span className="text-sm text-gray-500">/mo</span></p>
+                <p className="text-3xl font-bold text-sky-600">$49<span className="text-sm text-gray-500">/mo</span></p>
                 <p className="text-xs text-gray-600 mt-2 mb-3">1 user • 1,500 min/mo</p>
                 <p className="text-xs text-gray-500">Perfect for individual sales reps</p>
               </div>
 
-              <div className="p-4 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg shadow-xl transform hover:scale-105 transition-all relative">
+              <div className="p-4 bg-gradient-to-br from-sky-600 to-blue-600 rounded-lg shadow-xl transform hover:scale-105 transition-all relative">
                 <Badge className="mb-2 bg-yellow-400 text-yellow-900 hover:bg-yellow-400">⭐ Most Popular</Badge>
                 <p className="text-sm font-semibold text-white mb-1">Team 5</p>
-                <p className="text-3xl font-bold text-white">$149<span className="text-sm text-purple-200">/mo</span></p>
-                <p className="text-xs text-purple-100 mt-2 mb-3">5 users • 6,000 min/mo</p>
-                <p className="text-xs text-purple-100">Great for small sales teams</p>
+                <p className="text-3xl font-bold text-white">$149<span className="text-sm text-sky-200">/mo</span></p>
+                <p className="text-xs text-sky-100 mt-2 mb-3">5 users • 6,000 min/mo</p>
+                <p className="text-xs text-sky-100">Great for small sales teams</p>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-purple-200 hover:border-purple-400 transition-all hover:shadow-md">
+              <div className="p-4 bg-white rounded-lg border border-sky-200 hover:border-sky-400 transition-all hover:shadow-md">
                 <p className="text-sm font-semibold text-gray-700 mb-1">Team 10</p>
-                <p className="text-3xl font-bold text-purple-600">$299<span className="text-sm text-gray-500">/mo</span></p>
+                <p className="text-3xl font-bold text-sky-600">$299<span className="text-sm text-gray-500">/mo</span></p>
                 <p className="text-xs text-gray-600 mt-2 mb-3">10 users • 15,000 min/mo</p>
                 <p className="text-xs text-gray-500">Best for growing teams</p>
               </div>
@@ -651,7 +651,7 @@ export default function TeamSettingsPage() {
             {/* CTA Button */}
             <div className="space-y-2">
               <Button
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-6 text-lg shadow-lg"
+                className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-semibold py-6 text-lg shadow-lg"
                 onClick={() => router.push('/settings?tab=billing')}
               >
                 <Crown className="w-5 h-5 mr-2" />
@@ -798,7 +798,7 @@ export default function TeamSettingsPage() {
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition"
                 >
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center text-white font-semibold">
                       {(member.user.user_metadata?.full_name || member.user.email)?.[0]?.toUpperCase()}
                     </div>
                     <div>

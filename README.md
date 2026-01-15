@@ -1,4 +1,4 @@
-# SynQall AI - CRM Data Entry Automation
+# LoadVoice AI - CRM Data Entry Automation
 
 A Next.js web application for automating CRM data entry from sales call recordings. Upload calls and get CRM-ready data instantly with no integrations required.
 

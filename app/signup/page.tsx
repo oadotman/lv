@@ -1,342 +1,317 @@
-'use client'
-
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-// Note: Auth is handled via /api/auth/signup endpoint
-import { useAuth } from '@/lib/AuthContext'
-import { Phone, Loader2, CheckCircle2, Users, Gift } from 'lucide-react'
+import { Phone, CheckCircle2, Users, Gift, Shield, Clock, Zap } from 'lucide-react'
 
-function SignUpForm() {
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [organizationName, setOrganizationName] = useState('')
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { user } = useAuth()
-
-  // Check for invitation parameters
-  const inviteEmail = searchParams?.get('email')
-  const returnTo = searchParams?.get('returnTo')
-  const isInvited = !!inviteEmail && !!returnTo
-
-  // Check for referral code
-  const referralCode = searchParams?.get('ref')
-
-  // Pre-fill email if coming from invitation
-  useEffect(() => {
-    if (inviteEmail) {
-      setEmail(inviteEmail)
-    }
-  }, [inviteEmail])
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      // If coming from invitation, redirect to the invitation page
-      if (returnTo) {
-        router.push(returnTo)
-      } else {
-        router.push('/')
+export const metadata: Metadata = {
+  title: 'Sign Up - LoadVoice | Start Your Free Trial Today',
+  description: 'Create your LoadVoice account and start saving 12+ hours per week with AI-powered freight call documentation. 60 minutes free every month, no credit card required.',
+  keywords: [
+    'LoadVoice signup',
+    'freight CRM free trial',
+    'create account',
+    'freight broker software trial',
+    'get started with LoadVoice',
+    'freight documentation free'
+  ],
+  alternates: {
+    canonical: 'https://loadvoice.com/signup'
+  },
+  openGraph: {
+    title: 'Sign Up for LoadVoice - Start Free Trial',
+    description: 'Join 500+ freight brokers saving 12+ hours per week. 60 minutes free forever, no credit card required.',
+    url: 'https://loadvoice.com/signup',
+    siteName: 'LoadVoice',
+    images: [
+      {
+        url: 'https://loadvoice.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Sign up for LoadVoice',
       }
-    }
-  }, [user, router, returnTo])
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setSuccess(false)
-
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    // Validate password strength
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setLoading(false)
-      return
-    }
-
-    // Validate privacy policy acceptance
-    if (!acceptedPrivacy) {
-      setError('You must accept the Privacy Policy and Terms of Service to create an account')
-      setLoading(false)
-      return
-    }
-
-    try {
-      // Extract invitation token from returnTo URL if present
-      let inviteToken: string | undefined
-      if (returnTo && returnTo.startsWith('/invite/')) {
-        inviteToken = returnTo.replace('/invite/', '')
-      }
-
-      // Call custom signup API that creates user + organization
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          fullName,
-          organizationName: organizationName || `${fullName}'s Organization`,
-          inviteToken, // Pass invitation token if present
-          referralCode, // Pass referral code if present
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        // Enhanced error message with debug info in development
-        let errorMessage = data.error || 'Signup failed'
-        if (data.debugInfo) {
-          console.error('🔴 Signup error details:', data.debugInfo)
-          errorMessage += ` (${data.debugInfo.code || data.debugInfo.message})`
-        }
-        throw new Error(errorMessage)
-      }
-
-      setSuccess(true)
-      setLoading(false)
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        if (returnTo && inviteToken) {
-          // If invitation was accepted during signup, redirect directly to login
-          // without the invite URL since it's already processed
-          router.push('/login?message=Account created successfully! You have been added to the team. Please sign in.&inviteAccepted=true')
-        } else {
-          // Normal signup flow
-          router.push('/login?message=Account created successfully! Please sign in.')
-        }
-      }, 2000)
-    } catch (err: any) {
-      setError(err.message)
-      setLoading(false)
-    }
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Sign Up for LoadVoice - Free Trial',
+    description: '60 minutes free forever. Join 500+ freight brokers automating their call documentation.',
+    images: ['https://loadvoice.com/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
   }
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4">
-        <Card className="w-full max-w-md dark:bg-slate-900 dark:border-slate-800">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="h-12 w-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100">Account created!</CardTitle>
-            <CardDescription className="text-slate-600 dark:text-slate-400">
-              Your account has been created successfully. You can now sign in and start using SynQall.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex justify-center">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Redirecting to login...
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4">
-      <Card className="w-full max-w-md dark:bg-slate-900 dark:border-slate-800">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-              <Phone className="h-6 w-6 text-white" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100">Create your account</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">
-            {isInvited ? (
-              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <span className="text-blue-700 dark:text-blue-300">
-                  You're joining an existing team. Your account will be linked to their organization.
-                </span>
-              </div>
-            ) : referralCode ? (
-              <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <span className="text-green-700 dark:text-green-300">
-                    You've been referred! Sign up now to start with 30 free minutes.
-                  </span>
-                </div>
-              </div>
-            ) : (
-              'Start automating your CRM data entry today'
-            )}
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSignUp}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-slate-700 dark:text-slate-300">Full name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="Alex Morgan"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                disabled={loading}
-                className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-                className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              />
-            </div>
-            {!isInvited && (
-              <div className="space-y-2">
-                <Label htmlFor="organizationName" className="text-slate-700 dark:text-slate-300">
-                  Organization name
-                  <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">(optional)</span>
-                </Label>
-                <Input
-                  id="organizationName"
-                  type="text"
-                placeholder="Acme Corp (defaults to your name)"
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-                disabled={loading}
-                className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              />
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  You'll start with a Free plan (1 user, 30 min/month)
-                </p>
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-slate-700 dark:text-slate-300">Confirm password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Re-enter your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={loading}
-                className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              />
-            </div>
-
-            {/* Privacy Policy Checkbox */}
-            <div className="flex items-start gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="acceptPrivacy"
-                checked={acceptedPrivacy}
-                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                disabled={loading}
-                className="mt-1 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer dark:bg-slate-800"
-                required
-              />
-              <label htmlFor="acceptPrivacy" className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed cursor-pointer">
-                I agree to the{' '}
-                <Link
-                  href="/privacy"
-                  target="_blank"
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-medium"
-                >
-                  Privacy Policy
-                </Link>
-                {' '}and{' '}
-                <Link
-                  href="/terms"
-                  target="_blank"
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-medium"
-                >
-                  Terms of Service
-                </Link>
-              </label>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || !acceptedPrivacy}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                'Create account'
-              )}
-            </Button>
-            <p className="text-sm text-center text-slate-600 dark:text-slate-400">
-              Already have an account?{' '}
-              <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
-  )
 }
 
 export default function SignUpPage() {
+  const benefits = [
+    {
+      icon: Clock,
+      title: "Save 12+ Hours Weekly",
+      description: "Eliminate manual data entry"
+    },
+    {
+      icon: Shield,
+      title: "FMCSA Compliant",
+      description: "Automatic carrier verification"
+    },
+    {
+      icon: Zap,
+      title: "Instant Setup",
+      description: "Start in under 5 minutes"
+    }
+  ]
+
+  const testimonials = [
+    {
+      quote: "As an independent broker, LoadVoice is my virtual assistant. Saves me 15 hours per week!",
+      author: "Mike R.",
+      company: "Independent Freight Broker"
+    },
+    {
+      quote: "Perfect for small operations. I run my brokerage solo and LoadVoice handles all my documentation.",
+      author: "Sarah L.",
+      company: "Solo Broker"
+    }
+  ]
+
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-          <p className="mt-4 text-gray-600">Loading...</p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="container max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <Link href="/" className="flex items-center gap-2">
+            <Phone className="h-8 w-8 text-purple-600" />
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              LoadVoice
+            </span>
+          </Link>
+          <Link href="/login" className="text-gray-600 hover:text-gray-900">
+            Already have an account? Sign in
+          </Link>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
+          {/* Left Column - Sign Up Form */}
+          <div>
+            <Card className="shadow-xl border-gray-200">
+              <CardHeader className="space-y-1 pb-6">
+                <CardTitle className="text-3xl font-bold">Create Your Account</CardTitle>
+                <CardDescription className="text-base">
+                  Start your free trial - 60 minutes free every month, forever
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                {/* Server-rendered form structure */}
+                <form className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="fullName" className="text-sm font-medium">
+                      Full Name *
+                    </label>
+                    <input
+                      id="fullName"
+                      name="fullName"
+                      type="text"
+                      required
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="John Smith"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium">
+                      Email Address *
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="john@example.com"
+                    />
+                    <p className="text-xs text-gray-500">Personal or business email accepted</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="organization" className="text-sm font-medium">
+                      Company Name (Optional)
+                    </label>
+                    <input
+                      id="organization"
+                      name="organization"
+                      type="text"
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="ABC Freight Brokers or leave blank"
+                    />
+                    <p className="text-xs text-gray-500">Independent brokers can skip this</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="password" className="text-sm font-medium">
+                      Password *
+                    </label>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Minimum 8 characters"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="confirmPassword" className="text-sm font-medium">
+                      Confirm Password *
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      required
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Re-enter password"
+                    />
+                  </div>
+
+                  <div className="flex items-start space-x-2">
+                    <input
+                      id="acceptTerms"
+                      name="acceptTerms"
+                      type="checkbox"
+                      required
+                      className="mt-1"
+                    />
+                    <label htmlFor="acceptTerms" className="text-sm text-gray-600">
+                      I agree to the{' '}
+                      <Link href="/terms" className="text-purple-600 hover:underline">
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link href="/privacy" className="text-purple-600 hover:underline">
+                        Privacy Policy
+                      </Link>
+                    </label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  >
+                    Create Account
+                  </Button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-2 gap-3">
+                    <Button variant="outline" className="w-full">
+                      Google
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      Microsoft
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+
+              <CardFooter className="pt-4 text-center text-sm text-gray-600">
+                By signing up, you agree to receive product updates and marketing communications
+              </CardFooter>
+            </Card>
+          </div>
+
+          {/* Right Column - Benefits */}
+          <div className="space-y-8">
+            {/* Trust Badges */}
+            <div className="flex items-center gap-4 justify-center lg:justify-start">
+              <div className="flex -space-x-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 border-2 border-white" />
+                ))}
+              </div>
+              <div className="text-sm">
+                <p className="font-semibold">Join 500+ freight brokers</p>
+                <p className="text-gray-600">Saving 12+ hours per week</p>
+              </div>
+            </div>
+
+            {/* Key Benefits */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">Why LoadVoice?</h2>
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <benefit.icon className="h-6 w-6 text-purple-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">{benefit.title}</h3>
+                    <p className="text-gray-600">{benefit.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* What's Included */}
+            <div className="bg-purple-50 rounded-xl p-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Gift className="h-5 w-5 text-purple-600" />
+                Included in Free Trial
+              </h3>
+              <ul className="space-y-2">
+                {[
+                  '60 minutes free every month',
+                  'AI-powered transcription',
+                  'Automatic data extraction',
+                  'Carrier verification',
+                  'Team collaboration',
+                  'No credit card required'
+                ].map((item, index) => (
+                  <li key={index} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Testimonials */}
+            <div className="space-y-4">
+              <h3 className="font-semibold">What Our Users Say</h3>
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="border-l-4 border-purple-600 pl-4 py-2">
+                  <p className="text-gray-700 italic">"{testimonial.quote}"</p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    - {testimonial.author}, {testimonial.company}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Security Badge */}
+            <div className="flex items-center gap-3 text-sm text-gray-600">
+              <Shield className="h-5 w-5 text-green-600" />
+              <span>Bank-level encryption • SOC 2 Compliant • GDPR Ready</span>
+            </div>
+          </div>
         </div>
       </div>
-    }>
-      <SignUpForm />
-    </Suspense>
+    </div>
   )
 }

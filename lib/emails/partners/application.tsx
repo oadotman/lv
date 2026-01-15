@@ -40,30 +40,30 @@ export function PartnerApplicationEmail({
   const getSubject = () => {
     switch (type) {
       case 'received':
-        return 'SynQall Partner Application Received';
+        return 'Loadvoice Partner Application Received';
       case 'approved':
-        return 'Welcome to the SynQall Partner Program!';
+        return 'Welcome to the Loadvoice Partner Program!';
       case 'rejected':
-        return 'SynQall Partner Application Update';
+        return 'Loadvoice Partner Application Update';
       case 'new_application':
         return 'New Partner Application Received';
       default:
-        return 'SynQall Partner Program';
+        return 'Loadvoice Partner Program';
     }
   };
 
   const getPreviewText = () => {
     switch (type) {
       case 'received':
-        return 'Thank you for applying to the SynQall Partner Program';
+        return 'Thank you for applying to the Loadvoice Partner Program';
       case 'approved':
         return 'Your application has been approved! Get started now.';
       case 'rejected':
-        return 'Update on your SynQall Partner Program application';
+        return 'Update on your Loadvoice Partner Program application';
       case 'new_application':
         return `New application from ${data.applicant_name}`;
       default:
-        return 'SynQall Partner Program Update';
+        return 'Loadvoice Partner Program Update';
     }
   };
 
@@ -78,7 +78,7 @@ export function PartnerApplicationEmail({
               <Heading style={h1}>Application Received!</Heading>
               <Text style={text}>Hi {recipientName},</Text>
               <Text style={text}>
-                Thank you for applying to the SynQall Partner Program. We have received your
+                Thank you for applying to the Loadvoice Partner Program. We have received your
                 application and will review it within 2 business days.
               </Text>
               <Text style={text}>
@@ -88,7 +88,7 @@ export function PartnerApplicationEmail({
               </Text>
               <Text style={text}>
                 In the meantime, feel free to explore our{' '}
-                <Link href="https://synqall.com" style={link}>
+                <Link href="https://loadvoice.com" style={link}>
                   website
                 </Link>{' '}
                 to learn more about our platform.
@@ -98,10 +98,10 @@ export function PartnerApplicationEmail({
 
           {type === 'approved' && (
             <>
-              <Heading style={h1}>Welcome to the SynQall Partner Program!</Heading>
+              <Heading style={h1}>Welcome to the Loadvoice Partner Program!</Heading>
               <Text style={text}>Hi {recipientName},</Text>
               <Text style={text}>
-                Great news! Your application to the SynQall Partner Program has been approved.
+                Great news! Your application to the Loadvoice Partner Program has been approved.
               </Text>
               <Text style={text}>
                 Here are your partner account details:
@@ -143,7 +143,7 @@ export function PartnerApplicationEmail({
               <Heading style={h1}>Application Update</Heading>
               <Text style={text}>Hi {recipientName},</Text>
               <Text style={text}>
-                Thank you for your interest in the SynQall Partner Program. After careful review,
+                Thank you for your interest in the Loadvoice Partner Program. After careful review,
                 we've decided not to move forward with your application at this time.
               </Text>
               {data.rejectionReason && (
@@ -153,7 +153,7 @@ export function PartnerApplicationEmail({
               )}
               <Text style={text}>
                 We encourage you to reapply in the future if your circumstances change. In the
-                meantime, you're welcome to use SynQall as a customer and experience the benefits
+                meantime, you're welcome to use Loadvoice as a customer and experience the benefits
                 firsthand.
               </Text>
               <Text style={text}>
@@ -186,7 +186,7 @@ export function PartnerApplicationEmail({
                 </Text>
               </Section>
               <Section style={buttonContainer}>
-                <Button style={button} href="https://synqall.com/admin/partners/applications">
+                <Button style={button} href="https://loadvoice.com/admin/partners/applications">
                   Review Application
                 </Button>
               </Section>
@@ -196,13 +196,13 @@ export function PartnerApplicationEmail({
           <Text style={footer}>
             Best regards,
             <br />
-            The SynQall Team
+            The Loadvoice Team
           </Text>
           <Text style={footerSmall}>
-            SynQall - AI-Powered CRM Data Capture
+            Loadvoice - AI-Powered CRM Data Capture
             <br />
-            <Link href="mailto:partners@synqall.com" style={link}>
-              partners@synqall.com
+            <Link href="mailto:partners@loadvoice.com" style={link}>
+              partners@loadvoice.com
             </Link>
           </Text>
         </Container>
@@ -224,21 +224,21 @@ export async function sendPartnerApplicationEmail(
   const subject = (() => {
     switch (type) {
       case 'received':
-        return 'SynQall Partner Application Received';
+        return 'Loadvoice Partner Application Received';
       case 'approved':
-        return 'Welcome to the SynQall Partner Program!';
+        return 'Welcome to the Loadvoice Partner Program!';
       case 'rejected':
-        return 'SynQall Partner Application Update';
+        return 'Loadvoice Partner Application Update';
       case 'new_application':
         return 'New Partner Application Received';
       default:
-        return 'SynQall Partner Program';
+        return 'Loadvoice Partner Program';
     }
   })();
 
   try {
     const { data: emailData, error } = await resend.emails.send({
-      from: 'SynQall Partners <partners@synqall.com>',
+      from: 'Loadvoice Partners <partners@loadvoice.com>',
       to: [to],
       subject,
       react: PartnerApplicationEmail({ recipientName, type, data }),

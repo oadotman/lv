@@ -56,7 +56,7 @@ export function UsageMeter() {
     return (
       <div className="bg-white rounded-2xl shadow-[0px_1px_3px_rgba(0,0,0,0.08)] p-8">
         <div className="flex items-center gap-3 mb-6">
-          <Clock className="w-6 h-6 text-violet-600" />
+          <Clock className="w-6 h-6 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900">Monthly Usage</h3>
         </div>
         <div className="animate-pulse space-y-4">
@@ -83,11 +83,16 @@ export function UsageMeter() {
   return (
     <div className="bg-white rounded-2xl shadow-[0px_1px_3px_rgba(0,0,0,0.08)] p-8">
       {/* Title Row */}
-      <div className="flex items-center gap-3">
-        <div className="w-6 h-6 flex items-center justify-center">
-          <Clock className="w-6 h-6 text-violet-600" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 flex items-center justify-center">
+            <Clock className="w-6 h-6 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">Monthly Usage</h3>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">Monthly Usage</h3>
+        <span className="text-sm text-gray-500">
+          {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        </span>
       </div>
 
       {/* Main Usage Display */}
@@ -122,7 +127,9 @@ export function UsageMeter() {
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-gray-500" />
           <span className="text-sm text-gray-500">
-            {usage.remainingMinutes} minutes remaining this billing period
+            {usage.remainingMinutes > 0
+              ? `${usage.remainingMinutes} minutes remaining this month`
+              : `${Math.abs(usage.remainingMinutes)} minutes over limit`}
           </span>
         </div>
 
@@ -137,7 +144,7 @@ export function UsageMeter() {
                 "gap-1.5",
                 usage.warningLevel === 'exceeded'
                   ? "bg-red-600 hover:bg-red-700"
-                  : "bg-violet-600 hover:bg-violet-700"
+                  : "bg-blue-600 hover:bg-blue-700"
               )}
             >
               <Plus className="w-3 h-3" />

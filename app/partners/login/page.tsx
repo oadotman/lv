@@ -1,6 +1,6 @@
 // =====================================================
 // PARTNER LOGIN PAGE
-// Login page for SynQall partners
+// Login page for LoadVoice partners
 // =====================================================
 
 'use client';
@@ -67,7 +67,7 @@ export default function PartnerLoginPage() {
 
       toast({
         title: 'Login Successful',
-        description: 'Welcome back to the SynQall Partner Program',
+        description: 'Welcome back to the LoadVoice Partner Program',
       });
 
       // Redirect to dashboard or requested page
@@ -114,7 +114,7 @@ export default function PartnerLoginPage() {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">SynQall Partners</h1>
+            <h1 className="text-3xl font-bold text-gray-900">LoadVoice Partners</h1>
             <p className="text-gray-600 mt-2">Reset your password</p>
           </div>
 
@@ -324,10 +324,10 @@ export default function PartnerLoginPage() {
               <p className="text-sm text-gray-600">
                 Need help? Contact{' '}
                 <a
-                  href="mailto:partners@synqall.com"
+                  href="mailto:partners@loadvoice.com"
                   className="text-blue-600 hover:underline"
                 >
-                  partners@synqall.com
+                  partners@loadvoice.com
                 </a>
               </p>
             </div>

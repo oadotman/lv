@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://synqall.com'
+  const baseUrl = 'https://loadvoice.com'
 
   return {
     rules: [
@@ -11,7 +11,10 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/dashboard/',
           '/calls/',
-          '/templates/',
+          '/loads/',
+          '/carriers/',
+          '/shippers/',
+          '/lanes/',
           '/settings/',
           '/analytics/',
           '/team/',
@@ -21,6 +24,13 @@ export default function robots(): MetadataRoute.Robots {
           '/static/',
           '/admin/',
           '/partners/dashboard/',
+          '/onboarding/',
+          '/upgrade/',
+          '/overage/',
+          '/billing/',
+          '/pay-overage/',
+          '/invite/',
+          '/invite-signup/',
         ],
       },
       {

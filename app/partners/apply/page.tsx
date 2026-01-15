@@ -1,6 +1,6 @@
 // =====================================================
 // PARTNER APPLICATION FORM
-// Application form for the SynQall Partner Program
+// Application form for the LoadVoice Partner Program
 // =====================================================
 
 'use client';
@@ -36,7 +36,7 @@ interface ApplicationFormData {
   crms_used: string[];
   how_heard: string;
   why_partner: string;
-  has_used_synqall: string;
+  has_used_loadvoice: string;
   terms_accepted: boolean;
 }
 
@@ -68,7 +68,7 @@ export default function PartnerApplicationPage() {
     crms_used: [],
     how_heard: '',
     why_partner: '',
-    has_used_synqall: '',
+    has_used_loadvoice: '',
     terms_accepted: false,
   });
 
@@ -105,8 +105,8 @@ export default function PartnerApplicationPage() {
       errors.why_partner = 'Please provide more detail (minimum 10 characters)';
     }
 
-    if (!formData.has_used_synqall) {
-      errors.has_used_synqall = 'Please let us know if you have used SynQall';
+    if (!formData.has_used_loadvoice) {
+      errors.has_used_loadvoice = 'Please let us know if you have used LoadVoice';
     }
 
     if (!formData.terms_accepted) {
@@ -183,7 +183,7 @@ export default function PartnerApplicationPage() {
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h1 className="text-2xl font-bold mb-2">Application Submitted!</h1>
                 <p className="text-gray-600 mb-6">
-                  Thank you for applying to the SynQall Partner Program.
+                  Thank you for applying to the LoadVoice Partner Program.
                   We will review your application and get back to you within 2 business days.
                 </p>
                 <p className="text-gray-600 mb-8">
@@ -216,7 +216,7 @@ export default function PartnerApplicationPage() {
           <CardHeader>
             <CardTitle className="text-3xl">Apply to Become a Partner</CardTitle>
             <CardDescription>
-              Join the SynQall Partner Program and earn 25-30% recurring commissions
+              Join the LoadVoice Partner Program and earn 25-30% recurring commissions
             </CardDescription>
           </CardHeader>
 
@@ -385,7 +385,7 @@ export default function PartnerApplicationPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="how_heard">How did you hear about SynQall? (Optional)</Label>
+                  <Label htmlFor="how_heard">How did you hear about LoadVoice? (Optional)</Label>
                   <Input
                     id="how_heard"
                     value={formData.how_heard}
@@ -399,11 +399,11 @@ export default function PartnerApplicationPage() {
 
               {/* Why Partner */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Why Partner with SynQall?</h3>
+                <h3 className="text-lg font-semibold">Why Partner with LoadVoice?</h3>
 
                 <div>
                   <Label htmlFor="why_partner">
-                    Why do you want to become a SynQall partner? *
+                    Why do you want to become a LoadVoice partner? *
                   </Label>
                   <Textarea
                     id="why_partner"
@@ -411,7 +411,7 @@ export default function PartnerApplicationPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, why_partner: e.target.value })
                     }
-                    placeholder="Tell us about your interest in partnering with SynQall..."
+                    placeholder="Tell us about your interest in partnering with LoadVoice..."
                     rows={4}
                     className={validationErrors.why_partner ? 'border-red-500' : ''}
                   />
@@ -421,17 +421,17 @@ export default function PartnerApplicationPage() {
                 </div>
 
                 <div>
-                  <Label>Have you used SynQall yourself? *</Label>
+                  <Label>Have you used LoadVoice yourself? *</Label>
                   <div className="flex gap-4 mt-2">
                     <div className="flex items-center space-x-2">
                       <input
                         type="radio"
                         id="used_yes"
-                        name="has_used_synqall"
+                        name="has_used_loadvoice"
                         value="yes"
-                        checked={formData.has_used_synqall === 'yes'}
+                        checked={formData.has_used_loadvoice === 'yes'}
                         onChange={(e) =>
-                          setFormData({ ...formData, has_used_synqall: e.target.value })
+                          setFormData({ ...formData, has_used_loadvoice: e.target.value })
                         }
                         className="cursor-pointer"
                       />
@@ -443,11 +443,11 @@ export default function PartnerApplicationPage() {
                       <input
                         type="radio"
                         id="used_no"
-                        name="has_used_synqall"
+                        name="has_used_loadvoice"
                         value="no"
-                        checked={formData.has_used_synqall === 'no'}
+                        checked={formData.has_used_loadvoice === 'no'}
                         onChange={(e) =>
-                          setFormData({ ...formData, has_used_synqall: e.target.value })
+                          setFormData({ ...formData, has_used_loadvoice: e.target.value })
                         }
                         className="cursor-pointer"
                       />
@@ -459,11 +459,11 @@ export default function PartnerApplicationPage() {
                       <input
                         type="radio"
                         id="used_not_yet"
-                        name="has_used_synqall"
+                        name="has_used_loadvoice"
                         value="not_yet"
-                        checked={formData.has_used_synqall === 'not_yet'}
+                        checked={formData.has_used_loadvoice === 'not_yet'}
                         onChange={(e) =>
-                          setFormData({ ...formData, has_used_synqall: e.target.value })
+                          setFormData({ ...formData, has_used_loadvoice: e.target.value })
                         }
                         className="cursor-pointer"
                       />
@@ -472,8 +472,8 @@ export default function PartnerApplicationPage() {
                       </Label>
                     </div>
                   </div>
-                  {validationErrors.has_used_synqall && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.has_used_synqall}</p>
+                  {validationErrors.has_used_loadvoice && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.has_used_loadvoice}</p>
                   )}
                 </div>
               </div>
