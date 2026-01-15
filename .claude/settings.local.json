@@ -106,7 +106,8 @@
       "Bash(del \"C:\\Users\\User\\Desktop\\Eledami\\fresh ideas\\Final\\loadvoice\\.env.example\")",
       "Bash(del \"C:\\Users\\User\\Desktop\\Eledami\\fresh ideas\\Final\\loadvoice\\app\\settings\\page_OLD.tsx\")",
       "Bash(npm update:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(ln:*)"
     ],
     "deny": [],
     "ask": []
