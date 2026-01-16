@@ -29,26 +29,26 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 export const metadata: Metadata = {
-  title: 'LoadVoice - Automatic Call Forwarding & AI Documentation for Freight Brokers',
-  description: 'Forward your freight calls to LoadVoice and get instant AI-powered documentation. No manual uploads, no data entry. Every call automatically captured, transcribed, and processed into actionable CRM data.',
+  title: 'LoadVoice - Automatic Call Documentation for Freight Brokers & 3PLs',
+  description: 'LoadVoice automatically captures load details, rates, and carrier information from every broker-carrier call. Forward your calls. Talk normally. Your CRM updates itself. Setup in 2 minutes.',
   keywords: [
-    'freight broker call forwarding',
-    'automatic call recording',
-    'twilio freight integration',
-    'voice AI for logistics',
-    'automated freight documentation',
-    'broker phone system',
-    'freight CRM automation',
-    'carrier call tracking',
+    'freight broker call documentation',
+    'freight broker automation',
+    '3PL call recording',
+    'carrier vetting automation',
     'load documentation software',
-    'transportation call center'
+    'freight broker CRM automation',
+    'FMCSA carrier verification',
+    'automated rate confirmation',
+    'broker TMS integration',
+    'freight call tracking'
   ],
   alternates: {
     canonical: 'https://loadvoice.com'
   },
   openGraph: {
-    title: 'LoadVoice - Automatic Call Documentation for Freight Brokers',
-    description: 'Forward your calls to LoadVoice. Every conversation automatically documented with AI. No manual work required.',
+    title: 'LoadVoice - Automatic Call Documentation for Freight Brokers & 3PLs',
+    description: 'Automatically capture load details, rates, and carrier info from every call. No data entry. No workflow changes.',
     url: 'https://loadvoice.com',
     siteName: 'LoadVoice',
     images: [
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
         url: 'https://loadvoice.com/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'LoadVoice - Automatic Call Forwarding for Freight',
+        alt: 'LoadVoice - Freight Broker Call Automation',
       }
     ],
     locale: 'en_US',
@@ -64,8 +64,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LoadVoice - Automatic Call Documentation',
-    description: 'Forward your calls. Get instant documentation. No manual work.',
+    title: 'LoadVoice - Freight Broker Call Automation',
+    description: 'Stop doing manual call notes. Forward calls to LoadVoice and let AI handle documentation.',
     images: ['https://loadvoice.com/og-image.png'],
     creator: '@loadvoice',
   },
@@ -110,7 +110,7 @@ export default function HomePage() {
     {
       step: "4",
       title: "Get Instant Documentation",
-      description: "AI extracts load details, carrier info, and rates - ready in your CRM instantly",
+      description: "Load details, carrier info, and rates extracted - ready in your CRM instantly",
       icon: FileText,
       time: "Real-time"
     }
@@ -130,7 +130,7 @@ export default function HomePage() {
     },
     {
       icon: Brain,
-      title: "Real-Time AI Processing",
+      title: "Real-Time Processing",
       description: "Load details extracted while you're still on the call"
     },
     {
@@ -153,69 +153,77 @@ export default function HomePage() {
   const testimonials = [
     {
       name: "Mike Johnson",
-      role: "Owner",
+      role: "Freight Broker Owner",
       company: "Express Logistics LLC",
-      content: "We just forward our calls to LoadVoice and everything gets documented. It's like having a full-time data entry team that never makes mistakes.",
-      savings: "15 hours/week saved"
+      content: "I used to spend 2 hours every night entering load details from calls. Now LoadVoice does it automatically while I'm negotiating rates. We're booking 40% more loads with the same team.",
+      savings: "15 hours/week saved",
+      loads: "250+ loads/month"
     },
     {
       name: "Sarah Chen",
-      role: "Operations Manager",
+      role: "3PL Operations Manager",
       company: "Global Freight Solutions",
-      content: "Setup took 2 minutes. Now every carrier call is automatically vetted, documented, and added to our CRM. This is what automation should be.",
-      savings: "40% more loads handled"
+      content: "Every carrier call now includes automatic FMCSA verification and insurance checks. Rate cons are ready before we hang up. This eliminated our entire manual documentation process.",
+      savings: "40% more loads handled",
+      loads: "500+ loads/month"
     },
     {
       name: "Tom Williams",
-      role: "Senior Broker",
+      role: "Senior Freight Broker",
       company: "Midwest Transport Brokers",
-      content: "I was skeptical about AI, but LoadVoice just works. I forward my calls, talk normally, and check my CRM later - everything's there.",
-      savings: "$8,000/month saved"
+      content: "LoadVoice captures pickup/delivery details, equipment types, and rates perfectly every time. My dispatchers can focus on moving freight instead of data entry.",
+      savings: "$8,000/month saved",
+      loads: "350+ loads/month"
     }
   ]
 
   const pricingPlans = [
     {
-      name: "Free Trial",
+      name: "Solo Broker",
       price: "$0",
-      description: "Test with your real calls",
+      description: "Perfect for testing with real loads",
       minutes: 60,
+      loads: "~5 loads/month",
       features: [
-        "Your own LoadVoice number",
+        "Your own broker phone number",
         "60 minutes free every month",
-        "Instant call forwarding setup",
-        "AI transcription & extraction",
-        "Carrier verification (FMCSA)",
+        "All load details captured",
+        "Carrier FMCSA verification",
+        "Rate confirmation ready",
+        "CRM/TMS integration",
         "Email support"
       ]
     },
     {
-      name: "Team",
+      name: "Brokerage Team",
       price: "$199",
-      description: "For growing brokerages",
+      description: "For active freight brokerages",
       minutes: 1500,
+      loads: "~125 loads/month",
       features: [
         "1,500 minutes/month",
-        "3 LoadVoice numbers",
+        "3 broker phone numbers",
         "3 team members",
-        "Smart call routing",
-        "Real-time notifications",
+        "Load assignment routing",
+        "Real-time rate alerts",
+        "Carrier compliance checks",
         "Priority support",
         "Overage: $0.20/min"
       ],
       popular: true
     },
     {
-      name: "Enterprise",
+      name: "3PL Enterprise",
       price: "$999",
-      description: "For established operations",
+      description: "For high-volume 3PLs",
       minutes: 15000,
+      loads: "~1,250 loads/month",
       features: [
         "15,000 minutes/month",
-        "Unlimited numbers",
+        "Unlimited broker numbers",
         "20+ team members",
-        "Custom call flows",
-        "API access",
+        "Custom TMS integration",
+        "API for load data",
         "White-label options",
         "Dedicated success manager",
         "Overage: $0.15/min"
@@ -259,29 +267,32 @@ export default function HomePage() {
           </div>
         </nav>
 
-        {/* Hero Section - COMPLETELY REDESIGNED FOR TWILIO FOCUS */}
+        {/* Hero Section - FREIGHT BROKER FOCUSED */}
         <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-6">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center space-y-6">
               <Badge className="bg-green-800/30 text-green-300 border-green-700 animate-pulse">
                 <PhoneForwarded className="h-3 w-3 mr-1" />
-                Setup in 2 minutes • No tech skills needed
+                For Freight Brokers & 3PLs
               </Badge>
 
               <h1 className="text-5xl md:text-7xl font-bold">
-                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Forward Your Calls.
+                <span className="text-white">
+                  Automatic Call Documentation for
                 </span>
                 <br />
-                <span className="text-white">
-                  Get Instant Documentation.
+                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Freight Brokers & 3PLs
                 </span>
               </h1>
 
-              <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
-                LoadVoice gives you a phone number that automatically captures every freight conversation.
-                <span className="text-purple-400 font-semibold"> No uploads. No manual work.</span> Just forward your calls
-                and let AI handle the documentation.
+              <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto">
+                LoadVoice listens in the background and automatically captures load details, rates, and carrier information from every broker-carrier call —
+                <span className="text-purple-400 font-semibold"> with zero data entry and no workflow changes.</span>
+              </p>
+
+              <p className="text-lg text-gray-400">
+                Forward your calls. Talk normally. Your CRM updates itself.
               </p>
 
               {/* PRIMARY CTA - GET YOUR NUMBER */}
@@ -290,7 +301,7 @@ export default function HomePage() {
                   <Link href="/signup">
                     <Button size="lg" className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white text-lg px-10 py-7 shadow-lg shadow-green-500/30">
                       <PhoneForwarded className="mr-2 h-6 w-6" />
-                      Get Your LoadVoice Number Now
+                      Get Your LoadVoice Number
                     </Button>
                   </Link>
                   <Link href="#how-it-works">
@@ -301,14 +312,18 @@ export default function HomePage() {
                   </Link>
                 </div>
 
-                <div className="flex items-center justify-center gap-8 text-sm text-gray-400">
+                <div className="flex items-center justify-center gap-6 text-sm text-gray-400">
                   <span className="flex items-center gap-1">
                     <CheckCircle className="h-4 w-4 text-green-400" />
                     Setup in 2 minutes
                   </span>
                   <span className="flex items-center gap-1">
                     <CheckCircle className="h-4 w-4 text-green-400" />
-                    60 minutes free
+                    Works with any phone system
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="h-4 w-4 text-green-400" />
+                    FMCSA checks included
                   </span>
                   <span className="flex items-center gap-1">
                     <CheckCircle className="h-4 w-4 text-green-400" />
@@ -316,14 +331,110 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
 
-              {/* SECONDARY - Manual Upload (de-emphasized) */}
-              <div className="pt-12 border-t border-purple-800/30 mt-12">
-                <p className="text-gray-500 text-sm mb-3">Already have recordings?</p>
-                <Link href="/calls/new">
-                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-300">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload existing calls
+        {/* NEW FIRST SECTION - Stop Doing Manual Call Notes */}
+        <section className="py-20 px-6">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">
+                Stop Doing Manual Call Notes After Every Load
+              </h2>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                Every day, freight brokers and 3PL teams spend hours:
+              </p>
+            </div>
+
+            {/* Pain Points Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+                <AlertTriangle className="h-8 w-8 text-red-400 mb-2" />
+                <p className="text-gray-300">Re-typing load details after carrier calls</p>
+              </div>
+              <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+                <AlertTriangle className="h-8 w-8 text-red-400 mb-2" />
+                <p className="text-gray-300">Copying rates and lane info into their CRM</p>
+              </div>
+              <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+                <AlertTriangle className="h-8 w-8 text-red-400 mb-2" />
+                <p className="text-gray-300">Verifying carriers in FMCSA mid-call</p>
+              </div>
+              <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+                <AlertTriangle className="h-8 w-8 text-red-400 mb-2" />
+                <p className="text-gray-300">Fixing missed or incomplete documentation</p>
+              </div>
+            </div>
+
+            <div className="text-center mb-12">
+              <p className="text-2xl font-bold text-purple-400">
+                LoadVoice eliminates all of that — automatically.
+              </p>
+            </div>
+
+            {/* 3-Step Broker Process */}
+            <div className="bg-purple-900/20 border border-purple-700/30 rounded-2xl p-8">
+              <h3 className="text-2xl font-bold mb-8 text-center">How LoadVoice Works</h3>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-full p-2 text-white font-bold">1</div>
+                    <h4 className="text-xl font-semibold">Get Your LoadVoice Number</h4>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Instantly receive a dedicated phone number for your brokerage or 3PL. Takes 30 seconds.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-full p-2 text-white font-bold">2</div>
+                    <h4 className="text-xl font-semibold">Forward Carrier & Shipper Calls</h4>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Forward calls from your existing line or use LoadVoice directly — no new system to learn.
+                  </p>
+                  <p className="text-gray-400 text-xs mt-2">
+                    Works with your existing phone system — no new hardware required.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-full p-2 text-white font-bold">3</div>
+                    <h4 className="text-xl font-semibold">Calls Are Documented Automatically</h4>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    While you negotiate rates, LoadVoice documents the call in real time:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm text-gray-400">
+                    <li className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                      <span>Load details</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                      <span>Carrier info</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                      <span>Rates & lanes</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                      <span>FMCSA verification</span>
+                    </li>
+                  </ul>
+                  <p className="text-green-400 text-sm font-semibold mt-2">
+                    All ready for your CRM — before you hang up.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 text-center">
+                <Link href="/signup">
+                  <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600">
+                    <PhoneForwarded className="mr-2 h-5 w-5" />
+                    Get Your LoadVoice Number
                   </Button>
                 </Link>
               </div>
@@ -338,9 +449,6 @@ export default function HomePage() {
               <h2 className="text-4xl font-bold mb-4">
                 From Setup to Documentation in Minutes
               </h2>
-              <p className="text-xl text-gray-300">
-                No IT team needed. No complex integrations. Just forward and forget.
-              </p>
             </div>
 
             <div className="grid md:grid-cols-4 gap-6">
@@ -381,47 +489,110 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Forwarding Features Section */}
-        <section className="py-20 px-6">
+        {/* Built for Real Freight Brokers Section - MOVED UP AND ENHANCED */}
+        <section className="py-20 px-6 bg-gradient-to-b from-black/30 to-purple-950/50">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-12">
+              <Badge className="bg-purple-800/30 text-purple-300 border-purple-700 mb-4">
+                <Users className="h-3 w-3 mr-1" />
+                Trusted by 500+ Freight Brokers & 3PLs
+              </Badge>
               <h2 className="text-4xl font-bold mb-4">
-                Built for Real Freight Brokers
+                Built for How Freight Brokers Actually Work
               </h2>
-              <p className="text-xl text-gray-300">
-                Not another app to learn. LoadVoice works with how you already work.
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                No uploads. No typing. No missed load details.<br/>
+                Just forward broker-carrier calls and move on to the next load.
+              </p>
+              <p className="text-lg text-gray-400 mt-4">
+                LoadVoice uses AI to extract structured load data from live freight calls in real time.
               </p>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {forwardingFeatures.map((feature, index) => (
-                <div key={index} className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl hover:border-purple-600/50 transition-colors">
-                  <feature.icon className="h-10 w-10 text-purple-400 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-gray-300">{feature.description}</p>
-                </div>
-              ))}
+
+            {/* Broker-Specific Features */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              <div className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl hover:border-purple-600/50 transition-colors">
+                <Package className="h-10 w-10 text-purple-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Load Details Captured</h3>
+                <p className="text-gray-300">Origin, destination, equipment type, commodity — all extracted automatically from your calls.</p>
+              </div>
+              <div className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl hover:border-purple-600/50 transition-colors">
+                <TrendingUp className="h-10 w-10 text-purple-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Rate Confirmation Ready</h3>
+                <p className="text-gray-300">Rates, lanes, and terms captured in real-time. Rate cons generated before you hang up.</p>
+              </div>
+              <div className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl hover:border-purple-600/50 transition-colors">
+                <Shield className="h-10 w-10 text-purple-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">FMCSA Verification</h3>
+                <p className="text-gray-300">Carrier MC numbers checked automatically. Insurance and authority verified during calls.</p>
+              </div>
+              <div className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl hover:border-purple-600/50 transition-colors">
+                <Clock className="h-10 w-10 text-purple-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">12 Minutes Saved Per Load</h3>
+                <p className="text-gray-300">Average time saved on documentation per load. That's 15+ hours weekly for active brokers.</p>
+              </div>
+              <div className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl hover:border-purple-600/50 transition-colors">
+                <PhoneForwarded className="h-10 w-10 text-purple-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Works With Your Phone</h3>
+                <p className="text-gray-300">Keep your existing number. Forward calls or use LoadVoice directly. No new system to learn.</p>
+              </div>
+              <div className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl hover:border-purple-600/50 transition-colors">
+                <FileText className="h-10 w-10 text-purple-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">CRM Updates Itself</h3>
+                <p className="text-gray-300">Integrates with your TMS/CRM. Load data flows automatically — no manual entry required.</p>
+              </div>
+            </div>
+
+            {/* Broker-Specific CTA */}
+            <div className="text-center p-8 bg-purple-900/30 rounded-xl border border-purple-700/50">
+              <p className="text-2xl font-bold mb-4 text-purple-400">
+                Stop typing. Start closing more loads.
+              </p>
+              <Link href="/signup">
+                <Button size="lg" className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400">
+                  <PhoneForwarded className="mr-2 h-5 w-5" />
+                  Get Your LoadVoice Number
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
 
-        {/* Testimonials Section */}
+        {/* Testimonials Section - Broker Focused */}
         <section className="py-20 px-6 bg-black/30">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-4xl font-bold text-center mb-12">
-              Brokers Save 15+ Hours Every Week
+            {/* Raw Quote */}
+            <div className="text-center mb-12">
+              <p className="text-3xl font-bold text-white italic mb-2">
+                "I stopped doing call notes on day one."
+              </p>
+              <p className="text-gray-400">
+                — Freight Broker, Chicago
+              </p>
+            </div>
+
+            <h2 className="text-4xl font-bold text-center mb-4">
+              Freight Brokers Save 15+ Hours Every Week
             </h2>
+            <p className="text-xl text-gray-300 text-center mb-12">
+              Join 500+ brokers who've eliminated manual call documentation
+            </p>
             <div className="grid md:grid-cols-3 gap-6">
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="p-6 bg-purple-900/20 border border-purple-700/30 rounded-xl">
-                  <div className="mb-4">
+                  <div className="flex gap-2 mb-4">
                     <Badge className="bg-green-800/30 text-green-300 border-green-700">
                       {testimonial.savings}
+                    </Badge>
+                    <Badge className="bg-purple-800/30 text-purple-300 border-purple-700">
+                      {testimonial.loads}
                     </Badge>
                   </div>
                   <p className="text-gray-300 mb-4 italic">"{testimonial.content}"</p>
                   <div>
                     <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-gray-400">{testimonial.role}, {testimonial.company}</p>
+                    <p className="text-sm text-gray-400">{testimonial.role}</p>
+                    <p className="text-sm text-gray-500">{testimonial.company}</p>
                   </div>
                 </div>
               ))}
@@ -429,15 +600,15 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Pricing Section */}
+        {/* Pricing Section - Broker Focused */}
         <section className="py-20 px-6">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4">
-                Start Free, Scale As You Grow
+                Pricing Built for Freight Brokers
               </h2>
               <p className="text-xl text-gray-300">
-                Get your LoadVoice number today. No credit card required.
+                Start free. Scale as your brokerage grows. Cancel anytime.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
@@ -445,12 +616,13 @@ export default function HomePage() {
                 <div key={index} className={`relative p-6 bg-purple-900/20 border rounded-xl ${plan.popular ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-purple-700/30'}`}>
                   {plan.popular && (
                     <span className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      Most Popular
+                      Most Popular for Brokers
                     </span>
                   )}
                   <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
                   <p className="text-3xl font-bold mb-1">{plan.price}<span className="text-lg text-gray-400">/month</span></p>
-                  <p className="text-gray-400 mb-2">{plan.minutes.toLocaleString()} minutes included</p>
+                  <p className="text-gray-400 mb-1">{plan.minutes.toLocaleString()} minutes included</p>
+                  <p className="text-purple-400 text-sm mb-2">{plan.loads}</p>
                   <p className="text-sm text-gray-500 mb-6">{plan.description}</p>
                   <ul className="space-y-3 mb-6">
                     {plan.features.map((feature, idx) => (
@@ -462,38 +634,55 @@ export default function HomePage() {
                   </ul>
                   <Link href="/signup">
                     <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600">
-                      Get Your Number
+                      Get Your LoadVoice Number
                     </Button>
                   </Link>
                 </div>
               ))}
             </div>
+            <div className="mt-12 text-center p-6 bg-purple-900/20 rounded-xl border border-purple-700/30">
+              <p className="text-lg text-gray-300">
+                <span className="font-bold text-purple-400">Average call duration:</span> 12 minutes for load booking
+              </p>
+              <p className="text-sm text-gray-400 mt-2">
+                Most brokers use 1,200-1,500 minutes/month (100-125 loads)
+              </p>
+            </div>
           </div>
         </section>
 
-        {/* Final CTA Section */}
+        {/* Final CTA Section - Broker Urgency */}
         <section className="py-20 px-6 bg-gradient-to-r from-purple-900/50 to-pink-900/50">
           <div className="container mx-auto max-w-4xl text-center">
             <Badge className="bg-yellow-800/30 text-yellow-300 border-yellow-700 mb-6">
               <Timer className="h-3 w-3 mr-1" />
-              Average setup time: 2 minutes 14 seconds
+              Average broker saves 12 minutes per load
             </Badge>
             <h2 className="text-4xl font-bold mb-6">
-              Your Competitors Are Already Saving 15+ Hours a Week
+              Other Brokers Are Booking More Loads While You're Typing
             </h2>
             <p className="text-xl text-gray-300 mb-8">
-              Every call you make without LoadVoice is 12 minutes of documentation you'll do manually.
-              Get your number now and never do data entry again.
+              Every carrier call without LoadVoice means 12 minutes of manual documentation.<br/>
+              That's 3-4 extra loads you could be booking every day.
             </p>
+            <div className="bg-purple-900/30 rounded-xl p-6 mb-8 border border-purple-700/50">
+              <p className="text-lg font-semibold text-purple-400 mb-2">
+                Quick Math for Active Brokers:
+              </p>
+              <p className="text-gray-300">
+                20 calls/day × 12 minutes saved = <span className="text-green-400 font-bold">4 hours daily</span><br/>
+                4 hours × $150/hour opportunity cost = <span className="text-green-400 font-bold">$600/day lost to data entry</span>
+              </p>
+            </div>
             <div className="space-y-4">
               <Link href="/signup">
                 <Button size="lg" className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white text-lg px-10 py-7 shadow-lg shadow-green-500/30">
                   <PhoneForwarded className="mr-2 h-6 w-6" />
-                  Get Your LoadVoice Number Now
+                  Start Saving 12 Minutes Per Load Now
                 </Button>
               </Link>
               <p className="text-gray-400 text-sm">
-                Free trial • No credit card • Cancel anytime
+                Setup in 2 minutes • 60 free minutes • No credit card required
               </p>
             </div>
           </div>
